@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, Chip, TextInput } from "@/components/ui";
 import { saveMedicine } from "../actions";
@@ -10,6 +9,8 @@ import type { Enums } from "@/lib/supabase/types";
 /**
  * Same fields and same optionality as the standalone Add Medicine flow inside
  * Health — deliberately identical, not a reduced onboarding variant.
+ *
+ * This is the one screen with no icon and a left-aligned header.
  */
 const TIMES: { value: Enums<"time_of_day">; label: string }[] = [
   { value: "morning", label: "Morning" },
@@ -18,6 +19,12 @@ const TIMES: { value: Enums<"time_of_day">; label: string }[] = [
 ];
 
 const CONDITIONS = ["Sugar", "BP", "Acidity", "Thyroid", "Asthma"];
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[14px] leading-[1.2] font-medium text-[#636366]">{children}</span>
+  );
+}
 
 export function MedicineForm({ justAdded }: { justAdded: boolean }) {
   const [error, action, pending] = useActionState(saveMedicine, null);
@@ -34,7 +41,9 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
   return (
     <form action={action}>
       <OnboardingScreen
+        align="start"
         backHref="/onboarding/family"
+        skipHref="/onboarding/reminders"
         title="Let’s add your Medicine"
         subtitle="Please add the medicines you take regularly"
         footer={
@@ -42,15 +51,9 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
             <Button type="submit" name="intent" value="next" disabled={pending}>
               {pending ? "Saving…" : "Next"}
             </Button>
-            <Button type="submit" name="intent" value="another" variant="secondary" disabled={pending}>
+            <Button type="submit" name="intent" value="another" variant="ghost" disabled={pending}>
               Add Another Medicine
             </Button>
-            <Link
-              href="/onboarding/reminders"
-              className="text-body-medium text-action-primary flex h-[44px] items-center justify-center"
-            >
-              Skip
-            </Link>
           </>
         }
       >
@@ -60,32 +63,36 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
           </p>
         ) : null}
 
-        <TextInput label="Medicine Name" name="name" placeholder="Gliptagrate" />
+        <TextInput label="Medicine Name" size="lg" name="name" placeholder="Gliptagrate" />
 
-        <div className="flex flex-col gap-2">
-          <span className="text-body-secondary text-text-secondary">When do you take it?</span>
+        <div className="flex flex-col gap-2.5">
+          <FieldLabel>When do you take it?</FieldLabel>
           {times.map((t) => (
             <input key={t} type="hidden" name="times_of_day" value={t} />
           ))}
           <div className="flex flex-wrap gap-2">
             {TIMES.map((t) => (
-              <Chip key={t.value} selected={times.includes(t.value)} onClick={() => toggleTime(t.value)}>
+              <Chip
+                key={t.value}
+                size="compact"
+                selected={times.includes(t.value)}
+                onClick={() => toggleTime(t.value)}
+              >
                 {t.label}
               </Chip>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {/* Optional — never blocks saving. */}
-          <span className="text-body-secondary text-text-secondary">
-            What is the medicine for?
-          </span>
+          <FieldLabel>What is the medicine for?</FieldLabel>
           {!custom ? <input type="hidden" name="condition_tag" value={condition} /> : null}
           <div className="flex flex-wrap gap-2">
             {CONDITIONS.map((c) => (
               <Chip
                 key={c}
+                size="compact"
                 selected={!custom && condition === c}
                 onClick={() => {
                   setCustom(false);
@@ -95,18 +102,23 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
                 {c}
               </Chip>
             ))}
-            <Chip selected={custom} onClick={() => { setCustom(!custom); setCondition(""); }}>
+            <Chip
+              size="compact"
+              selected={custom}
+              onClick={() => {
+                setCustom(!custom);
+                setCondition("");
+              }}
+            >
               + Custom
             </Chip>
           </div>
           {custom ? (
-            <div className="mt-2">
-              <TextInput label="Condition" name="condition_tag" placeholder="Type a condition" />
-            </div>
+            <TextInput label="Condition" size="lg" name="condition_tag" placeholder="Type a condition" />
           ) : null}
         </div>
 
-        <TextInput label="Remarks (optional)" name="remarks" placeholder="Add Remarks" />
+        <TextInput label="Remarks (optional)" size="lg" name="remarks" placeholder="Add Remarks" />
 
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error">{error}</p>

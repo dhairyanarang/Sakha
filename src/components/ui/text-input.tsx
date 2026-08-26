@@ -8,28 +8,53 @@ import { cn } from "@/lib/cn";
  * a placeholder disappears the moment she starts typing, which is exactly when
  * she may need reminding what the field was for.
  *
- * Field is 54px tall, radius/md. Focus takes the border to action/primary at
- * 1.5px in Figma; we hold the border at 1px and add a 0.5px ring so focusing
- * doesn't nudge the layout.
+ * Two sizes. `default` matches the Component Library: label body-secondary in
+ * text/secondary, value body-primary (16px). `lg` matches what every real
+ * Onboarding screen uses: label 14px Medium and an 18px Medium value. The lg
+ * treatment has no counterpart in the Figma component library — flagged.
+ *
+ * Focus takes the border to action/primary at 1.5px in Figma; we hold it at
+ * 1px and add a 0.5px ring so focusing doesn't nudge the layout.
  */
+type InputSize = "default" | "lg";
+
 export interface TextInputProps
-  extends Omit<React.ComponentPropsWithoutRef<"input">, "id"> {
+  extends Omit<React.ComponentPropsWithoutRef<"input">, "id" | "size"> {
   label: string;
+  size?: InputSize;
 }
 
-export function TextInput({ label, className, disabled, ...props }: TextInputProps) {
+export function TextInput({
+  label,
+  size = "default",
+  className,
+  disabled,
+  ...props
+}: TextInputProps) {
   const id = useId();
+  const lg = size === "lg";
+
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>
-      <label htmlFor={id} className="text-body-secondary text-text-secondary">
+      <label
+        htmlFor={id}
+        className={cn(
+          lg
+            ? "text-[14px] leading-[1.2] font-medium text-[#636366]"
+            : "text-body-secondary text-text-secondary",
+        )}
+      >
         {label}
       </label>
       <input
         id={id}
         disabled={disabled}
         className={cn(
-          "text-body-primary h-[54px] w-full rounded-md border px-4 transition-shadow outline-none",
-          "placeholder:text-text-tertiary",
+          "w-full rounded-md border transition-shadow outline-none",
+          lg
+            ? "text-[18px] leading-[1.2] font-medium p-4"
+            : "text-body-primary h-[54px] px-4",
+          "placeholder:text-text-tertiary placeholder:font-normal",
           disabled
             ? "bg-surface-subtle border-border-default text-text-disabled"
             : [

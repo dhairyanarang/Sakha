@@ -1,17 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
+import { User } from "lucide-react";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, TextInput } from "@/components/ui";
 import { saveName } from "../actions";
 
-export function NameForm({ icon }: { icon: React.ReactNode }) {
+export function NameForm() {
   const [error, action, pending] = useActionState(saveName, null);
 
   return (
     <form action={action}>
       <OnboardingScreen
-        icon={icon}
+        icon={<User size={60} className="text-action-primary" aria-hidden />}
         title="What should we call you?"
         subtitle="This will be your name in Sakha."
         footer={
@@ -23,6 +24,7 @@ export function NameForm({ icon }: { icon: React.ReactNode }) {
         {/* Figma labels this "You Name" — corrected to "Your Name". */}
         <TextInput
           label="Your Name"
+          size="lg"
           name="name"
           placeholder="Asha Sharma"
           autoComplete="name"
@@ -30,9 +32,7 @@ export function NameForm({ icon }: { icon: React.ReactNode }) {
           required
         />
         {error ? (
-          <p role="alert" className="text-body-secondary text-feedback-error">
-            {error}
-          </p>
+          <p role="alert" className="text-body-secondary text-feedback-error">{error}</p>
         ) : null}
       </OnboardingScreen>
     </form>
