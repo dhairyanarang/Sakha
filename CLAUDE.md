@@ -127,13 +127,30 @@ Decided by the user on 2026-08-26:
 
 ## Known open issues
 
-- `surface/tinted-strong` is aliased to `brand/50` in Figma, making it identical
-  to `surface/tinted`. `docs/design-system.md` specifies `brand/100` (#E4E3FF).
-  Code follows Figma. **Unresolved — needs a design decision.**
+- **`surface/tinted-strong` is aliased to `brand/50`**, making it identical to
+  `surface/tinted` and therefore inert. `docs/design-system.md` specifies
+  `brand/100` (#E4E3FF). Code follows Figma. Fixing it would also give the
+  Secondary button a perceptible pressed fill, which it currently lacks.
+- **Toggle Off and Toggle Disabled are the same colour.** Both resolve to
+  `action/primary-disabled`, so an off switch is indistinguishable from one she
+  cannot operate. Needs a design decision, not a code workaround.
+- **The Family Member Card name is unbound text at 18px/Medium.** The only text
+  styles at that size and weight are `button-label` and `value-display`, and a
+  person's name is neither. Left unbound deliberately rather than forced into
+  the wrong style — it likely wants its own style.
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
 - PWA file upload on installed iOS has not been tested on a real device.
+
+### Resolved 2026-08-26
+
+Tertiary button gained a real pressed state (tinted fill, darkened border and
+label). Secondary's pressed label was restored to `action/primary-pressed` after
+a rebinding had made it identical to Default. Settings Row's chevron replaced an
+8px circle. Card padding 14 -> 16 and Family Member Card gap 10 -> 12, both back
+on the grid. All 18 Button labels and the Empty State message are now bound to
+real text styles.
 
 ## Commands
 

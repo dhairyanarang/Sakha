@@ -5,8 +5,7 @@ import { cn } from "@/lib/cn";
  * same container at different heights, so there is deliberately no separate
  * ListRow component.
  *
- * Auto-height, white, border/soft hairline, radius/xl. Figma's 14px padding is
- * off the 4px grid — reproduced as authored and flagged (see CLAUDE.md).
+ * Auto-height, white, border/soft hairline, radius/xl. Padding is space/4.
  */
 export interface CardProps extends React.ComponentPropsWithoutRef<"div"> {
   as?: "div" | "li";
@@ -17,7 +16,7 @@ export function Card({ as: Tag = "div", className, children, ...props }: CardPro
   return (
     <Comp
       className={cn(
-        "bg-surface-default border-border-soft flex w-full items-center gap-3 rounded-xl border-[0.5px] p-[14px]",
+        "bg-surface-default border-border-soft flex w-full items-center gap-3 rounded-xl border-[0.5px] p-4",
         className,
       )}
       {...props}

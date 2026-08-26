@@ -6,10 +6,7 @@ import { cn } from "@/lib/cn";
 /**
  * Settings Row — icon, label/subtitle column, trailing control.
  *
- * NOTE: Figma's Control=Chevron variant currently contains an 8px grey circle
- * rather than a chevron. The Design MD is explicit that this should be "a real
- * Toggle instance or a chevron", so we render a chevron. Flagged for a fix in
- * the Figma file — this is the one place we knowingly diverge.
+ * Control=Chevron uses a real lucide chevron-right, matching Figma.
  */
 export interface SettingsRowProps extends React.ComponentPropsWithoutRef<"div"> {
   icon: React.ReactNode;

@@ -7,8 +7,8 @@ import { cn } from "@/lib/cn";
  * Composes real Avatar and Tertiary/Compact Button instances rather than
  * restyled copies, matching how it's built in Figma.
  *
- * Figma's embedded button carries a radius override of 33, which is not on the
- * radius scale. We use the component's own radius/sm. Flagged.
+ * Figma's embedded button is overridden to radius/full; the compact Button's
+ * own radius is radius/sm. Kept as the component default here.
  */
 export interface FamilyMemberCardProps extends React.ComponentPropsWithoutRef<"div"> {
   name: string;
@@ -30,7 +30,7 @@ export function FamilyMemberCard({
   return (
     <div
       className={cn(
-        "bg-surface-default border-border-soft flex w-[179px] flex-col items-center gap-2.5 rounded-xl border-[0.5px] px-3 py-4",
+        "bg-surface-default border-border-soft flex w-[179px] flex-col items-center gap-3 rounded-xl border-[0.5px] px-3 py-4",
         className,
       )}
       {...props}

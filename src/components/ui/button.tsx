@@ -32,21 +32,23 @@ const STYLE: Record<
     disabled: "bg-action-primary-disabled text-text-on-brand",
   },
   secondary: {
-    // Pressed darkens the LABEL to brand/700, not the fill. No semantic token
-    // exists for that value — see the open issues in CLAUDE.md.
+    // Pressed darkens the label only, so the cue is quiet. If
+    // surface/tinted-strong is ever fixed to brand/100, darkening the fill
+    // here would give a far more perceptible signal.
     base: "bg-surface-tinted text-action-primary",
-    active: "active:text-[var(--brand-700)]",
-    pressed: "text-[var(--brand-700)]",
-    // Figma uses the neutral/100 primitive; surface/subtle aliases it.
+    active: "active:text-action-primary-pressed",
+    pressed: "text-action-primary-pressed",
     disabled: "bg-surface-subtle text-text-disabled",
   },
   tertiary: {
+    // Pressed picks up a tinted fill and darkens border and label together.
+    // An outline button has little surface to work with, so the fill carries
+    // the cue — area is far easier to perceive than a 1px border shift.
     base: "bg-surface-default border border-action-primary text-action-primary",
-    // NOTE: Figma's Tertiary/Pressed is visually identical to Default — neither
-    // the fill nor the label darkens. Reproduced faithfully, but flagged: this
-    // button currently gives no tap feedback at all.
-    active: "",
-    pressed: "",
+    active:
+      "active:bg-surface-tinted active:border-action-primary-pressed active:text-action-primary-pressed",
+    pressed:
+      "bg-surface-tinted border-action-primary-pressed text-action-primary-pressed",
     disabled: "border-border-default text-text-disabled",
   },
 };
