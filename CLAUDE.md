@@ -127,17 +127,6 @@ Decided by the user on 2026-08-26:
 
 ## Known open issues
 
-- **`surface/tinted-strong` is aliased to `brand/50`**, making it identical to
-  `surface/tinted` and therefore inert. `docs/design-system.md` specifies
-  `brand/100` (#E4E3FF). Code follows Figma. Fixing it would also give the
-  Secondary button a perceptible pressed fill, which it currently lacks.
-- **Toggle Off and Toggle Disabled are the same colour.** Both resolve to
-  `action/primary-disabled`, so an off switch is indistinguishable from one she
-  cannot operate. Needs a design decision, not a code workaround.
-- **The Family Member Card name is unbound text at 18px/Medium.** The only text
-  styles at that size and weight are `button-label` and `value-display`, and a
-  person's name is neither. Left unbound deliberately rather than forced into
-  the wrong style — it likely wants its own style.
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
@@ -151,6 +140,14 @@ a rebinding had made it identical to Default. Settings Row's chevron replaced an
 8px circle. Card padding 14 -> 16 and Family Member Card gap 10 -> 12, both back
 on the grid. All 18 Button labels and the Empty State message are now bound to
 real text styles.
+
+`surface/tinted-strong` was re-aliased brand/50 -> brand/100 and now actually
+differs from `surface/tinted`; Secondary/Pressed uses it so the fill darkens
+rather than relying on a label shift alone. Two new semantic tokens,
+`control/track-off` (neutral/300) and `control/track-disabled` (neutral/200),
+separate an off toggle from a disabled one — they previously resolved to the
+same hex. A new `text/name-label` style (18/Medium) carries the Family Member
+Card name, which had no correct style to bind to. 83 variables, 14 text styles.
 
 ## Commands
 

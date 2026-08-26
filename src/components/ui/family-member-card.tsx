@@ -37,7 +37,7 @@ export function FamilyMemberCard({
     >
       <Avatar src={photoUrl} name={name} />
       <div className="flex w-full flex-col items-center gap-1">
-        <span className="text-chip-label text-text-primary w-full truncate text-center">
+        <span className="text-name-label text-text-primary w-full truncate text-center">
           {name}
         </span>
         <span className="text-body-secondary text-text-secondary">{relation}</span>

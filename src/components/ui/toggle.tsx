@@ -5,9 +5,8 @@ import { cn } from "@/lib/cn";
 /**
  * Toggle — 54x28 track, 24x24 white thumb, 2px inset.
  *
- * NOTE: Off and Disabled both resolve to action/primary-disabled in Figma, so
- * the two states are currently indistinguishable. Reproduced as authored and
- * flagged in CLAUDE.md — it needs a design decision, not a code workaround.
+ * Off and Disabled use separate track tokens one step apart on the neutral
+ * scale, so a switch she can turn on never looks like one she can't touch.
  */
 export interface ToggleProps
   extends Omit<React.ComponentPropsWithoutRef<"button">, "onChange"> {
@@ -32,7 +31,11 @@ export function Toggle({
       onClick={() => onCheckedChange?.(!checked)}
       className={cn(
         "inline-flex h-[28px] w-[54px] shrink-0 items-center rounded-full p-[2px] transition-colors",
-        checked && !disabled ? "bg-action-primary" : "bg-action-primary-disabled",
+        disabled
+          ? "bg-control-track-disabled"
+          : checked
+            ? "bg-action-primary"
+            : "bg-control-track-off",
         checked ? "justify-end" : "justify-start",
         className,
       )}

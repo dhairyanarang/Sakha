@@ -32,12 +32,11 @@ const STYLE: Record<
     disabled: "bg-action-primary-disabled text-text-on-brand",
   },
   secondary: {
-    // Pressed darkens the label only, so the cue is quiet. If
-    // surface/tinted-strong is ever fixed to brand/100, darkening the fill
-    // here would give a far more perceptible signal.
+    // Fill AND label darken together. A label-only shift was too quiet to
+    // register at arm's length.
     base: "bg-surface-tinted text-action-primary",
-    active: "active:text-action-primary-pressed",
-    pressed: "text-action-primary-pressed",
+    active: "active:bg-surface-tinted-strong active:text-action-primary-pressed",
+    pressed: "bg-surface-tinted-strong text-action-primary-pressed",
     disabled: "bg-surface-subtle text-text-disabled",
   },
   tertiary: {

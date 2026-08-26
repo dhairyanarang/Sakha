@@ -23,6 +23,7 @@ const twMerge = extendTailwindMerge({
             "eyebrow-label",
             "nav-label",
             "chip-label",
+            "name-label",
             "button-label",
             "value-display",
             "value-display-large",
