@@ -1,0 +1,226 @@
+/* ---------------------------------------------------------------------------
+ * Sakha design tokens
+ *
+ * GENERATED FROM FIGMA — do not hand-edit values.
+ * Source file : "Social Initiative Project" (uwL7Ym8EDtxOhyMuQQOicm)
+ * Collections : Primitives (35) · Semantic (32) · Spacing (7) · Radius (7)
+ *
+ * To refresh: read the variable collections over the Figma Dev Mode MCP
+ * connection and regenerate this file. Never hand-copy hex values from the
+ * Design MD — Figma is the source of truth.
+ *
+ * Tier discipline (from the Design MD):
+ *   Primitives live in :root as plain custom properties and deliberately
+ *   generate NO Tailwind utilities. Screens and components must only ever
+ *   reference the semantic tokens in @theme below.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* -- Primitives · neutral ------------------------------------------------ */
+  --neutral-0:   #FFFFFF;
+  --neutral-50:  #FAFAFA;
+  --neutral-100: #F5F5F5;
+  --neutral-200: #E7E7E7;
+  --neutral-300: #D4D4D4;
+  --neutral-400: #A8A8A8;
+  --neutral-500: #808080;
+  --neutral-600: #595959;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #000000; /* primary text is pure black, deliberately */
+
+  /* -- Primitives · brand (the only brand scale; there is no second) ------- */
+  --brand-25:  #F8F8FF;
+  --brand-50:  #F1F1FF;
+  --brand-100: #E4E3FF;
+  --brand-200: #C9C7FF;
+  --brand-300: #AAA8FF;
+  --brand-400: #807DFF;
+  --brand-500: #5551FF; /* the actual brand color */
+  --brand-600: #4845D9;
+  --brand-700: #3C39B3;
+  --brand-800: #2F2D8C;
+  --brand-900: #222066;
+
+  /* -- Primitives · support ------------------------------------------------ */
+  --red-100:    #FAECEC;
+  --red-500:    #CF3E3E;
+  --red-700:    #9B2F2F;
+  --green-100:  #F3F8F3;
+  --green-500:  #6AA969;
+  --green-700:  #1B631A;
+  --orange-500: #F88F11;
+
+  /* -- Primitives · alpha --------------------------------------------------
+   * Real transparency is reserved for form-control borders on guaranteed
+   * static backgrounds, and for genuine overlay/scrim elements. Never use
+   * opacity to lighten TEXT — reach for a lighter solid neutral instead. */
+  --alpha-black-12: rgb(0 0 0 / 0.12);
+  --alpha-black-16: rgb(0 0 0 / 0.16);
+  --alpha-black-24: rgb(0 0 0 / 0.24);
+  --alpha-black-40: rgb(0 0 0 / 0.40);
+  --alpha-black-60: rgb(0 0 0 / 0.60);
+  --alpha-green-60: rgb(106 169 105 / 0.60);
+}
+
+@theme {
+  /* ======================================================================
+   * SEMANTIC COLOR — the only colors screens and components may reference
+   * ==================================================================== */
+
+  /* -- Text ---------------------------------------------------------------- */
+  --color-text-primary:   var(--neutral-900);
+  --color-text-secondary: var(--neutral-600);
+  --color-text-tertiary:  var(--neutral-500);
+  --color-text-disabled:  var(--neutral-400);
+  --color-text-on-brand:  var(--neutral-0);
+
+  /* -- Surface ------------------------------------------------------------- */
+  --color-surface-default:      var(--neutral-0);
+  --color-surface-page:         var(--brand-25);  /* app background != card */
+  --color-surface-subtle:       var(--neutral-100);
+  --color-surface-tinted:       var(--brand-50);
+  /* NOTE: Figma currently aliases tinted-strong -> brand/50, making it
+   * identical to surface/tinted. The Design MD specifies brand/100 (#E4E3FF).
+   * Following Figma as source of truth. Flagged for resolution. */
+  --color-surface-tinted-strong: var(--brand-50);
+
+  /* -- Border -------------------------------------------------------------- */
+  --color-border-default: var(--neutral-200);
+  --color-border-soft:    var(--alpha-black-16); /* Card / List Row stroke */
+  --color-border-subtle:  var(--alpha-black-24); /* form controls, Radio ring */
+  --color-border-faint:   var(--alpha-black-12); /* Bottom Nav top divider */
+
+  /* -- Action -------------------------------------------------------------- */
+  --color-action-primary:          var(--brand-500);
+  --color-action-primary-pressed:  var(--brand-600);
+  --color-action-primary-disabled: var(--neutral-300);
+
+  /* -- Feedback ------------------------------------------------------------
+   * `error` and `mood-not-good` share a value TODAY but are separate tokens
+   * on purpose. Mood is a soft personal signal, never an alarm. Never
+   * substitute one for the other. */
+  --color-feedback-error:           var(--red-500);
+  --color-feedback-error-surface:   var(--red-100);
+  --color-feedback-mood-not-good:   var(--red-500);
+  --color-feedback-success:         var(--green-500);
+  --color-feedback-success-surface: var(--green-100);
+  --color-feedback-success-text:    var(--green-700);
+  /* `info` reuses the brand hue and is NOT interactive — a known trade-off. */
+  --color-feedback-info:            var(--brand-500);
+  --color-feedback-info-surface:    var(--brand-50);
+
+  /* -- Icon ---------------------------------------------------------------- */
+  --color-icon-stroke:        var(--alpha-black-60); /* inactive nav icon */
+  --color-icon-stroke-subtle: var(--alpha-black-40);
+
+  /* -- Chart --------------------------------------------------------------- */
+  --color-chart-systolic:     var(--brand-500);
+  --color-chart-diastolic:    var(--orange-500);
+  --color-chart-range-line:   var(--alpha-green-60);
+  --color-chart-gridline:     var(--alpha-black-12);
+  --color-chart-gridline-alt: var(--alpha-black-24);
+
+  /* ======================================================================
+   * SPACING — 4px grid, no other unit anywhere.
+   * Expressed in rem so spacing scales if she raises her browser font size.
+   * 1rem = 16px at default. NOTE: `7` is 44px (not Tailwind's stock 28px),
+   * because space/7 in Figma is 44.
+   * ==================================================================== */
+  --spacing-1: 0.25rem;  /*  4px */
+  --spacing-2: 0.5rem;   /*  8px */
+  --spacing-3: 0.75rem;  /* 12px */
+  --spacing-4: 1rem;     /* 16px — the standard horizontal screen margin */
+  --spacing-5: 1.25rem;  /* 20px */
+  --spacing-6: 1.5rem;   /* 24px */
+  --spacing-7: 2.75rem;  /* 44px */
+
+  /* ======================================================================
+   * RADIUS
+   * ==================================================================== */
+  --radius-xs:   5px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-2xl:  32px;
+  --radius-full: 999px;
+}
+
+/* ===========================================================================
+ * TYPOGRAPHY — the 13 real Figma text styles, one Tailwind utility each.
+ *
+ * Apply these directly (`text-body-primary`, `text-button-label`, …). Do NOT
+ * recreate ad-hoc font-size/weight combinations — if a screen seems to need
+ * one, that's a design question, not an implementation one.
+ *
+ * Inter is the only typeface. An earlier draft specified Noto Sans; that was
+ * wrong. If Devanagari rendering blocks the Hindi build, that's an explicit
+ * decision to revisit, not to assume silently.
+ *
+ * Line height: every style is lineHeight:AUTO in Figma (~1.21x), which has no
+ * CSS equivalent. Single-line styles use 1.2 (visually identical). Styles that
+ * actually wrap use 1.5 for readability — our reader is presbyopic and WCAG
+ * 1.4.12 puts body copy at 1.5. Sizes and weights are exactly as authored.
+ * ========================================================================= */
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* -- Titles and headings ------------------------------------------------- */
+  --text-screen-title:                20px;   /* Screen/modal titles, Home greeting */
+  --text-screen-title--line-height:   1.2;
+  --text-screen-title--font-weight:   500;
+
+  --text-section-label:               12px;   /* Small section headers, active nav label */
+  --text-section-label--line-height:  1.2;
+  --text-section-label--font-weight:  600;
+
+  --text-subsection-heading:              14px; /* e.g. "Measurements" */
+  --text-subsection-heading--line-height: 1.4;
+  --text-subsection-heading--font-weight: 500;
+
+  /* -- Body (these wrap — 1.5 line height) --------------------------------- */
+  --text-body-primary:                16px;   /* Primary row/card labels */
+  --text-body-primary--line-height:   1.5;
+  --text-body-primary--font-weight:   400;
+
+  --text-body-medium:                 16px;   /* Document titles, settings row labels */
+  --text-body-medium--line-height:    1.5;
+  --text-body-medium--font-weight:    500;
+
+  --text-body-secondary:              14px;   /* Supporting text, row subtitles */
+  --text-body-secondary--line-height: 1.5;
+  --text-body-secondary--font-weight: 400;
+
+  /* -- Labels and metadata ------------------------------------------------- */
+  --text-metadata:                    14px;   /* Timestamps, "3 days ago" */
+  --text-metadata--line-height:       1.4;
+  --text-metadata--font-weight:       400;
+
+  --text-eyebrow-label:               12px;
+  --text-eyebrow-label--line-height:  1.2;
+  --text-eyebrow-label--font-weight:  500;
+
+  --text-nav-label:                   12px;   /* Inactive bottom nav labels */
+  --text-nav-label--line-height:      1.2;
+  --text-nav-label--font-weight:      400;
+
+  /* -- Controls ------------------------------------------------------------ */
+  --text-chip-label:                  18px;
+  --text-chip-label--line-height:     1.2;
+  --text-chip-label--font-weight:     400;
+
+  --text-button-label:                18px;
+  --text-button-label--line-height:   1.2;
+  --text-button-label--font-weight:   500;
+
+  /* -- Numeric displays ---------------------------------------------------- */
+  --text-value-display:                    18px; /* Compact values in lists */
+  --text-value-display--line-height:       1.2;
+  --text-value-display--font-weight:       500;
+
+  --text-value-display-large:              24px; /* Hero reading on detail screens */
+  --text-value-display-large--line-height: 1.2;
+  --text-value-display-large--font-weight: 500;
+}
