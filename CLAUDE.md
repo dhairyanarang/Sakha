@@ -149,6 +149,26 @@ separate an off toggle from a disabled one — they previously resolved to the
 same hex. A new `text/name-label` style (18/Medium) carries the Family Member
 Card name, which had no correct style to bind to. 83 variables, 14 text styles.
 
+## Supabase
+
+Project `yfuihfgvheavodrzxiwh`, region `ap-south-1` (Mumbai — she is in Delhi).
+
+- **Never create a module-level Supabase client.** `src/lib/supabase/server.ts`
+  builds one per request; hoisting it leaks one user's session into another's.
+- **In `proxy.ts`, use `getUser()`, never `getSession()`.** `getSession()` only
+  reads the cookie and will return a forged one; `getUser()` revalidates.
+- Access control is one predicate: `private.is_account_member(account_id)`.
+  The helpers live in the `private` schema precisely so PostgREST does not
+  expose them as REST endpoints — do not move them back into `public`.
+- Creating an account goes through `create_account()`, which inserts the
+  account and its owner membership together. A bare INSERT policy on
+  `account_members` would let anyone claim ownership of any account.
+- Storage upsert needs INSERT **and** SELECT **and** UPDATE policies; with
+  only INSERT, replacing a document fails silently.
+- `service_role` / secret keys must never appear in a `NEXT_PUBLIC_` variable.
+- The `reminders` table is deliberately not built yet — its shape depends on
+  recurrence decisions that belong to Phase 7.
+
 ## Commands
 
 ```bash
@@ -156,4 +176,6 @@ pnpm dev      # local dev server
 pnpm build    # production build — must pass before any push
 pnpm lint
 node scripts/generate-icons.mjs   # regenerate PWA icons from placeholder mark
+pnpm db:types                     # regenerate DB types (needs `supabase login` once)
+vercel env pull .env.local --yes  # refresh local env from Vercel
 ```
