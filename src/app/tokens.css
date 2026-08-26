@@ -3,7 +3,7 @@
  *
  * GENERATED FROM FIGMA — do not hand-edit values.
  * Source file : "Social Initiative Project" (uwL7Ym8EDtxOhyMuQQOicm)
- * Collections : Primitives (35) · Semantic (32) · Spacing (7) · Radius (7)
+ * Collections : Primitives (35) · Semantic (34) · Spacing (7) · Radius (7)
  *
  * To refresh: read the variable collections over the Figma Dev Mode MCP
  * connection and regenerate this file. Never hand-copy hex values from the
@@ -80,10 +80,7 @@
   --color-surface-page:         var(--brand-25);  /* app background != card */
   --color-surface-subtle:       var(--neutral-100);
   --color-surface-tinted:       var(--brand-50);
-  /* NOTE: Figma currently aliases tinted-strong -> brand/50, making it
-   * identical to surface/tinted. The Design MD specifies brand/100 (#E4E3FF).
-   * Following Figma as source of truth. Flagged for resolution. */
-  --color-surface-tinted-strong: var(--brand-50);
+  --color-surface-tinted-strong: var(--brand-100);
 
   /* -- Border -------------------------------------------------------------- */
   --color-border-default: var(--neutral-200);
@@ -109,6 +106,13 @@
   /* `info` reuses the brand hue and is NOT interactive — a known trade-off. */
   --color-feedback-info:            var(--brand-500);
   --color-feedback-info-surface:    var(--brand-50);
+
+  /* -- Control ------------------------------------------------------------
+   * The toggle track. Off must stay visibly stronger than disabled, so the
+   * two deliberately sit one step apart on the neutral scale rather than
+   * both landing on action/primary-disabled. */
+  --color-control-track-off:      var(--neutral-300);
+  --color-control-track-disabled: var(--neutral-200);
 
   /* -- Icon ---------------------------------------------------------------- */
   --color-icon-stroke:        var(--alpha-black-60); /* inactive nav icon */
@@ -214,6 +218,10 @@
   --text-button-label:                18px;
   --text-button-label--line-height:   1.2;
   --text-button-label--font-weight:   500;
+
+  --text-name-label:                  18px;   /* A person's name on a card */
+  --text-name-label--line-height:     1.2;
+  --text-name-label--font-weight:     500;
 
   /* -- Numeric displays ---------------------------------------------------- */
   --text-value-display:                    18px; /* Compact values in lists */

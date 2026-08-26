@@ -127,13 +127,27 @@ Decided by the user on 2026-08-26:
 
 ## Known open issues
 
-- `surface/tinted-strong` is aliased to `brand/50` in Figma, making it identical
-  to `surface/tinted`. `docs/design-system.md` specifies `brand/100` (#E4E3FF).
-  Code follows Figma. **Unresolved — needs a design decision.**
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
 - PWA file upload on installed iOS has not been tested on a real device.
+
+### Resolved 2026-08-26
+
+Tertiary button gained a real pressed state (tinted fill, darkened border and
+label). Secondary's pressed label was restored to `action/primary-pressed` after
+a rebinding had made it identical to Default. Settings Row's chevron replaced an
+8px circle. Card padding 14 -> 16 and Family Member Card gap 10 -> 12, both back
+on the grid. All 18 Button labels and the Empty State message are now bound to
+real text styles.
+
+`surface/tinted-strong` was re-aliased brand/50 -> brand/100 and now actually
+differs from `surface/tinted`; Secondary/Pressed uses it so the fill darkens
+rather than relying on a label shift alone. Two new semantic tokens,
+`control/track-off` (neutral/300) and `control/track-disabled` (neutral/200),
+separate an off toggle from a disabled one — they previously resolved to the
+same hex. A new `text/name-label` style (18/Medium) carries the Family Member
+Card name, which had no correct style to bind to. 83 variables, 14 text styles.
 
 ## Commands
 
