@@ -35,10 +35,10 @@ export default async function DocumentPage({
   const when = doc.docDate ?? doc.createdAt;
 
   return (
-    <div className="bg-surface-page flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div data-surface="page" className="bg-surface-page flex flex-1 flex-col">
       <ScreenHeader backHref="/health" title={doc.title} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-6 p-4">
         <section className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] p-3">
           <div className="flex items-center gap-3">
             <IconCircle tone="brand">
@@ -89,7 +89,7 @@ export default async function DocumentPage({
 
       {doc.signedUrl ? (
         <footer
-          className="bg-surface-page shrink-0 px-4 pt-4"
+          className="bg-surface-page sticky bottom-0 z-30 shrink-0 px-4 pt-4"
           style={{ paddingBottom: "var(--spacing-7)" }}
         >
           <a

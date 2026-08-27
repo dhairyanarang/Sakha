@@ -16,7 +16,7 @@ export default async function MedicinesPage() {
   const groups = await getMedicines(account.accountId);
 
   return (
-    <div className="bg-surface-page flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div data-surface="page" className="bg-surface-page flex flex-1 flex-col">
       <MedicinesHeader />
       <MedicinesList groups={groups} />
     </div>

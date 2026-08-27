@@ -61,7 +61,7 @@ export function MeasurementDetail({
 
   return (
     <>
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-6 p-4">
         <section className="bg-surface-default border-border-soft flex shrink-0 flex-col gap-4 rounded-xl border-[0.5px] p-3">
           <div className="flex items-start gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -173,13 +173,13 @@ export function MeasurementDetail({
 
       {/* The list fades under the pinned button rather than stopping dead
           against it, as drawn. */}
-      <div className="relative shrink-0">
+      <div className="sticky bottom-0 z-30 shrink-0">
         <div
           aria-hidden
           className="from-surface-page/0 to-surface-page pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b"
         />
         <footer
-          className="bg-surface-page px-4 pt-2"
+          className="bg-surface-page relative px-4 pt-2"
           style={{ paddingBottom: "var(--spacing-7)" }}
         >
           <button

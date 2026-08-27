@@ -16,7 +16,7 @@ export default async function WelcomePage() {
   if (data.user) redirect("/");
 
   return (
-    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="bg-surface-tinted flex flex-1 flex-col">
       <header
         className="flex shrink-0 flex-col items-center px-4"
         style={{ paddingTop: "31px" }}
@@ -53,7 +53,7 @@ export default async function WelcomePage() {
       </div>
 
       <footer
-        className="shrink-0 px-4"
+        className="bg-surface-tinted sticky bottom-0 z-30 shrink-0 px-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         <Link

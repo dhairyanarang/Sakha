@@ -10,21 +10,30 @@ html {
 }
 
 html {
-  /* The canvas behind everything, including the area under the status bar in
-     a standalone PWA and the overscroll area. Painting it here stops a white
-     band appearing above the app. */
+  /* The canvas behind everything: under the status bar in a standalone PWA,
+     and the strip revealed when the page is pulled past either edge. Painting
+     it here stops a white band appearing above the app. */
   background-color: var(--color-surface-tinted);
-  height: 100%;
+}
+
+/* Screens that sit on surface/page rather than surface/tinted say so, and the
+   canvas follows. Without this, pulling past the top of Health would reveal a
+   band in the wrong colour — invisible until the document could overscroll,
+   which it now can. */
+html:has([data-surface="page"]) {
+  background-color: var(--color-surface-page);
 }
 
 body {
-  background-color: var(--color-surface-tinted);
-  /* App-shell layout: the document itself never scrolls, so nothing can drag
-     the footers or the bottom nav around. Only the content area between them
-     scrolls. The shell is positioned fixed (see layout.tsx) rather than sized
-     with height:100%, which on iOS does not reliably cover the safe areas. */
-  height: 100%;
-  overflow: hidden;
+  /* The DOCUMENT is the scroller. iOS only rubber-bands the document — an
+     inner overflow container bounces only once its content actually
+     overflows, so short screens felt dead under the old fixed shell. Nothing
+     here manufactures scroll height; the page is simply its natural length and
+     the platform supplies the overscroll.
+
+     Footers and the bottom nav stay put with position:sticky instead, which
+     keeps its space in the flow, so nothing ends up hidden underneath. */
+  min-height: 100dvh;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */

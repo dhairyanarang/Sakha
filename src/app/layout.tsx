@@ -47,14 +47,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} antialiased`}>
       {/* Sakha is a mobile-only design — one 402px artboard, no tablet or
           desktop layout has ever been drawn. Rather than inventing breakpoints
           that don't exist, the app is capped at a phone-width column and
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
-      <body className="bg-surface-tinted flex flex-col">
-        <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
+      <body className="flex flex-col">
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col">
           {children}
         </div>
         {/* Visual feedback toolbar. Dev only — the check compiles away in a

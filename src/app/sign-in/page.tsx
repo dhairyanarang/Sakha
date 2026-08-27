@@ -16,7 +16,7 @@ export default async function SignInPage({
   const { error } = await searchParams;
 
   return (
-    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="bg-surface-tinted flex flex-1 flex-col">
       <header
         className="flex shrink-0 flex-col items-center gap-6 px-4"
         style={{ paddingTop: "46px" }}
@@ -52,7 +52,7 @@ export default async function SignInPage({
       </div>
 
       <footer
-        className="flex shrink-0 flex-col gap-6 px-4"
+        className="bg-surface-tinted sticky bottom-0 z-30 flex shrink-0 flex-col gap-6 px-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         {error ? (

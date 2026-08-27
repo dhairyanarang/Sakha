@@ -35,7 +35,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
 
   return (
     <>
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-6 p-4">
         {groups.length === 0 ? (
           <div className="flex flex-1 flex-col justify-center">
             <EmptyState
@@ -67,7 +67,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
       </main>
 
       <footer
-        className="bg-surface-page shrink-0 px-4 pt-4"
+        className="bg-surface-page sticky bottom-0 z-30 shrink-0 px-4 pt-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         <button

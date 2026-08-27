@@ -82,14 +82,33 @@ export function Sheet({
     vv?.addEventListener("resize", trackViewport);
     vv?.addEventListener("scroll", trackViewport);
 
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    /**
+     * Lock the page behind the sheet without losing her place.
+     *
+     * The document is the scroller now, and `overflow: hidden` on a scrolled
+     * body makes iOS snap to the top — so closing the sheet would dump her
+     * back at the start of a long list. Pinning the body at a negative offset
+     * holds the page exactly where it was, and the scroll position is restored
+     * on the way out.
+     */
+    const scrollY = window.scrollY;
+    const previous = {
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
 
     return () => {
       document.removeEventListener("keydown", onKey);
       vv?.removeEventListener("resize", trackViewport);
       vv?.removeEventListener("scroll", trackViewport);
-      document.body.style.overflow = previous;
+      document.body.style.position = previous.position;
+      document.body.style.top = previous.top;
+      document.body.style.width = previous.width;
+      window.scrollTo(0, scrollY);
     };
   }, [open, requestClose]);
 
@@ -149,7 +168,7 @@ export function Sheet({
             }
           }}
           className={
-            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto rounded-t-[38px] pb-2 " +
+            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[38px] pb-2 " +
             (closing
               ? "animate-[sheet-fall_240ms_cubic-bezier(0.32,0.72,0,1)_forwards]"
               : "animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]")
