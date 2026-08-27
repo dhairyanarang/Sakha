@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pill } from "lucide-react";
-import { EmptyState, FixedBar, IconCircle, Toast } from "@/components/ui";
+import { EmptyState, FixedBar, Toast } from "@/components/ui";
 import { MedicineRow } from "./medicine-row";
 import { MedicineSheet } from "./medicine-sheet";
 import type { MedicineDetail, MedicineGroup } from "@/lib/health-data";
@@ -43,11 +42,16 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
         {groups.length === 0 ? (
           <div className="flex flex-1 flex-col justify-center">
             <EmptyState
-              message="You have no medicines yet."
+              tone="brand"
+              message="You have no medicines."
               illustration={
-                <IconCircle tone="brand" className="size-[88px]">
-                  <Pill size={36} className="text-action-primary" aria-hidden />
-                </IconCircle>
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src="/empty/medicines.webp"
+                  alt=""
+                  aria-hidden
+                  className="h-[150px] w-[214px] object-contain"
+                />
               }
             />
           </div>

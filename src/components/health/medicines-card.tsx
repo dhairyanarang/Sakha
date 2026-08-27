@@ -40,7 +40,7 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
       <div className="relative z-10 flex flex-col gap-2">
         {count === 0 ? (
           <p className="text-[14px] leading-[1.4] text-[#666666]">
-            You have no medicines yet.
+            You have no medicines
           </p>
         ) : (
           <>

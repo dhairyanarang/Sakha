@@ -1,32 +1,45 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Empty State — illustration plus a message, vertically centred, 16px gap.
+ * Empty State — the screen's own artwork above a short line, centred.
  *
- * The 214x150 tinted block is the library placeholder. Each real screen brings
- * its own authored artwork; that artwork is not a token and should be passed in.
+ * The artwork is authored per screen and passed in; it is not a token. The
+ * fallback block only exists so the kitchen sink has something to show.
+ *
+ * FLAGGED: the empty-state frames disagree on the message colour — brand on
+ * the Medicines screen, black on Documents, Invitations and Home. `tone` keeps
+ * each frame honest rather than picking a winner, but it is worth settling.
  */
 export interface EmptyStateProps extends React.ComponentPropsWithoutRef<"div"> {
   message: string;
   illustration?: React.ReactNode;
+  tone?: "default" | "brand";
 }
 
 export function EmptyState({
   message,
   illustration,
+  tone = "default",
   className,
   children,
   ...props
 }: EmptyStateProps) {
   return (
     <div
-      className={cn("flex w-full flex-col items-center justify-center gap-4", className)}
+      className={cn("flex w-full flex-col items-center justify-center gap-2.5 py-4", className)}
       {...props}
     >
       {illustration ?? (
         <div className="bg-surface-tinted h-[150px] w-[214px] rounded-md" />
       )}
-      <p className="text-body-primary text-text-primary text-center">{message}</p>
+      <p
+        className={cn(
+          "text-center text-[16px] leading-[1.4] font-medium",
+          tone === "brand" ? "text-action-primary" : "text-text-primary",
+        )}
+      >
+        {message}
+      </p>
       {children}
     </div>
   );

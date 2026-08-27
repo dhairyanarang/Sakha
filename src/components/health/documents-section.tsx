@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Toast } from "@/components/ui";
+import { EmptyState, Toast } from "@/components/ui";
 import { DocumentRow } from "./document-row";
 import { AddTile } from "./add-tile";
 import { AddDocumentSheet } from "./add-document-sheet";
@@ -33,9 +33,18 @@ export function DocumentsSection({ documents }: { documents: DocumentSummary[] }
       </h2>
 
       {documents.length === 0 ? (
-        <p className="text-[14px] leading-[1.4] text-[#666666]">
-          You have no uploaded documents.
-        </p>
+        <EmptyState
+          message="You have no uploaded documents."
+          illustration={
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/empty/documents.webp"
+              alt=""
+              aria-hidden
+              className="h-[104px] w-[148px] object-contain"
+            />
+          }
+        />
       ) : (
         documents.map((d) => (
           <DocumentRow

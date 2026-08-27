@@ -10,9 +10,10 @@ import { IconCircle } from "@/components/ui";
  * 18px for the unit. That is authored content, not a missing text style; no
  * single style can cover a mixed-size run (see the Design MD).
  *
- * With no reading yet the row still renders. It says so plainly and keeps its
- * place in the card rather than disappearing, because a missing row reads as
- * something being broken rather than simply not recorded.
+ * With no reading yet the row still renders and keeps its place in the card —
+ * a missing row reads as something broken rather than something not yet done.
+ * It drops the value line entirely and says so on the date line instead, as
+ * drawn, rather than putting a placeholder where a number belongs.
  *
  * Prefetched in full. These detail routes are dynamic, and for a dynamic route
  * the default prefetch only reaches the nearest loading boundary — there are
@@ -51,19 +52,15 @@ export function MeasurementRow({
             <span className="text-[22px]">{value}</span>{" "}
             <span className="text-[18px]">{unit}</span>
           </p>
-        ) : (
-          <p className="text-text-tertiary text-[18px] leading-[1.2] font-medium">
-            No readings yet
-          </p>
-        )}
-
-        {when ? (
-          <span className="flex items-center gap-1">
-            <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
-            {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
-            <span className="text-[14px] leading-[1.2] text-[#999999]">{when}</span>
-          </span>
         ) : null}
+
+        <span className="flex items-center gap-1">
+          <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
+          {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
+          <span className="text-[14px] leading-[1.2] text-[#999999]">
+            {when ?? "Not Recorded yet"}
+          </span>
+        </span>
       </div>
 
       <ChevronRight size={20} className="text-text-tertiary shrink-0" aria-hidden />

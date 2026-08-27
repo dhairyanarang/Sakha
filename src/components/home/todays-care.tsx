@@ -6,7 +6,7 @@ import { CareRow } from "./care-row";
 import { RowAction } from "./row-action";
 import { RecordMeasurementSheet } from "./record-measurement-sheet";
 import { LogWalkSheet } from "./log-walk-sheet";
-import { Toast } from "@/components/ui";
+import { EmptyState, Toast } from "@/components/ui";
 import { confirmDoses } from "@/app/actions/home";
 import { currentSlot, SLOT_LABEL, SLOT_TIME, slotHasStarted } from "@/lib/today";
 import type { HomeData } from "@/lib/home-data";
@@ -46,14 +46,19 @@ export function TodaysCare({ data }: { data: HomeData }) {
         </h2>
 
         {data.doses.length === 0 ? (
-          /* Home's empty state is deliberately calmer than the others: its job
-             is today's status, not a first-time setup nudge. */
-          <div className="bg-surface-default border-border-soft shrink-0 rounded-xl border-[0.5px] px-3 py-4">
-            <p className="text-body-medium text-text-primary">You have no medicine recorded</p>
-            <p className="text-body-secondary text-text-secondary mt-1">
-              You can add your medicines from Health.
-            </p>
-          </div>
+          <EmptyState
+            className="shrink-0"
+            message="You have no medicines."
+            illustration={
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src="/empty/medicines-home.webp"
+                alt=""
+                aria-hidden
+                className="h-[120px] w-[171px] object-contain"
+              />
+            }
+          />
         ) : null}
 
         {data.doses.map((group) => {
@@ -122,7 +127,9 @@ export function TodaysCare({ data }: { data: HomeData }) {
         }
       >
         <p className="text-metadata text-text-tertiary">
-          {data.lastSugar ? `Last: ${data.lastSugar.value} ${data.lastSugar.unit}` : "No readings yet"}
+          {data.lastSugar
+            ? `Last: ${data.lastSugar.value} ${data.lastSugar.unit}`
+            : "Not Recorded yet"}
         </p>
       </CareRow>
 
@@ -139,7 +146,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
         <p className="text-metadata text-text-tertiary">
           {data.lastBp
             ? `Last: ${data.lastBp.systolic}/${data.lastBp.diastolic} ${data.lastBp.unit}`
-            : "No readings yet"}
+            : "Not Recorded yet"}
         </p>
       </CareRow>
 
