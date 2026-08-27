@@ -14,10 +14,16 @@ html {
      a standalone PWA and the overscroll area. Painting it here stops a white
      band appearing above the app. */
   background-color: var(--color-surface-tinted);
+  height: 100%;
 }
 
 body {
   background-color: var(--color-surface-tinted);
+  /* App-shell layout: the document itself never scrolls. Footers and the
+     bottom nav are pinned because nothing moves them — only the content area
+     between them scrolls. */
+  height: 100%;
+  overflow: hidden;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */

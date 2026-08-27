@@ -39,12 +39,12 @@ export default async function WelcomePage() {
         </p>
       </header>
 
-      <div className="relative min-h-[220px] flex-1">
+      <div className="relative min-h-0 flex-1">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/onboarding/welcome.webp"
           alt="An older woman and her son looking at a phone together"
-          className="absolute inset-x-0 bottom-0 w-full object-contain object-bottom"
+          className="absolute inset-x-0 bottom-0 max-h-full w-full object-contain object-bottom"
         />
         <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
