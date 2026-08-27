@@ -33,10 +33,6 @@ export const viewport: Viewport = {
   // Deliberately NOT locking maximumScale or userScalable. Our reader is
   // presbyopic — pinch-zoom must keep working.
   viewportFit: "cover",
-  // Without this the iOS keyboard only shrinks the VISUAL viewport, so fixed
-  // elements keep their old geometry and a bottom sheet gets shunted up the
-  // screen. resizes-content makes dvh and fixed positioning account for it.
-  interactiveWidget: "resizes-content",
   themeColor: "#F1F1FF", // surface/tinted — matches the canvas
 };
 
@@ -50,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex flex-col">
         <StatusBarBackdrop />
-        <div className="bg-surface-tinted mx-auto flex h-full w-full max-w-[430px] flex-col overflow-hidden">
+        <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>
         {/* Visual feedback toolbar. Dev only — the check compiles away in a

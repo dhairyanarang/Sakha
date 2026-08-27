@@ -52,7 +52,7 @@ export default async function SignInPage({
 
       <footer
         className="flex shrink-0 flex-col gap-6 px-4"
-        style={{ paddingBottom: "calc(var(--spacing-7) + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "calc(var(--spacing-2) + env(safe-area-inset-bottom))" }}
       >
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error text-center">

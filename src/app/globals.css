@@ -19,11 +19,13 @@ html {
 
 body {
   background-color: var(--color-surface-tinted);
-  /* App-shell layout: the document itself never scrolls. Footers and the
-     bottom nav are pinned because nothing moves them — only the content area
-     between them scrolls. */
+  /* App-shell layout: the document itself never scrolls, so nothing can drag
+     the footers or the bottom nav around. Only the content area between them
+     scrolls. The shell is positioned fixed (see layout.tsx) rather than sized
+     with height:100%, which on iOS does not reliably cover the safe areas. */
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */

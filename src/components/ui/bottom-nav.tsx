@@ -11,9 +11,9 @@ import { cn } from "@/lib/cn";
  * both icon and text; inactive icons use the icon/stroke token at 60% rather
  * than a flat solid. Icon stroke weights are taken from the Figma vectors.
  *
- * Bottom padding is the safe-area inset plus 8px. The inset is what reserves
- * room for the iPhone home indicator — iOS draws that itself, so we must
- * leave space for it but must not try to render one.
+ * The bar's white fill runs to the physical bottom edge; the safe-area inset
+ * is applied as padding INSIDE it, so the labels clear the iPhone home
+ * indicator without leaving a strip of page colour beneath the bar.
  */
 export type NavTab = "home" | "health" | "library";
 
