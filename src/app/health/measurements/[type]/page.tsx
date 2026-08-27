@@ -74,7 +74,7 @@ export default async function MeasurementPage({
   const months = await getMeasurementHistory(account.accountId, config.type);
 
   return (
-    <div data-surface="page" className="bg-surface-page flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <ScreenHeader backHref="/health" title={config.heading} />
       <MeasurementDetail
         type={config.type}

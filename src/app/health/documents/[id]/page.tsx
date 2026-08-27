@@ -35,7 +35,7 @@ export default async function DocumentPage({
   const when = doc.docDate ?? doc.createdAt;
 
   return (
-    <div data-surface="page" className="bg-surface-page flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <ScreenHeader backHref="/health" title={doc.title} />
 
       <main className="flex flex-1 flex-col gap-6 p-4">

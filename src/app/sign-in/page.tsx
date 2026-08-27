@@ -16,7 +16,7 @@ export default async function SignInPage({
   const { error } = await searchParams;
 
   return (
-    <div className="bg-surface-tinted flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <header
         className="flex shrink-0 flex-col items-center gap-6 px-4"
         style={{ paddingTop: "46px" }}

@@ -25,7 +25,7 @@ export default async function HealthPage() {
   const weight = latest.weight;
 
   return (
-    <div data-surface="page" className="bg-surface-page flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <AppHeader name={account.displayName} />
 
       <main className="flex flex-1 flex-col gap-6 p-4">

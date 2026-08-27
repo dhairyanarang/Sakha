@@ -12,16 +12,23 @@ html {
 html {
   /* The canvas behind everything: under the status bar in a standalone PWA,
      and the strip revealed when the page is pulled past either edge. Painting
-     it here stops a white band appearing above the app. */
-  background-color: var(--color-surface-tinted);
+     it here stops a white band appearing above the app, and it is the SAME
+     colour every screen sits on — so overscrolling never reveals a different
+     shade and there is nothing to flash during a scroll.
+
+     surface/page is the one page background in this app. surface/tinted is a
+     component fill only (Icon Circle, Secondary/Tertiary buttons, Info
+     Callout), never a canvas. */
+  background-color: var(--color-surface-page);
+
+  /* The scrollbar is chrome she never asked for and cannot use on a phone.
+     Hiding it changes nothing about scrolling itself — touch, keyboard, and
+     the iOS rubber-band all behave exactly as before. */
+  scrollbar-width: none;
 }
 
-/* Screens that sit on surface/page rather than surface/tinted say so, and the
-   canvas follows. Without this, pulling past the top of Health would reveal a
-   band in the wrong colour — invisible until the document could overscroll,
-   which it now can. */
-html:has([data-surface="page"]) {
-  background-color: var(--color-surface-page);
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

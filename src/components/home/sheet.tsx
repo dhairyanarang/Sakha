@@ -168,7 +168,7 @@ export function Sheet({
             }
           }}
           className={
-            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[38px] pb-2 " +
+            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[38px] pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " +
             (closing
               ? "animate-[sheet-fall_240ms_cubic-bezier(0.32,0.72,0,1)_forwards]"
               : "animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]")

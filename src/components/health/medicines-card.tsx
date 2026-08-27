@@ -20,6 +20,7 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
   return (
     <Link
       href="/health/medicines"
+      prefetch
       className="bg-surface-default border-border-soft relative flex w-full shrink-0 flex-col gap-6 overflow-hidden rounded-xl border-[0.5px] px-3 py-4"
     >
       <div className="flex items-center gap-2.5">

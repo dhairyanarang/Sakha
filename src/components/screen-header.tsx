@@ -32,6 +32,7 @@ export function ScreenHeader({
         <div className="flex min-w-0 items-center gap-1">
           <Link
             href={backHref}
+            prefetch
             aria-label="Go back"
             className="text-text-primary flex size-[42px] shrink-0 items-center justify-center"
           >

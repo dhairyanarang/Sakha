@@ -13,6 +13,12 @@ import { IconCircle } from "@/components/ui";
  * With no reading yet the row still renders. It says so plainly and keeps its
  * place in the card rather than disappearing, because a missing row reads as
  * something being broken rather than simply not recorded.
+ *
+ * Prefetched in full. These detail routes are dynamic, and for a dynamic route
+ * the default prefetch only reaches the nearest loading boundary — there are
+ * none, so it fetched nothing and every tap waited on a cold server render.
+ * Next still only prefetches links that are actually on screen, so this costs
+ * three requests here rather than one per row in the whole app.
  */
 export function MeasurementRow({
   href,
@@ -32,7 +38,7 @@ export function MeasurementRow({
   when: string | null;
 }) {
   return (
-    <Link href={href} className="flex w-full items-center gap-3">
+    <Link href={href} prefetch className="flex w-full items-center gap-3">
       <IconCircle tone={tone}>{icon}</IconCircle>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">

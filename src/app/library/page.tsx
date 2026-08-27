@@ -9,7 +9,7 @@ export default async function LibraryPage() {
   await requireAccount();
 
   return (
-    <div className="bg-surface-tinted flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <header className="shrink-0 px-4 pb-4" style={{ paddingTop: "var(--spacing-3)" }}>
         <h1 className="text-screen-title text-text-primary">Library</h1>
       </header>

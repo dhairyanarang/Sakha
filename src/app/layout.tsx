@@ -42,7 +42,7 @@ export const viewport: Viewport = {
   // Deliberately NOT locking maximumScale or userScalable. Our reader is
   // presbyopic — pinch-zoom must keep working.
   viewportFit: "cover",
-  themeColor: "#F1F1FF", // surface/tinted — matches the canvas
+  themeColor: "#F8F8FF", // surface/page — matches the canvas
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

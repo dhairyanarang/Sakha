@@ -16,7 +16,7 @@ export default async function WelcomePage() {
   if (data.user) redirect("/");
 
   return (
-    <div className="bg-surface-tinted flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <header
         className="flex shrink-0 flex-col items-center px-4"
         style={{ paddingTop: "31px" }}
@@ -49,7 +49,7 @@ export default async function WelcomePage() {
              screen crops the bottom of the frame and never their faces. */
           className="absolute inset-0 size-full object-cover object-top"
         />
-        <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
+        <div className="from-surface-page/0 to-surface-page absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
 
       <footer

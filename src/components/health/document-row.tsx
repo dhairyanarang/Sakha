@@ -15,6 +15,7 @@ export function DocumentRow({
   return (
     <Link
       href={href}
+      prefetch
       className="bg-surface-default border-border-soft flex w-full items-center gap-3 rounded-xl border-[0.5px] px-3 py-4"
     >
       <IconCircle tone="brand">

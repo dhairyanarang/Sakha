@@ -11,7 +11,7 @@ export default async function HomePage() {
   const home = await getHomeData(account.accountId);
 
   return (
-    <div className="bg-surface-tinted flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       <AppHeader name={account.displayName} />
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">

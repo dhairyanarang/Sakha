@@ -38,7 +38,7 @@ export function OnboardingScreen({
   align?: "center" | "start";
 }) {
   return (
-    <div className="bg-surface-tinted flex flex-1 flex-col">
+    <div className="bg-surface-page flex flex-1 flex-col">
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
       <div
         className="flex h-[42px] shrink-0 items-center justify-between px-2.5"
@@ -107,7 +107,7 @@ export function OnboardingScreen({
         /* No divider: Next should sit exactly as Get Started does, not read
            as a separate bar. The background still hides content scrolling
            beneath it. */
-        className="bg-surface-tinted flex flex-col gap-1 px-4 pt-4"
+        className="bg-surface-page flex flex-col gap-1 px-4 pt-4"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
         style={{ paddingBottom: "calc(var(--spacing-6) + var(--spacing-3))" }}

@@ -16,6 +16,12 @@ import { FixedBar } from "./fixed-bar";
  * is applied as padding INSIDE it, so the labels clear the iPhone home
  * indicator without leaving a strip of page colour beneath the bar.
  *
+ * That inset, and the 8px above the icons, live on each TAB rather than on the
+ * bar. The spacing is identical either way, but it makes the whole third of the
+ * bar tappable — 74px tall instead of the 42px the icon and label occupy — so
+ * a tap near the bottom edge or beside the label still lands. Nothing grew
+ * visually; the target simply now covers the padding it always sat in.
+ *
  * Every tab prefetches in full. These routes are dynamic, and for a dynamic
  * route the default prefetch only reaches the nearest loading boundary — of
  * which there are none here, so the default fetched nothing at all and each
@@ -40,9 +46,8 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
     <FixedBar reserve={75}>
     <nav
       aria-label="Main"
-      style={{ paddingBottom: "var(--spacing-6)" }}
       className={cn(
-        "bg-surface-default border-border-faint flex w-full items-start border-t px-3 pt-2",
+        "bg-surface-default border-border-faint flex w-full border-t px-3",
         className,
       )}
       {...props}
@@ -55,7 +60,8 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
             href={href}
             prefetch
             aria-current={isActive ? "page" : undefined}
-            className="flex flex-1 flex-col items-center justify-center gap-1"
+            style={{ paddingBottom: "var(--spacing-6)" }}
+            className="flex flex-1 flex-col items-center justify-center gap-1 pt-2"
           >
             <Icon
               size={24}
