@@ -1,4 +1,5 @@
 import { requireAccount } from "@/lib/account";
+import { Eye } from "lucide-react";
 import { getHomeData } from "@/lib/home-data";
 import { greeting } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
@@ -8,7 +9,7 @@ import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
 
 export default async function HomePage() {
-  const { account } = await requireAccount();
+  const { account, canEdit } = await requireAccount();
 
   const home = await getHomeData(account.accountId);
   const avatarUrl = await getHeaderAvatar();
@@ -24,8 +25,20 @@ export default async function HomePage() {
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
-        <MoodCard mood={home.mood} />
-        <TodaysCare data={home} />
+        {/* Viewing someone else's account is stated plainly and at the top,
+            not implied by missing buttons. */}
+        {!canEdit ? (
+          <div className="bg-surface-tinted border-action-primary flex shrink-0 items-center gap-3 rounded-sm border px-3 py-2.5">
+            <Eye size={22} className="text-action-primary shrink-0" aria-hidden />
+            <p className="text-action-primary text-[16px] leading-[1.4]">
+              You are viewing {account.displayName}&apos;s information. You cannot
+              change anything.
+            </p>
+          </div>
+        ) : null}
+
+        {canEdit ? <MoodCard mood={home.mood} /> : null}
+        <TodaysCare data={home} canEdit={canEdit} />
       </main>
 
       <BottomNav active="home" className="shrink-0" />

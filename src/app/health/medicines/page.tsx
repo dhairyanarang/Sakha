@@ -11,14 +11,14 @@ import { MedicinesList } from "@/components/health/medicines-list";
  * stays a server component that only fetches.
  */
 export default async function MedicinesPage() {
-  const { account } = await requireAccount();
+  const { account, canEdit } = await requireAccount();
 
   const groups = await getMedicines(account.accountId);
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
       <MedicinesHeader />
-      <MedicinesList groups={groups} />
+      <MedicinesList groups={groups} canEdit={canEdit} />
     </div>
   );
 }

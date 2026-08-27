@@ -69,7 +69,7 @@ export default async function MeasurementPage({
   const config = TYPES[slug];
   if (!config) notFound();
 
-  const { account } = await requireAccount();
+  const { account, canEdit } = await requireAccount();
 
   const months = await getMeasurementHistory(account.accountId, config.type);
 
@@ -82,6 +82,7 @@ export default async function MeasurementPage({
         unit={config.unit}
         rangeNote={config.range}
         months={months}
+        canEdit={canEdit}
       />
     </div>
   );

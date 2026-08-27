@@ -18,7 +18,13 @@ import type { MedicineDetail, MedicineGroup } from "@/lib/health-data";
  * had just saved. The counter forces a fresh mount every time, so Add always
  * starts empty while Edit still fills itself in from the medicine.
  */
-export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
+export function MedicinesList({
+  groups,
+  canEdit = true,
+}: {
+  groups: MedicineGroup[];
+  canEdit?: boolean;
+}) {
   const [editing, setEditing] = useState<MedicineDetail | null>(null);
   const [open, setOpen] = useState(false);
   const [openCount, setOpenCount] = useState(0);
@@ -67,13 +73,14 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
                 {group.conditionTag ?? "Other"}
               </h2>
               {group.medicines.map((m) => (
-                <MedicineRow key={m.id} medicine={m} onEdit={() => edit(m)} />
+                <MedicineRow key={m.id} medicine={m} onEdit={canEdit ? () => edit(m) : null} />
               ))}
             </section>
           ))
         )}
       </main>
 
+      {canEdit ? (
       <FixedBar reserve={120}>
       <footer
         className="bg-surface-page px-4 pt-4"
@@ -88,6 +95,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
         </button>
       </footer>
       </FixedBar>
+      ) : null}
 
       <MedicineSheet
         key={`${editing?.id ?? "new"}-${openCount}`}

@@ -127,7 +127,11 @@ export async function getActiveAccount(): Promise<Membership | null> {
  * Signed out and signed-in-but-not-set-up are different situations and go to
  * different places: the first has nothing yet, the second is mid-onboarding.
  */
-export async function requireAccount(): Promise<{ account: Membership }> {
+export async function requireAccount(): Promise<{
+  account: Membership;
+  /** False for a family member: they read everything and change nothing. */
+  canEdit: boolean;
+}> {
   const { user } = await getViewer();
   if (!user) redirect("/welcome");
 
@@ -135,5 +139,5 @@ export async function requireAccount(): Promise<{ account: Membership }> {
   const account = await getActiveAccount();
   if (!account) redirect("/onboarding/name");
 
-  return { account };
+  return { account, canEdit: account.role === "owner" };
 }

@@ -34,12 +34,14 @@ export function MeasurementDetail({
   unit,
   rangeNote,
   months,
+  canEdit = true,
 }: {
   type: Enums<"measurement_type">;
   title: string;
   unit: string;
   rangeNote: RangeNote;
   months: MeasurementMonth[];
+  canEdit?: boolean;
 }) {
   const [recording, setRecording] = useState(false);
   const [editingEntry, setEditingEntry] = useState<MeasurementEntry | null>(null);
@@ -180,9 +182,14 @@ export function MeasurementDetail({
                   {i > 0 ? <div className="border-border-default border-t" /> : null}
                   <button
                     type="button"
-                    onClick={() => openEdit(e)}
-                    aria-label={`Edit reading, ${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`}
-                    className="active:bg-surface-tinted -mx-2 flex items-end gap-2 rounded-md px-2 py-1 text-left transition-colors"
+                    onClick={() => canEdit && openEdit(e)}
+                    disabled={!canEdit}
+                    aria-label={
+                      canEdit
+                        ? `Edit reading, ${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`
+                        : `${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`
+                    }
+                    className="active:bg-surface-tinted -mx-2 flex items-end gap-2 rounded-md px-2 py-1 text-left transition-colors disabled:pointer-events-none"
                   >
                     <p className="flex flex-1 items-end gap-1">
                       <span className="text-text-primary text-[18px] leading-[1.2] font-medium">
@@ -194,11 +201,13 @@ export function MeasurementDetail({
                     <span className="shrink-0 text-[14px] leading-[1.2] text-[#999999]">
                       {readingStamp(e.measuredAt)}
                     </span>
-                    <ChevronRight
-                      size={16}
-                      className="text-text-tertiary shrink-0"
-                      aria-hidden
-                    />
+                    {canEdit ? (
+                      <ChevronRight
+                        size={16}
+                        className="text-text-tertiary shrink-0"
+                        aria-hidden
+                      />
+                    ) : null}
                   </button>
                 </div>
               ))}
@@ -209,6 +218,7 @@ export function MeasurementDetail({
 
       {/* The list fades under the pinned button rather than stopping dead
           against it, as drawn. */}
+      {canEdit ? (
       <FixedBar reserve={112}>
         <div
           aria-hidden
@@ -227,6 +237,7 @@ export function MeasurementDetail({
           </button>
         </footer>
       </FixedBar>
+      ) : null}
 
       <RecordMeasurementSheet
         key={`${editingEntry?.id ?? "new"}-${sheetNonce}`}

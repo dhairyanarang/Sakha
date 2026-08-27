@@ -19,7 +19,13 @@ import type { DocumentSummary } from "@/lib/health-data";
  * reach a fuller list — no chevron on this heading, no Documents screen in the
  * file — so truncating here would put documents somewhere she cannot get to.
  */
-export function DocumentsSection({ documents }: { documents: DocumentSummary[] }) {
+export function DocumentsSection({
+  documents,
+  canEdit = true,
+}: {
+  documents: DocumentSummary[];
+  canEdit?: boolean;
+}) {
   const [adding, setAdding] = useState(false);
   // Remount on each open, so a second document never opens on the first one's
   // title, date and type.
@@ -56,7 +62,11 @@ export function DocumentsSection({ documents }: { documents: DocumentSummary[] }
         ))
       )}
 
-      <AddTile onClick={() => { setOpenCount((n) => n + 1); setAdding(true); }}>+ Add Document</AddTile>
+      {canEdit ? (
+        <AddTile onClick={() => { setOpenCount((n) => n + 1); setAdding(true); }}>
+          + Add Document
+        </AddTile>
+      ) : null}
 
       <AddDocumentSheet
         key={openCount}

@@ -11,7 +11,14 @@ import { confirmDoses } from "@/app/actions/home";
 import { currentSlot, SLOT_LABEL, SLOT_TIME, slotHasStarted } from "@/lib/today";
 import type { HomeData } from "@/lib/home-data";
 
-export function TodaysCare({ data }: { data: HomeData }) {
+export function TodaysCare({
+  data,
+  canEdit = true,
+}: {
+  data: HomeData;
+  /** A family member sees the same rows with nothing to press. */
+  canEdit?: boolean;
+}) {
   const [sheet, setSheet] = useState<null | "sugar" | "bp" | "walk">(null);
   // Every open remounts the sheet. Without this a second reading reused the
   // first one's date and time, which is a wrong reading, not just stale UI.
@@ -79,7 +86,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
               icon={<Pill size={22} aria-hidden />}
               title={SLOT_LABEL[group.slot]}
               action={
-                done ? (
+                !canEdit ? null : done ? (
                   <span className="text-feedback-success-text flex w-[100px] shrink-0 items-center justify-center gap-1 text-[16px]">
                     <Check size={18} aria-hidden />
                     Done
@@ -121,9 +128,11 @@ export function TodaysCare({ data }: { data: HomeData }) {
         icon={<Droplet size={22} aria-hidden />}
         title="Record Sugar level"
         action={
-          <RowAction tone="tinted" onClick={() => openSheet("sugar")}>
-            Record
-          </RowAction>
+          canEdit ? (
+            <RowAction tone="tinted" onClick={() => openSheet("sugar")}>
+              Record
+            </RowAction>
+          ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">
@@ -138,9 +147,11 @@ export function TodaysCare({ data }: { data: HomeData }) {
         icon={<HeartPulse size={22} aria-hidden />}
         title="Record BP"
         action={
-          <RowAction tone="tinted" onClick={() => openSheet("bp")}>
-            Record
-          </RowAction>
+          canEdit ? (
+            <RowAction tone="tinted" onClick={() => openSheet("bp")}>
+              Record
+            </RowAction>
+          ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">
@@ -158,9 +169,11 @@ export function TodaysCare({ data }: { data: HomeData }) {
           /* One walk entry per day, so once it exists the action edits it
              rather than adding another. Measurements are the opposite —
              several readings a day are normal — so those keep "Record". */
-          <RowAction tone="tinted" onClick={() => openSheet("walk")}>
-            {data.walk === null ? "Log Walk" : "Update"}
-          </RowAction>
+          canEdit ? (
+            <RowAction tone="tinted" onClick={() => openSheet("walk")}>
+              {data.walk === null ? "Log Walk" : "Update"}
+            </RowAction>
+          ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">

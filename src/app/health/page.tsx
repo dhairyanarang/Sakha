@@ -18,7 +18,7 @@ import { DocumentsSection } from "@/components/health/documents-section";
  * frame behind it, so both are invisible and neither is reproduced here.
  */
 export default async function HealthPage() {
-  const { account } = await requireAccount();
+  const { account, canEdit } = await requireAccount();
 
   const { medicines, latest, documents } = await getHealthOverview(account.accountId);
   const avatarUrl = await getHeaderAvatar();
@@ -78,7 +78,7 @@ export default async function HealthPage() {
           </div>
         </section>
 
-        <DocumentsSection documents={documents} />
+        <DocumentsSection documents={documents} canEdit={canEdit} />
       </main>
 
       <BottomNav active="health" className="shrink-0" />

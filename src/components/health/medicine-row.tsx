@@ -22,7 +22,8 @@ export function MedicineRow({
   onEdit,
 }: {
   medicine: MedicineDetail;
-  onEdit: () => void;
+  /** Null for a family member — the row stays, the way in does not. */
+  onEdit: (() => void) | null;
 }) {
   return (
     <div className="bg-surface-default border-border-soft flex w-full items-center gap-3 rounded-xl border-[0.5px] px-3 py-4">
@@ -43,6 +44,7 @@ export function MedicineRow({
         <DoseDots times={medicine.times} name={medicine.name} />
       </div>
 
+      {onEdit ? (
       <button
         type="button"
         onClick={onEdit}
@@ -52,6 +54,7 @@ export function MedicineRow({
         <PenLine size={18} aria-hidden />
         Edit
       </button>
+      ) : null}
     </div>
   );
 }

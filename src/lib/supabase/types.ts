@@ -118,6 +118,53 @@ export type Database = {
           },
         ]
       }
+      family_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          account_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          name: string
+          relation: string
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          account_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          name: string
+          relation: string
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          account_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          relation?: string
+          status?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invitations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_documents: {
         Row: {
           account_id: string
@@ -408,9 +455,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { p_token_hash: string }; Returns: string }
       create_account: {
         Args: { p_display_name: string; p_language?: string }
         Returns: string
+      }
+      invitation_preview: {
+        Args: { p_token_hash: string }
+        Returns: {
+          invitee_name: string
+          inviter_name: string
+          relation: string
+          state: string
+        }[]
       }
     }
     Enums: {
