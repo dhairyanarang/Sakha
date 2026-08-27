@@ -1,16 +1,17 @@
 "use client";
 
 import { PenLine, Pill } from "lucide-react";
-import { IconCircle, StatusTag } from "@/components/ui";
-import { SLOT_LABEL } from "@/lib/today";
+import { IconCircle } from "@/components/ui";
+import { DoseDots } from "./dose-dots";
 import type { MedicineDetail } from "@/lib/health-data";
 
 /**
  * One medicine in the Medicines list: name, her own remark, today's doses,
  * and a way in to edit it.
  *
- * The dots are per slot and read morning to evening. An outlined dot means
- * not yet confirmed — never "missed", which is not a state this product has.
+ * The three dots read morning, afternoon, evening. Filled means she takes it
+ * then; empty means she does not. They are the schedule, never a judgement
+ * about whether a dose was taken.
  *
  * Only the Edit button is interactive, not the whole row. Editing opens a
  * sheet over this screen, as drawn, so a card that also swallowed taps would
@@ -23,10 +24,6 @@ export function MedicineRow({
   medicine: MedicineDetail;
   onEdit: () => void;
 }) {
-  const doses = medicine.slots
-    .map((s) => `${SLOT_LABEL[s.slot]} ${s.confirmed ? "confirmed" : "not confirmed"}`)
-    .join(", ");
-
   return (
     <div className="bg-surface-default border-border-soft flex w-full items-center gap-3 rounded-xl border-[0.5px] px-3 py-4">
       <IconCircle tone="brand">
@@ -43,10 +40,7 @@ export function MedicineRow({
             </p>
           ) : null}
         </div>
-        <StatusTag
-          slots={medicine.slots.map((s) => s.confirmed)}
-          label={`${medicine.name}: ${doses}`}
-        />
+        <DoseDots times={medicine.times} name={medicine.name} />
       </div>
 
       <button

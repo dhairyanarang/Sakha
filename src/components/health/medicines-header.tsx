@@ -41,9 +41,9 @@ export function MedicinesHeader() {
       {open ? (
         <div id="medicines-legend" className="bg-surface-page shrink-0 px-4 pt-4">
           <InfoCallout label="What the dots mean">
-            One dot for each time you take a medicine today. A filled dot is one
-            you have confirmed. An empty dot simply means not yet — you can
-            confirm it whenever you like.
+            The three dots are morning, afternoon and evening, in that order. A
+            filled dot means you take that medicine at that time. An empty dot
+            means you do not.
           </InfoCallout>
         </div>
       ) : null}

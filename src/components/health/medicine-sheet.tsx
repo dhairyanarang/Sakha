@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Sheet } from "@/components/home/sheet";
 import { Button, Chip, TextInput } from "@/components/ui";
-import { createMedicine, updateMedicine } from "@/app/health/actions";
+import { archiveMedicine, createMedicine, updateMedicine } from "@/app/health/actions";
 import type { MedicineDetail } from "@/lib/health-data";
 import type { Enums } from "@/lib/supabase/types";
 
@@ -14,9 +14,14 @@ import type { Enums } from "@/lib/supabase/types";
  * Same fields and same optionality as the onboarding step, deliberately: a
  * medicine added later must not ask for more than one added on day one.
  *
- * No delete. The design has no delete affordance on either frame, and the
- * schema's archived_at has no control anywhere — so removing a medicine is
- * still an undesigned flow rather than something invented here.
+ * Delete sits opposite the title on the edit variant, where the user asked for
+ * it. It archives rather than deletes: every dose she ever confirmed points at
+ * this medicine, and destroying that history to tidy a list is not a trade she
+ * asked for.
+ *
+ * It confirms in place rather than opening a dialog over a dialog — one calm
+ * question, with the safe answer first and the destructive one named plainly
+ * rather than shouted at her.
  */
 const TIMES: { value: Enums<"time_of_day">; label: string }[] = [
   { value: "morning", label: "Morning" },
@@ -43,7 +48,7 @@ export function MedicineSheet({
 
   const [name, setName] = useState(medicine?.name ?? "");
   const [times, setTimes] = useState<Enums<"time_of_day">[]>(
-    medicine?.slots.map((s) => s.slot) ?? [],
+    medicine?.times ?? [],
   );
   // A saved condition that isn't one of the five suggestions is a custom one,
   // so the field opens already showing it rather than looking discarded.
@@ -51,7 +56,21 @@ export function MedicineSheet({
   const [condition, setCondition] = useState(preset);
   const [remarks, setRemarks] = useState(medicine?.remarks ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  function remove() {
+    if (!medicine) return;
+    setError(null);
+    startTransition(async () => {
+      const err = await archiveMedicine(medicine.id);
+      if (err) setError(err);
+      else {
+        onSaved("Medicine removed.");
+        onClose();
+      }
+    });
+  }
 
   function toggleTime(v: Enums<"time_of_day">) {
     setTimes((cur) => (cur.includes(v) ? cur.filter((t) => t !== v) : [...cur, v]));
@@ -78,7 +97,23 @@ export function MedicineSheet({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={editing ? "Edit Medicine" : "Add Medicine"}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={editing ? "Edit Medicine" : "Add Medicine"}
+      action={
+        editing ? (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            disabled={pending}
+            className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
+          >
+            Delete
+          </button>
+        ) : undefined
+      }
+    >
       <div className="flex flex-col gap-6">
         <TextInput
           label="Medicine Name"
@@ -158,14 +193,48 @@ export function MedicineSheet({
         ) : null}
       </div>
 
-      <div className="flex items-start gap-3">
-        <Button variant="tertiary" onClick={onClose} disabled={pending} className="flex-1">
-          Cancel
-        </Button>
-        <Button onClick={save} disabled={pending} className="flex-1">
-          {pending ? "Saving…" : "Save"}
-        </Button>
-      </div>
+      {confirmingDelete ? (
+        <div className="bg-feedback-error-surface flex flex-col gap-4 rounded-md p-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-body-medium text-text-primary">Remove this medicine?</p>
+            <p className="text-body-secondary text-text-secondary">
+              It comes off your list. Everything you have already confirmed stays
+              as it is.
+            </p>
+          </div>
+          <div className="flex items-start gap-3">
+            {/* The safe answer sits first and is the plainer of the two. */}
+            <Button
+              variant="tertiary"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={pending}
+              className="flex-1"
+            >
+              Keep it
+            </Button>
+            {/* Not a Button variant: the library has no destructive style, and
+                inventing a fourth one for a single use is worse than one local
+                button that says what it does. Flagged. */}
+            <button
+              type="button"
+              onClick={remove}
+              disabled={pending}
+              className="bg-feedback-error text-text-on-brand text-button-label flex h-[60px] flex-1 items-center justify-center rounded-xl transition-colors disabled:opacity-60"
+            >
+              {pending ? "Removing…" : "Remove"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3">
+          <Button variant="tertiary" onClick={onClose} disabled={pending} className="flex-1">
+            Cancel
+          </Button>
+          <Button onClick={save} disabled={pending} className="flex-1">
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      )}
     </Sheet>
   );
 }

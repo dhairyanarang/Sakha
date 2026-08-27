@@ -82,6 +82,33 @@ export async function updateMedicine(
   return null;
 }
 
+/**
+ * Removes a medicine from her list.
+ *
+ * Archives rather than deletes. medication_logs reference the medicine, so a
+ * hard delete would cascade and destroy the record of every dose she ever
+ * confirmed — losing history she never asked to lose in order to tidy a list.
+ * Setting archived_at drops it out of every query (they all filter on it) while
+ * leaving the past intact, which is what the column exists for.
+ */
+export async function archiveMedicine(id: string): Promise<string | null> {
+  const accountId = await getActiveAccountId();
+  if (!accountId) return SAVE_FAILED;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("medications")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("account_id", accountId);
+  if (error) return "We couldn't remove this. Please try again.";
+
+  revalidatePath("/health/medicines");
+  revalidatePath("/health");
+  revalidatePath("/");
+  return null;
+}
+
 /** Anything larger than this is almost certainly a photo that wants resizing. */
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 

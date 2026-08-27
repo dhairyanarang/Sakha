@@ -22,6 +22,27 @@ import { cn } from "@/lib/cn";
  * arrow keys step it, because nothing here may depend on a swipe.
  */
 const TICK_GAP = 10; // px between adjacent ticks
+
+/**
+ * Snaps a computed value back onto the step grid.
+ *
+ * min + i * 0.5 drifts in binary floating point — 76.5 comes back as
+ * 76.50000000000001 — which would both display wrong and never compare equal.
+ */
+function onStep(value: number, min: number, step: number): number {
+  const decimals = String(step).split(".")[1]?.length ?? 0;
+  return Number((Math.round((value - min) / step) * step + min).toFixed(decimals));
+}
+
+/**
+ * "75", not "75.0" — and "76.5" stays "76.5".
+ *
+ * Only correct because onStep has already trimmed the float drift; formatting
+ * a raw 76.50000000000001 here would print the whole thing.
+ */
+function display(value: number): string {
+  return String(value);
+}
 const TRACK_HEIGHT = 150; // the full draggable area
 const TICKS_TOP = 96; // where the tick strip begins inside that area
 
@@ -30,6 +51,7 @@ export function RulerPicker({
   onChange,
   min,
   max,
+  step = 1,
   unit,
   label,
 }: {
@@ -37,17 +59,20 @@ export function RulerPicker({
   onChange: (v: number) => void;
   min: number;
   max: number;
+  /** Increment between adjacent ticks. 0.5 gives half-unit precision. */
+  step?: number;
   unit: string;
   label: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dragging, setDragging] = useState(false);
-  const count = max - min + 1;
+  const count = Math.round((max - min) / step) + 1;
+  const offsetFor = (v: number) => ((v - min) / step) * TICK_GAP;
 
   useEffect(() => {
     const el = trackRef.current;
-    if (el) el.scrollLeft = (value - min) * TICK_GAP;
+    if (el) el.scrollLeft = offsetFor(value);
     // Mount only — after this the scroll position belongs to the user.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -56,23 +81,31 @@ export function RulerPicker({
     const el = trackRef.current;
     if (!el) return;
     setDragging(true);
-    const next = Math.min(max, Math.max(min, min + Math.round(el.scrollLeft / TICK_GAP)));
+    const raw = min + Math.round(el.scrollLeft / TICK_GAP) * step;
+    const next = onStep(Math.min(max, Math.max(min, raw)), min, step);
     if (next !== value) onChange(next);
     if (settling.current) clearTimeout(settling.current);
     settling.current = setTimeout(() => setDragging(false), 140);
   }
 
-  function step(delta: number) {
-    const next = Math.min(max, Math.max(min, value + delta));
+  /** delta is in ticks, not units, so a keypress always moves one increment. */
+  function nudge(delta: number) {
+    const next = onStep(
+      Math.min(max, Math.max(min, value + delta * step)),
+      min,
+      step,
+    );
     onChange(next);
-    if (trackRef.current) trackRef.current.scrollLeft = (next - min) * TICK_GAP;
+    if (trackRef.current) trackRef.current.scrollLeft = offsetFor(next);
   }
 
   return (
     <div className="relative w-full" style={{ height: TRACK_HEIGHT }}>
       {/* Readout. Non-interactive so drags pass straight through to the scale. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-center">
-        <span className="text-action-primary text-[45px] leading-[52px] font-medium">{value}</span>
+        <span className="text-action-primary text-[45px] leading-[52px] font-medium">
+          {display(value)}
+        </span>
         <span className="text-text-tertiary text-[16px] leading-6">{unit}</span>
       </div>
 
@@ -91,13 +124,13 @@ export function RulerPicker({
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
-        aria-valuetext={`${value} ${unit}`}
+        aria-valuetext={`${display(value)} ${unit}`}
         onScroll={handleScroll}
         onKeyDown={(e) => {
-          if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); step(-1); }
-          if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); step(1); }
-          if (e.key === "PageDown") { e.preventDefault(); step(-10); }
-          if (e.key === "PageUp") { e.preventDefault(); step(10); }
+          if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); nudge(-1); }
+          if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); nudge(1); }
+          if (e.key === "PageDown") { e.preventDefault(); nudge(-10); }
+          if (e.key === "PageUp") { e.preventDefault(); nudge(10); }
         }}
         className={cn(
           "absolute inset-0 flex snap-x snap-mandatory items-start overflow-x-auto outline-none",
@@ -109,8 +142,10 @@ export function RulerPicker({
         {/* Half-width spacers so the first and last values reach the centre. */}
         <span aria-hidden className="shrink-0" style={{ width: "calc(50% - 1px)" }} />
         {Array.from({ length: count }, (_, i) => {
-          const v = min + i;
-          const major = v % 10 === 0;
+          const v = onStep(min + i * step, min, step);
+          // Every whole ten, whatever the step — so the scale still reads in
+          // familiar landmarks rather than every half kilo looking equal.
+          const major = Math.abs(v % 10) < 1e-9;
           return (
             <span
               key={v}

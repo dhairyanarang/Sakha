@@ -1,18 +1,20 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Status Tag — the real medicine dose indicator. Filled dot per confirmed
- * dose, outlined dot for one not yet confirmed.
+ * Status Tag — the medicine dose indicator.
  *
- * Never label an outlined dot "missed" — the only statuses are confirmed,
- * skipped and unconfirmed, and an outlined dot simply means not yet.
+ * In the product this renders a medicine's daily schedule: three dots reading
+ * morning, afternoon, evening, filled where she takes it. See DoseDots, which
+ * is the only thing that should build one for a medicine.
  *
- * Two ways to drive it. `confirmed`/`total` fills the first n dots, which is
- * right for a plain count. `slots` gives one dot per entry in the order given
- * and fills them individually — which is what the Health screen actually
- * needs, because a medicine taken morning and evening but not afternoon reads
- * as filled/outlined/filled, and no leading-count version of this can draw
- * that. Pass one or the other; `slots` wins.
+ * An empty dot means "not taken at this time of day". It is NOT a missed dose
+ * — "missed" is not a state this product has at all.
+ *
+ * Two ways to drive it. `slots` gives one dot per entry, in order, filled
+ * individually — required here, because position carries the meaning and
+ * morning-and-evening must read filled/empty/filled rather than collapsing to
+ * two adjacent dots. `confirmed`/`total` fills the first n instead, which suits
+ * a plain count and is what the kitchen sink demonstrates. `slots` wins.
  */
 export interface StatusTagProps extends React.ComponentPropsWithoutRef<"div"> {
   total?: number;

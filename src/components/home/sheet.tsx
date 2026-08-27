@@ -28,11 +28,14 @@ export function Sheet({
   open,
   onClose,
   title,
+  action,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Sits opposite the title. Used for Delete on Edit Medicine. */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -163,7 +166,12 @@ export function Sheet({
           >
             <span className="bg-border-default h-1 w-12 rounded-full" aria-hidden />
           </div>
-          <h2 className="text-screen-title text-text-primary px-4">{title}</h2>
+          <div className="flex items-center gap-3 px-4">
+            <h2 className="text-screen-title text-text-primary min-w-0 flex-1 truncate">
+              {title}
+            </h2>
+            {action ? <div className="shrink-0">{action}</div> : null}
+          </div>
           <div className="border-border-default mt-4 border-t" />
           <div
             className="flex flex-col gap-7 px-4 pt-6"

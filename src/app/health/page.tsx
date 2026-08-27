@@ -55,8 +55,11 @@ export default async function HealthPage() {
             <div className="border-border-default border-t" />
             <MeasurementRow
               href="/health/measurements/blood-pressure"
-              tone="error"
-              icon={<HeartPulse size={22} className="text-feedback-error" aria-hidden />}
+              /* Blue, matching Home. Figma tints this row red here and blue on
+                 Home; blue is the one the user chose, and it also keeps red
+                 for the single reading that is genuinely about blood. */
+              tone="brand"
+              icon={<HeartPulse size={22} className="text-action-primary" aria-hidden />}
               label="Blood Pressure"
               value={bp ? `${bp.value}/${bp.valueSecondary}` : null}
               unit={bp?.unit ?? "mmHg"}

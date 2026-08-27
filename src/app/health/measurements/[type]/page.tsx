@@ -19,16 +19,26 @@ import type { Enums } from "@/lib/supabase/types";
  */
 const TYPES: Record<
   string,
-  { type: Enums<"measurement_type">; title: string; unit: string; range: RangeNote }
+  {
+    type: Enums<"measurement_type">;
+    /** The header. Only weight says "Progress" — that is what its frame says. */
+    heading: string;
+    /** The plain name, used in the chart's spoken summary. */
+    title: string;
+    unit: string;
+    range: RangeNote;
+  }
 > = {
   "blood-sugar": {
     type: "blood_sugar",
+    heading: "Blood Sugar",
     title: "Blood Sugar",
     unit: "mg/dL",
     range: { kind: "badge", label: "Normal Range", value: "70-140 mg/dL" },
   },
   "blood-pressure": {
     type: "blood_pressure",
+    heading: "Blood Pressure",
     title: "Blood Pressure",
     unit: "mmHg",
     range: {
@@ -39,12 +49,14 @@ const TYPES: Record<
   },
   weight: {
     type: "weight",
+    /* Frame 213:12807 titles this "Weight Progress" where the other two are
+       just the measurement name. Followed per frame rather than reconciled —
+       flagged as an inconsistency between the three. */
+    heading: "Weight Progress",
     title: "Weight",
     unit: "kg",
-    /* FLAGGED: weight has no detail frame in Figma. It reuses this shape
-       because the Health screen links to it and a designed link that 404s is
-       worse than a screen built from its two designed siblings. No range
-       note — none was written, and a healthy weight is not a fixed number. */
+    /* No range note: none was written for weight, and a healthy weight is not
+       a fixed number to invent one from. */
     range: null,
   },
 };
@@ -69,9 +81,10 @@ export default async function MeasurementPage({
 
   return (
     <div className="bg-surface-page flex min-h-0 flex-1 flex-col overflow-hidden">
-      <ScreenHeader backHref="/health" title={config.title} />
+      <ScreenHeader backHref="/health" title={config.heading} />
       <MeasurementDetail
         type={config.type}
+        title={config.title}
         unit={config.unit}
         rangeNote={config.range}
         months={months}

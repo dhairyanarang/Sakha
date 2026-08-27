@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { StatusTag } from "@/components/ui";
-import { SLOT_LABEL } from "@/lib/today";
+import { DoseDots } from "./dose-dots";
 import type { MedicineSummary } from "@/lib/health-data";
 
 /**
@@ -46,15 +45,7 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
                 <p className="text-action-primary truncate text-[16px] leading-[1.4]">
                   {m.name}
                 </p>
-                <StatusTag
-                  slots={m.slots.map((s) => s.confirmed)}
-                  label={`${m.name}: ${m.slots
-                    .map(
-                      (s) =>
-                        `${SLOT_LABEL[s.slot]} ${s.confirmed ? "confirmed" : "not confirmed"}`,
-                    )
-                    .join(", ")}`}
-                />
+                <DoseDots times={m.times} name={m.name} />
               </div>
             ))}
           </>

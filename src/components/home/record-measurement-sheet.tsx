@@ -22,13 +22,13 @@ function nowLocalInput() {
 // Ranges wide enough to cover anything real, narrow enough that the scale
 // stays usable. The picker can't produce a value outside them.
 const RANGE = {
-  blood_sugar: { min: 40, max: 400 },
-  systolic: { min: 70, max: 220 },
-  diastolic: { min: 40, max: 140 },
-  // Weight steps in whole kilograms. The ruler cannot express half a kilo,
-  // which is a real limit for a bathroom scale — flagged rather than papered
-  // over with a keypad this flow deliberately does not have.
-  weight: { min: 30, max: 150 },
+  blood_sugar: { min: 40, max: 400, step: 1 },
+  systolic: { min: 70, max: 220, step: 1 },
+  diastolic: { min: 40, max: 140, step: 1 },
+  // Half a kilo, because that is what a bathroom scale actually shows. The
+  // ticks stay 10px apart, so the scale is simply twice as long to travel —
+  // and the major marks still land on whole tens, keeping familiar landmarks.
+  weight: { min: 30, max: 150, step: 0.5 },
 };
 
 const COPY = {
@@ -140,6 +140,7 @@ export function RecordMeasurementSheet({
               unit={unit}
               min={singleRange.min}
               max={singleRange.max}
+              step={singleRange.step}
               value={single}
               onChange={setSingle}
             />

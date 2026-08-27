@@ -1,12 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
-import { localDate, SLOT_ORDER, TZ } from "@/lib/today";
+import { SLOT_ORDER, TZ } from "@/lib/today";
 import type { Enums } from "@/lib/supabase/types";
 
 export type MedicineSummary = {
   id: string;
   name: string;
-  /** One entry per slot this medicine is actually taken in, in day order. */
-  slots: { slot: Enums<"time_of_day">; confirmed: boolean }[];
+  /**
+   * Which of the three times of day this medicine is taken in.
+   *
+   * This is her SCHEDULE, not today's progress. The three dots beside a
+   * medicine always read morning, afternoon, evening in that order; a filled
+   * one means she takes it then, an empty one means she does not. Nothing
+   * about confirmation is expressed here.
+   */
+  times: Enums<"time_of_day">[];
 };
 
 export type MedicineDetail = MedicineSummary & {
@@ -44,27 +51,20 @@ export type HealthOverview = {
 /**
  * Everything the Health landing screen renders, in one pass.
  *
- * The dots beside each medicine are per-slot, not a count: a medicine taken
- * morning and evening shows two dots, and the one it skipped this afternoon
- * cannot appear at all. Same rule as Home — "unconfirmed" is the absence of a
- * log row, never a stored value.
+ * Note this deliberately does NOT read medication_logs. The dots beside each
+ * medicine describe her schedule, not today's progress, so nothing here
+ * depends on what has been confirmed — Home is where today's state lives.
  */
 export async function getHealthOverview(accountId: string): Promise<HealthOverview> {
   const supabase = await createClient();
-  const today = localDate();
 
-  const [meds, logs, measurements, docs] = await Promise.all([
+  const [meds, measurements, docs] = await Promise.all([
     supabase
       .from("medications")
       .select("id, name, times_of_day")
       .eq("account_id", accountId)
       .is("archived_at", null)
       .order("created_at"),
-    supabase
-      .from("medication_logs")
-      .select("medication_id, slot, status")
-      .eq("account_id", accountId)
-      .eq("local_date", today),
     supabase
       .from("health_measurements")
       .select("type, value, value_secondary, unit, measured_at")
@@ -79,19 +79,12 @@ export async function getHealthOverview(accountId: string): Promise<HealthOvervi
       .order("created_at", { ascending: false }),
   ]);
 
-  const logged = new Map(
-    (logs.data ?? []).map((l) => [`${l.medication_id}:${l.slot}`, l.status]),
-  );
-
   const medicines: MedicineSummary[] = (meds.data ?? []).map((m) => ({
     id: m.id,
     name: m.name,
-    // Ordered by time of day rather than however the array was stored, so the
-    // dots always read morning to evening, left to right.
-    slots: SLOT_ORDER.filter((s) => m.times_of_day.includes(s)).map((slot) => ({
-      slot,
-      confirmed: logged.get(`${m.id}:${slot}`) === "confirmed",
-    })),
+    // Ordered rather than taken as stored, so the dots always read morning to
+    // evening left to right regardless of the order they were saved in.
+    times: SLOT_ORDER.filter((s) => m.times_of_day.includes(s)),
   }));
 
   // One query, sorted newest first — the first row seen for a type is its
@@ -137,25 +130,13 @@ export async function getHealthOverview(accountId: string): Promise<HealthOvervi
  */
 export async function getMedicines(accountId: string): Promise<MedicineGroup[]> {
   const supabase = await createClient();
-  const today = localDate();
 
-  const [meds, logs] = await Promise.all([
-    supabase
-      .from("medications")
-      .select("id, name, times_of_day, condition_tag, remarks")
-      .eq("account_id", accountId)
-      .is("archived_at", null)
-      .order("created_at"),
-    supabase
-      .from("medication_logs")
-      .select("medication_id, slot, status")
-      .eq("account_id", accountId)
-      .eq("local_date", today),
-  ]);
-
-  const logged = new Map(
-    (logs.data ?? []).map((l) => [`${l.medication_id}:${l.slot}`, l.status]),
-  );
+  const meds = await supabase
+    .from("medications")
+    .select("id, name, times_of_day, condition_tag, remarks")
+    .eq("account_id", accountId)
+    .is("archived_at", null)
+    .order("created_at");
 
   const groups = new Map<string, MedicineGroup>();
   for (const m of meds.data ?? []) {
@@ -168,10 +149,7 @@ export async function getMedicines(accountId: string): Promise<MedicineGroup[]> 
       name: m.name,
       conditionTag: m.condition_tag,
       remarks: m.remarks,
-      slots: SLOT_ORDER.filter((s) => m.times_of_day.includes(s)).map((slot) => ({
-        slot,
-        confirmed: logged.get(`${m.id}:${slot}`) === "confirmed",
-      })),
+      times: SLOT_ORDER.filter((s) => m.times_of_day.includes(s)),
     });
   }
 
@@ -201,10 +179,7 @@ export async function getMedicine(
     name: data.name,
     conditionTag: data.condition_tag,
     remarks: data.remarks,
-    slots: SLOT_ORDER.filter((s) => data.times_of_day.includes(s)).map((slot) => ({
-      slot,
-      confirmed: false,
-    })),
+    times: SLOT_ORDER.filter((s) => data.times_of_day.includes(s)),
   };
 }
 
