@@ -44,7 +44,10 @@ export default async function WelcomePage() {
         <img
           src="/onboarding/welcome.webp"
           alt="An older woman and her son looking at a phone together"
-          className="absolute inset-x-0 bottom-0 w-full"
+          /* Fills the box rather than being fitted inside it, so there are no
+             slivers of page down the sides. Anchored to the top so a short
+             screen crops the bottom of the frame and never their faces. */
+          className="absolute inset-0 size-full object-cover object-top"
         />
         <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
