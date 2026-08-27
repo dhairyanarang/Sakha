@@ -39,19 +39,19 @@ export default async function WelcomePage() {
         </p>
       </header>
 
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/onboarding/welcome.webp"
           alt="An older woman and her son looking at a phone together"
-          className="absolute inset-x-0 bottom-0 max-h-full w-full object-contain object-bottom"
+          className="absolute inset-x-0 bottom-0 w-full"
         />
         <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
 
       <footer
         className="shrink-0 px-4"
-        style={{ paddingBottom: "max(var(--spacing-4), env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "var(--spacing-4)" }}
       >
         <Link
           href="/sign-in"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -10,21 +10,20 @@ import { createPortal } from "react-dom";
  * Radix only for a select and a future date picker, and adding a component
  * library for this would breach "one visual system only".
  *
- * Keyboard handling: the keyboard OVERLAYS the sheet rather than reflowing the
- * page. iOS shrinks only the visual viewport when it opens, so a fixed sheet
- * keeps its geometry and ends up hidden behind the keyboard. We measure the
- * overlap from visualViewport and lift the sheet by exactly that much as
- * padding on the OUTER container — not a transform on the panel, which would
- * fight the entrance animation.
+ * Keyboard: the container BECOMES the visual viewport — same height, same
+ * offset — so anything aligned to its bottom sits exactly above the keyboard
+ * whatever iOS does with scroll position. No offset arithmetic to get wrong.
  *
- * The lift is capped so the fields stay on screen while Cancel and Save are
- * allowed to slide under the keyboard; they're reachable again the moment the
- * keyboard is dismissed, and tapping any non-field part of the sheet does that.
+ * Dismissal: tap the scrim, press Escape, hit Cancel, or drag the sheet down
+ * by its handle. The drag is an ADDITION, never the only way out — no action
+ * here may depend on a gesture, which rules out swipe-only dismissal.
  *
- * The scrim is real runtime opacity over whatever is actually behind it, never
- * a pre-computed solid. Dismissal is Escape, the scrim, or Cancel — never a
- * swipe, because no action may depend on a gesture beyond a tap.
+ * Leaving is animated as deliberately as arriving; a sheet that vanishes
+ * instantly reads as a glitch rather than a dismissal.
  */
+const CLOSE_MS = 240;
+const DRAG_TO_DISMISS = 110; // px past which the release closes it
+
 export function Sheet({
   open,
   onClose,
@@ -38,21 +37,36 @@ export function Sheet({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<number | null>(null);
+  const dragged = useRef(0);
+  const [closing, setClosing] = useState(false);
+
+  // Exit is driven by `open` flipping false, not by an internal request — so
+  // EVERY dismissal animates: scrim, Escape, the drag, and Cancel/Save inside
+  // the sheet, which call the parent's onClose directly.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open) setClosing(true);
+  }
+
+  const requestClose = useCallback(() => onClose(), [onClose]);
+
+  useEffect(() => {
+    if (!closing) return;
+    const t = setTimeout(() => setClosing(false), CLOSE_MS);
+    return () => clearTimeout(t);
+  }, [closing]);
 
   useEffect(() => {
     if (!open) return;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     };
     document.addEventListener("keydown", onKey);
 
     const vv = window.visualViewport;
-    // Rather than computing how tall the keyboard is and padding around it,
-    // the container simply BECOMES the visual viewport: same height, same
-    // offset. Anything aligned to its bottom then sits exactly above the
-    // keyboard, whatever iOS does with scroll position or reserved bars.
-    // This is what production sheet libraries do, and it self-corrects.
     const trackViewport = () => {
       if (!vv || !wrapRef.current) return;
       wrapRef.current.style.height = `${vv.height}px`;
@@ -65,25 +79,59 @@ export function Sheet({
     vv?.addEventListener("resize", trackViewport);
     vv?.addEventListener("scroll", trackViewport);
 
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", onKey);
       vv?.removeEventListener("resize", trackViewport);
       vv?.removeEventListener("scroll", trackViewport);
+      document.body.style.overflow = previous;
     };
-  }, [open, onClose]);
+  }, [open, requestClose]);
 
-  if (!open || typeof document === "undefined") return null;
+  // --- drag the handle down to dismiss -----------------------------------
+  function onDragStart(e: React.PointerEvent) {
+    if (closing || !open) return;
+    dragStart.current = e.clientY;
+    dragged.current = 0;
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    if (panelRef.current) panelRef.current.style.transition = "none";
+  }
+
+  function onDragMove(e: React.PointerEvent) {
+    if (dragStart.current === null || !panelRef.current) return;
+    // Downward only — dragging up shouldn't lift the sheet off its edge.
+    dragged.current = Math.max(0, e.clientY - dragStart.current);
+    panelRef.current.style.transform = `translateY(${dragged.current}px)`;
+  }
+
+  function onDragEnd() {
+    if (dragStart.current === null || !panelRef.current) return;
+    const travelled = dragged.current;
+    dragStart.current = null;
+    panelRef.current.style.transition = `transform ${CLOSE_MS}ms cubic-bezier(0.32,0.72,0,1)`;
+    if (travelled > DRAG_TO_DISMISS) {
+      requestClose();
+    } else {
+      panelRef.current.style.transform = "translateY(0)";
+    }
+  }
+
+  // Stay mounted through the exit animation.
+  if ((!open && !closing) || typeof document === "undefined") return null;
 
   return createPortal(
-    <div
-      ref={wrapRef}
-      className="fixed inset-x-0 top-0 z-50 flex items-end justify-center"
-    >
+    <div ref={wrapRef} className="fixed inset-x-0 top-0 z-50 flex items-end justify-center">
       <button
         type="button"
         aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 animate-[scrim-fade_200ms_ease-out] bg-black/40"
+        onClick={requestClose}
+        className={
+          closing
+            ? "absolute inset-0 animate-[scrim-clear_240ms_ease-in_forwards] bg-black/40"
+            : "absolute inset-0 animate-[scrim-fade_200ms_ease-out] bg-black/40"
+        }
       />
       <div className="relative flex w-full max-w-[430px] justify-center">
         <div
@@ -91,20 +139,31 @@ export function Sheet({
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          // Tapping any non-field part of the sheet dismisses the keyboard,
-          // which is otherwise awkward to put away on iOS.
           onPointerDown={(e) => {
             const target = e.target as HTMLElement;
-            if (!target.closest("input, textarea, select, button")) {
+            if (!target.closest("input, textarea, select, button, [role='slider']")) {
               (document.activeElement as HTMLElement | null)?.blur();
             }
           }}
-          className="bg-surface-default flex w-full flex-col gap-2 overflow-y-auto rounded-t-[38px] pb-2 animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]"
+          className={
+            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto rounded-t-[38px] pb-2 " +
+            (closing
+              ? "animate-[sheet-fall_240ms_cubic-bezier(0.32,0.72,0,1)_forwards]"
+              : "animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]")
+          }
         >
-          <div className="flex h-3 w-full shrink-0 items-end justify-center">
+          {/* Generous grab area — the visible bar is 48x4, the target is the
+              full width and 32px tall. */}
+          <div
+            onPointerDown={onDragStart}
+            onPointerMove={onDragMove}
+            onPointerUp={onDragEnd}
+            onPointerCancel={onDragEnd}
+            className="flex h-8 w-full shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+          >
             <span className="bg-border-default h-1 w-12 rounded-full" aria-hidden />
           </div>
-          <h2 className="text-screen-title text-text-primary px-4 pt-4">{title}</h2>
+          <h2 className="text-screen-title text-text-primary px-4">{title}</h2>
           <div className="border-border-default mt-4 border-t" />
           <div
             className="flex flex-col gap-7 px-4 pt-6"

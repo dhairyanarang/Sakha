@@ -65,3 +65,15 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Sheets leave the way they arrived. Without this they vanish instantly,
+   which reads as a glitch rather than a dismissal. */
+@keyframes sheet-fall {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes scrim-clear {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
