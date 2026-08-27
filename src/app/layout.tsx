@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
-import { StatusBarBackdrop } from "@/components/status-bar-backdrop";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,10 +16,14 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Sakha",
-    // Lets the page draw behind the status bar, which is the only way the
-    // Home gradient can reach it — iOS will otherwise reserve that strip and
-    // fill it with a single flat theme colour, never a gradient.
-    statusBarStyle: "black-translucent",
+    // NOT black-translucent. That setting applies only once installed to the
+    // home screen, and it makes the web view claim the whole screen — which
+    // flips env(safe-area-inset-bottom) from ~0 in the browser to 34px in
+    // standalone. Every footer then gained 34px the moment the app was
+    // installed, which is why it looked right in Safari and floated on the
+    // home screen. The cost is that Home's gradient stops at the status bar
+    // rather than running under it.
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
@@ -45,7 +48,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex flex-col">
-        <StatusBarBackdrop />
         <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>

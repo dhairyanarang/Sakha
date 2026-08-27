@@ -34,7 +34,7 @@ export function Toast({
       role="status"
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4"
-      style={{ bottom: "calc(var(--spacing-7) + env(safe-area-inset-bottom))" }}
+      style={{ bottom: "var(--spacing-7)" }}
     >
       <div className="bg-feedback-success-surface border-feedback-success flex items-center gap-2 rounded-full border px-4 py-3 shadow-[0_4px_16px_rgb(0_0_0/0.16)]">
         <Check size={18} className="text-feedback-success-text shrink-0" aria-hidden />

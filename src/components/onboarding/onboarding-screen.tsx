@@ -41,7 +41,7 @@ export function OnboardingScreen({
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
       <div
         className="flex h-[42px] shrink-0 items-center justify-between px-2.5"
-        style={{ marginTop: "calc(env(safe-area-inset-top) + var(--spacing-2))" }}
+        style={{ marginTop: "var(--spacing-2)" }}
       >
         {backHref ? (
           <Link
@@ -105,7 +105,7 @@ export function OnboardingScreen({
         className="border-border-faint bg-surface-tinted flex shrink-0 flex-col gap-1 border-t px-4 pt-3"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "var(--spacing-2)" }}
       >
         {footer}
       </footer>

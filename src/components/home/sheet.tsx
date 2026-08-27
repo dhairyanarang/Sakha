@@ -105,7 +105,7 @@ export function Sheet({
           <div className="border-border-default mt-4 border-t" />
           <div
             className="flex flex-col gap-7 px-4 pt-6"
-            style={{ paddingBottom: "calc(var(--spacing-5) + env(safe-area-inset-bottom))" }}
+            style={{ paddingBottom: "var(--spacing-5)" }}
           >
             {children}
           </div>
