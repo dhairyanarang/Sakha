@@ -27,7 +27,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex shrink-0 flex-col gap-3">
       <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
         today’s care
       </h2>
@@ -35,7 +35,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
       {data.doses.length === 0 ? (
         /* Home's empty state is deliberately calmer than the others: its job is
            today's status, not a first-time setup nudge. */
-        <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-3 py-4">
+        <div className="bg-surface-default border-border-soft shrink-0 rounded-xl border-[0.5px] px-3 py-4">
           <p className="text-body-medium text-text-primary">You have no medicine recorded</p>
           <p className="text-body-secondary text-text-secondary mt-1">
             You can add your medicines from Health.

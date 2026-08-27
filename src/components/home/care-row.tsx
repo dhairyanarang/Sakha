@@ -29,7 +29,7 @@ export function CareRow({
   return (
     <div
       className={cn(
-        "bg-surface-default border-border-soft flex items-center gap-3 rounded-xl border-[0.5px] px-3 py-4",
+        "bg-surface-default border-border-soft flex shrink-0 items-center gap-3 rounded-xl border-[0.5px] px-3 py-4",
         className,
       )}
     >

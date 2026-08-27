@@ -47,7 +47,7 @@ export function MoodCard({ mood }: { mood: Enums<"mood_level"> | null }) {
   return (
     <>
       {!answered ? (
-        <section className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] p-3">
+        <section className="bg-surface-default border-border-soft flex shrink-0 flex-col gap-4 rounded-xl border-[0.5px] p-3">
           <h2 className="text-body-medium text-text-primary">How are you feeling today?</h2>
           <div className="flex items-start gap-2">
             {MOODS.map(({ value, label, Icon }) => {
