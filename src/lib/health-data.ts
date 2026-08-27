@@ -259,7 +259,12 @@ export type StoredDocument = {
   createdAt: string;
   /** Short-lived; the bucket is private and has no public URL. */
   signedUrl: string | null;
+  /** Same object, signed to arrive as a download rather than open inline. */
+  downloadUrl: string | null;
+  /** The name the download lands under. */
+  fileName: string;
   isImage: boolean;
+  isPdf: boolean;
 };
 
 /** One document, with a link that can actually be opened. */
@@ -276,9 +281,20 @@ export async function getDocument(
     .maybeSingle();
   if (!data) return null;
 
-  const { data: signed } = await supabase.storage
-    .from("health-documents")
-    .createSignedUrl(data.storage_path, 60 * 10);
+  const extension = data.storage_path.split(".").pop()?.toLowerCase() ?? "";
+  const isPdf = extension === "pdf";
+  // A safe, recognisable filename — she should not be handed a UUID.
+  const fileName = `${data.title.replace(/[^\w\s.-]/g, "").trim() || "document"}${extension ? `.${extension}` : ""}`;
+
+  const [{ data: signed }, { data: signedDownload }] = await Promise.all([
+    supabase.storage.from("health-documents").createSignedUrl(data.storage_path, 60 * 10),
+    // download: sets Content-Disposition, which is the only thing that makes a
+    // cross-origin link actually save. The HTML download attribute is ignored
+    // across origins, and this URL is on the Supabase host.
+    supabase.storage
+      .from("health-documents")
+      .createSignedUrl(data.storage_path, 60 * 10, { download: fileName }),
+  ]);
 
   return {
     id: data.id,
@@ -289,6 +305,9 @@ export async function getDocument(
     notes: data.notes,
     createdAt: data.created_at,
     signedUrl: signed?.signedUrl ?? null,
-    isImage: !/\.pdf$/i.test(data.storage_path),
+    downloadUrl: signedDownload?.signedUrl ?? null,
+    fileName,
+    isImage: !isPdf,
+    isPdf,
   };
 }

@@ -1,24 +1,29 @@
 import { notFound } from "next/navigation";
-import { Calendar, ExternalLink, FileText } from "lucide-react";
+import { Calendar, Download, ExternalLink } from "lucide-react";
 import { requireAccount } from "@/lib/account";
 import { getDocument } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
 import { ScreenHeader } from "@/components/screen-header";
-import { FixedBar, IconCircle } from "@/components/ui";
+import { FixedBar } from "@/components/ui";
 
 /**
  * One stored document.
  *
- * DESIGNED IN CODE. Figma has no frame for viewing a document, and the user
- * asked for Documents to be built from the existing system. Everything here is
- * an existing part — the screen header, a card, an Icon Circle, the same
- * metadata treatment the measurement screens use.
+ * DESIGNED IN CODE — Figma has no frame for this. The document itself leads:
+ * it is the reason she opened the screen, so it gets the top of the page and
+ * the full width, and the details it came with sit underneath rather than in
+ * front of it.
  *
- * A photo is shown directly, because that is what most of these will be and
- * making her tap through to see a prescription she just photographed would be
- * pointless. A PDF cannot be shown inline reliably on a phone, so it gets an
- * honest button that hands it to whatever already opens PDFs on her device —
- * "one tap, no new patterns to learn".
+ * A photo — which most of these will be, since she photographs prescriptions —
+ * renders directly at its natural proportions. Pinch-zoom is never disabled in
+ * this app, so reading small print needs no control of ours.
+ *
+ * A PDF is handed to the browser's own viewer in an iframe, which is what gives
+ * page-by-page scrolling without shipping a PDF engine to her phone. iOS Safari
+ * is unreliable at paging inside an iframe, so PDFs also get Open, which hands
+ * the file to the full-screen viewer that pages properly. FLAGGED: making
+ * in-page paging identical on iOS would mean bundling pdf.js, a real weight to
+ * put on a phone for a file the OS already opens well.
  */
 export default async function DocumentPage({
   params,
@@ -26,7 +31,6 @@ export default async function DocumentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
   const { account } = await requireAccount();
 
   const doc = await getDocument(account.accountId, id);
@@ -38,29 +42,50 @@ export default async function DocumentPage({
     <div className="bg-surface-page flex flex-1 flex-col">
       <ScreenHeader backHref="/health" title={doc.title} />
 
-      <main className="flex flex-1 flex-col gap-6 p-4">
-        <section className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] p-3">
-          <div className="flex items-center gap-3">
-            <IconCircle tone="brand">
-              <FileText size={22} className="text-action-primary" aria-hidden />
-            </IconCircle>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <p className="text-body-medium text-text-primary">{doc.title}</p>
-              <span className="flex items-center gap-1">
-                <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
-                {/* rgba(0,0,0,0.4) over surface/default, as a solid. */}
-                <span className="text-[14px] leading-[1.2] text-[#999999]">
-                  {relativeWhen(when)}
-                </span>
-              </span>
-            </div>
-          </div>
+      <main className="flex flex-1 flex-col gap-4 p-4">
+        {doc.signedUrl ? (
+          <section className="bg-surface-default border-border-soft overflow-hidden rounded-xl border-[0.5px]">
+            {doc.isImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={doc.signedUrl}
+                alt={doc.title}
+                className="block h-auto w-full object-contain"
+              />
+            ) : (
+              <iframe
+                src={doc.signedUrl}
+                title={doc.title}
+                /* Tall enough that a page of A4 reads as a page rather than a
+                   letterbox, and it scrolls within itself. */
+                className="block h-[70vh] w-full border-0"
+              />
+            )}
+          </section>
+        ) : (
+          <section className="bg-surface-default border-border-soft rounded-xl border-[0.5px] p-4">
+            <p className="text-body-secondary text-text-secondary">
+              We couldn&apos;t load this document right now. Please try again.
+            </p>
+          </section>
+        )}
 
-          {doc.docType ? (
-            <span className="bg-surface-tinted text-action-primary self-start rounded-full px-4 py-2 text-[14px] leading-[1.2]">
-              {doc.docType}
+        {/* The details it arrived with, under the thing itself. */}
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1">
+              <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
+              {/* rgba(0,0,0,0.4) over surface/page, resolved to a solid value. */}
+              <span className="text-[14px] leading-[1.2] text-[#999999]">
+                {relativeWhen(when)}
+              </span>
             </span>
-          ) : null}
+            {doc.docType ? (
+              <span className="bg-surface-tinted text-action-primary rounded-full px-4 py-2 text-[14px] leading-[1.2]">
+                {doc.docType}
+              </span>
+            ) : null}
+          </div>
 
           {doc.notes ? (
             <p className="text-body-secondary text-text-secondary whitespace-pre-line">
@@ -68,41 +93,35 @@ export default async function DocumentPage({
             </p>
           ) : null}
         </section>
-
-        {doc.signedUrl ? (
-          doc.isImage ? (
-            <div className="border-border-soft overflow-hidden rounded-xl border-[0.5px]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={doc.signedUrl}
-                alt={doc.title}
-                className="block h-auto w-full object-contain"
-              />
-            </div>
-          ) : null
-        ) : (
-          <p className="text-body-secondary text-text-secondary">
-            We couldn&apos;t load this document right now. Please try again.
-          </p>
-        )}
       </main>
 
-      {doc.signedUrl ? (
+      {doc.downloadUrl ? (
         <FixedBar reserve={120}>
-        <footer
-          className="bg-surface-page px-4 pt-4"
-          style={{ paddingBottom: "var(--spacing-7)" }}
-        >
-          <a
-            href={doc.signedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center gap-3 rounded-xl transition-colors"
+          <footer
+            className="bg-surface-page flex items-start gap-3 px-4 pt-4"
+            style={{ paddingBottom: "var(--spacing-7)" }}
           >
-            <ExternalLink size={22} aria-hidden />
-            Open document
-          </a>
-        </footer>
+            {/* PDFs only: iOS pages them properly in the full-screen viewer,
+                which an iframe cannot be relied on to do. */}
+            {doc.isPdf && doc.signedUrl ? (
+              <a
+                href={doc.signedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-surface-default border-action-primary text-action-primary text-button-label active:bg-surface-tinted flex h-[60px] flex-1 items-center justify-center gap-2 rounded-xl border transition-colors"
+              >
+                <ExternalLink size={22} aria-hidden />
+                Open
+              </a>
+            ) : null}
+            <a
+              href={doc.downloadUrl}
+              className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] flex-1 items-center justify-center gap-2 rounded-xl transition-colors"
+            >
+              <Download size={22} aria-hidden />
+              Download
+            </a>
+          </footer>
         </FixedBar>
       ) : null}
     </div>

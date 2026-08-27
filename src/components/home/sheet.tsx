@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 
 /**
  * Bottom sheet.
@@ -10,9 +11,12 @@ import { createPortal } from "react-dom";
  * Radix only for a select and a future date picker, and adding a component
  * library for this would breach "one visual system only".
  *
- * Keyboard: the container BECOMES the visual viewport — same height, same
- * offset — so anything aligned to its bottom sits exactly above the keyboard
- * whatever iOS does with scroll position. No offset arithmetic to get wrong.
+ * Keyboard: while one is open the container becomes the visual viewport — same
+ * height, same offset — so anything aligned to its bottom sits exactly above
+ * the keyboard. The rest of the time it is simply inset-0 and does not track
+ * anything. Tracking the visual viewport unconditionally was a bug: iOS shrinks
+ * it whenever the URL bar collapses or the page rubber-bands, so the sheet slid
+ * about during ordinary scrolling.
  *
  * Dismissal: tap the scrim, press Escape, hit Cancel, or drag the sheet down
  * by its handle. The drag is an ADDITION, never the only way out — no action
@@ -47,6 +51,7 @@ export function Sheet({
   // Exit is driven by `open` flipping false, not by an internal request — so
   // EVERY dismissal animates: scrim, Escape, the drag, and Cancel/Save inside
   // the sheet, which call the parent's onClose directly.
+  const keyboardInset = useKeyboardInset();
   const [wasOpen, setWasOpen] = useState(open);
   if (wasOpen !== open) {
     setWasOpen(open);
@@ -71,11 +76,21 @@ export function Sheet({
 
     const vv = window.visualViewport;
     const trackViewport = () => {
-      if (!vv || !wrapRef.current) return;
-      wrapRef.current.style.height = `${vv.height}px`;
-      wrapRef.current.style.transform = `translateY(${vv.offsetTop}px)`;
-      if (panelRef.current) {
-        panelRef.current.style.maxHeight = `${Math.max(240, vv.height - 24)}px`;
+      const wrap = wrapRef.current;
+      if (!vv || !wrap) return;
+      if (keyboardInset > 0) {
+        // Keyboard up: match the visible area exactly so the buttons land just
+        // above it.
+        wrap.style.height = `${vv.height}px`;
+        wrap.style.transform = `translateY(${vv.offsetTop}px)`;
+        if (panelRef.current) {
+          panelRef.current.style.maxHeight = `${Math.max(240, vv.height - 24)}px`;
+        }
+      } else {
+        // Otherwise let inset-0 do it. Anything else follows the URL bar.
+        wrap.style.height = "";
+        wrap.style.transform = "";
+        if (panelRef.current) panelRef.current.style.maxHeight = "";
       }
     };
     trackViewport();
@@ -91,6 +106,23 @@ export function Sheet({
      * holds the page exactly where it was, and the scroll position is restored
      * on the way out.
      */
+    /**
+     * Dim the iOS status bar along with everything else.
+     *
+     * Installed, statusBarStyle is "default": iOS reserves and paints that
+     * strip itself from theme-color, and the web view starts below it — so the
+     * scrim cannot reach it no matter how the sheet is positioned. Repainting
+     * theme-color to the scrimmed colour is the only way to dim it without
+     * black-translucent, which is what caused the bottom-gap bug this codebase
+     * already fought once.
+     *
+     * #959599 is surface/page under black at 40%, the same value the scrim
+     * resolves to over the page. In a browser tab this is simply a no-op.
+     */
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    const previousTheme = themeMeta?.getAttribute("content") ?? null;
+    themeMeta?.setAttribute("content", "#959599");
+
     const scrollY = window.scrollY;
     const previous = {
       position: document.body.style.position,
@@ -105,12 +137,13 @@ export function Sheet({
       document.removeEventListener("keydown", onKey);
       vv?.removeEventListener("resize", trackViewport);
       vv?.removeEventListener("scroll", trackViewport);
+      if (previousTheme !== null) themeMeta?.setAttribute("content", previousTheme);
       document.body.style.position = previous.position;
       document.body.style.top = previous.top;
       document.body.style.width = previous.width;
       window.scrollTo(0, scrollY);
     };
-  }, [open, requestClose]);
+  }, [open, requestClose, keyboardInset]);
 
   // --- drag the handle down to dismiss -----------------------------------
   function onDragStart(e: React.PointerEvent) {
@@ -144,7 +177,7 @@ export function Sheet({
   if ((!open && !closing) || typeof document === "undefined") return null;
 
   return createPortal(
-    <div ref={wrapRef} className="fixed inset-x-0 top-0 z-50 flex items-end justify-center">
+    <div ref={wrapRef} className="fixed inset-0 z-50 flex items-end justify-center">
       <button
         type="button"
         aria-label="Close"
@@ -168,7 +201,7 @@ export function Sheet({
             }
           }}
           className={
-            "bg-surface-default flex w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[38px] pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " +
+            "bg-surface-default flex max-h-full w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[38px] pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " +
             (closing
               ? "animate-[sheet-fall_240ms_cubic-bezier(0.32,0.72,0,1)_forwards]"
               : "animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]")

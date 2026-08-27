@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 
 /**
  * A bar that stays put while the document scrolls underneath it.
@@ -21,10 +22,11 @@ import { cn } from "@/lib/cn";
  * is already correct. After mount the real height is measured and takes over,
  * which matters if she raises her system text size and the bar grows.
  *
- * The bar rides above the keyboard. iOS shrinks the visual viewport without
- * moving the layout viewport, so a bottom-anchored fixed element would sit
- * behind the keyboard — the offset below is how much of the layout viewport the
- * keyboard covers, which keeps Next and Save reachable while typing.
+ * The bar rides above the keyboard, and ONLY the keyboard. iOS shrinks the
+ * visual viewport for ordinary reasons too — the URL bar collapsing as you
+ * scroll, the rubber-band at either end — and an earlier version treated all of
+ * that as keyboard, which made the bar slide up and down during plain
+ * scrolling. useKeyboardInset is 0 unless a text field is genuinely focused.
  */
 export function FixedBar({
   reserve,
@@ -38,7 +40,7 @@ export function FixedBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(reserve);
-  const [keyboardInset, setKeyboardInset] = useState(0);
+  const keyboardInset = useKeyboardInset();
 
   useEffect(() => {
     const el = barRef.current;
@@ -48,23 +50,6 @@ export function FixedBar({
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => {
-      // What the keyboard covers: the gap between the layout viewport and the
-      // visible one. Zero whenever the keyboard is closed.
-      setKeyboardInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
-    };
-    update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-    };
   }, []);
 
   return (
