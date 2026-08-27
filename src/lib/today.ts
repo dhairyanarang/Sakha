@@ -68,3 +68,51 @@ export function currentSlot(at: Date = new Date()): Enums<"time_of_day"> {
   if (h < 17) return "afternoon";
   return "evening";
 }
+
+/** "9:12 AM" in her timezone. */
+function clockTime(at: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(at);
+}
+
+/**
+ * How long ago something was, in words.
+ *
+ * Plain and unhurried: "Today, 9:12 AM", "3 days ago". No seconds, no "just
+ * now" ticking over while she reads it, and nothing that implies she is late
+ * for anything. Anything older than about a month gets a real date instead,
+ * because "7 weeks ago" stops meaning much.
+ *
+ * A bare YYYY-MM-DD (a document's own date) has no time to show, so it never
+ * gets one — it is parsed as local noon so that a timezone shift cannot roll
+ * it onto the wrong day.
+ */
+export function relativeWhen(value: string, now: Date = new Date()): string {
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const at = dateOnly ? new Date(`${value}T12:00:00`) : new Date(value);
+  if (Number.isNaN(at.getTime())) return "";
+
+  const today = localDate(now);
+  const then = localDate(at);
+  if (then === today) return dateOnly ? "Today" : `Today, ${clockTime(at)}`;
+
+  // Difference in calendar days in her timezone, not elapsed hours — 11pm to
+  // 1am is "yesterday", not "2 hours ago".
+  const days = Math.round(
+    (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${then}T00:00:00Z`)) / 86_400_000,
+  );
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 14) return "1 week ago";
+  if (days < 35) return `${Math.floor(days / 7)} weeks ago`;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    day: "numeric",
+    month: "long",
+  }).format(at);
+}
