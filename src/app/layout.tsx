@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { StatusBarBackdrop } from "@/components/status-bar-backdrop";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Sakha",
-    statusBarStyle: "default",
+    // Lets the page draw behind the status bar, which is the only way the
+    // Home gradient can reach it — iOS will otherwise reserve that strip and
+    // fill it with a single flat theme colour, never a gradient.
+    statusBarStyle: "black-translucent",
   },
   formatDetection: {
     telephone: false,
@@ -40,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex min-h-full flex-col">
+        <StatusBarBackdrop />
         <div className="bg-surface-tinted mx-auto flex w-full max-w-[430px] flex-1 flex-col">
           {children}
         </div>

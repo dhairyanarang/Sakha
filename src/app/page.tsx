@@ -24,9 +24,13 @@ export default async function HomePage() {
   const home = await getHomeData(account.accountId);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
+    /* The gradient lives on the root, not the header, so it also fills the
+       area behind the status bar and shows through the tinted sheet's rounded
+       top corners. Rounding against the body — the same colour — made those
+       corners invisible. */
+    <div className="flex h-dvh flex-col overflow-hidden bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]">
       <header
-        className="shrink-0 bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))] px-4 pb-3"
+        className="shrink-0 px-4 pb-3"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + var(--spacing-2))" }}
       >
         <div className="flex items-center gap-3">

@@ -25,7 +25,9 @@ export function TodaysCare({ data }: { data: HomeData }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-subsection-heading text-action-primary">today’s care</h2>
+      <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
+        today’s care
+      </h2>
 
       {data.doses.length === 0 ? (
         /* Home's empty state is deliberately calmer than the others: its job is
