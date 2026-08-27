@@ -80,7 +80,7 @@
   --color-surface-page:         var(--brand-25);  /* app background != card */
   --color-surface-subtle:       var(--neutral-100);
   --color-surface-tinted:       var(--brand-50);
-  --color-surface-tinted-strong: var(--brand-100);
+  --color-surface-tinted-strong: var(--brand-50);
 
   /* -- Border -------------------------------------------------------------- */
   --color-border-default: var(--neutral-200);

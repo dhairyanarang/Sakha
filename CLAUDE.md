@@ -127,6 +127,10 @@ Decided by the user on 2026-08-26:
 
 ## Known open issues
 
+- **`surface/tinted-strong` resolves to the same value as `surface/tinted`**
+  (both `brand/50`, #F1F1FF), so it is inert. Consequence: Secondary's pressed
+  state can only darken its label, which is a quiet cue. A dedicated token for
+  a pressed tinted surface would fix it.
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
