@@ -125,6 +125,19 @@ Decided by the user on 2026-08-26:
   library. This is the sole authorised exception to "don't invent design."
 - Auth is **Google OAuth via Supabase**, as designed.
 
+## Development affordances (remove before launch)
+
+Gated on `NEXT_PUBLIC_DEV_TOOLS`, which is set on preview and development
+only — never production, so none of this exists in a real build.
+
+- `/dev/login` signs in as the QA account so the screens behind auth can be
+  driven in a browser. Credentials come from `DEV_LOGIN_EMAIL` /
+  `DEV_LOGIN_PASSWORD`, never the repo.
+- A small panel offers "Restart onboarding", which deletes the signed-in
+  user's own account so the flow starts from the top.
+- The QA account itself is `qa@sakha.internal`, created directly in
+  `auth.users`. **Delete it, the env vars, and this code before launch.**
+
 ## Known open issues
 
 - **`surface/tinted-strong` resolves to the same value as `surface/tinted`**

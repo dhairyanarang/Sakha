@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
+import { DevTools } from "@/components/dev-tools";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Visual feedback toolbar. Dev only — the check compiles away in a
             production build, so it never ships to a real device. */}
         {process.env.NODE_ENV === "development" && <Agentation />}
+        <DevTools />
       </body>
     </html>
   );
