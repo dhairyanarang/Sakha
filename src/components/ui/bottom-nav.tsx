@@ -31,7 +31,7 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
   return (
     <nav
       aria-label="Main"
-      style={{ paddingBottom: "var(--spacing-4)" }}
+      style={{ paddingBottom: "var(--spacing-6)" }}
       className={cn(
         "bg-surface-default border-border-faint flex w-full shrink-0 items-start border-t px-3 pt-2",
         className,

@@ -102,10 +102,13 @@ export function OnboardingScreen({
       </main>
 
       <footer
-        className="border-border-faint bg-surface-tinted flex shrink-0 flex-col gap-1 border-t px-4 pt-3"
+        /* No divider: Next should sit exactly as Get Started does, not read
+           as a separate bar. The background still hides content scrolling
+           beneath it. */
+        className="bg-surface-tinted flex shrink-0 flex-col gap-1 px-4 pt-4"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
-        style={{ paddingBottom: "var(--spacing-4)" }}
+        style={{ paddingBottom: "var(--spacing-6)" }}
       >
         {footer}
       </footer>
