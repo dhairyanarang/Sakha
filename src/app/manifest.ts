@@ -9,8 +9,12 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#F8F8FF", // surface/page
-    theme_color: "#F8F8FF",
+    background_color: "#F1F1FF", // surface/tinted
+    // iOS reads this at install time for the status bar. Light, to match the
+    // onboarding screens — there is no per-screen control for an installed
+    // app, so this is the value every screen gets unless iOS happens to
+    // honour the dynamic tag below.
+    theme_color: "#F1F1FF",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

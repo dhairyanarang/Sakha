@@ -32,11 +32,12 @@ const STYLE: Record<
     disabled: "bg-action-primary-disabled text-text-on-brand",
   },
   secondary: {
-    // Fill AND label darken together. A label-only shift was too quiet to
-    // register at arm's length.
+    // Only the label darkens. The fill can't: surface/tinted-strong resolves
+    // to the same value as surface/tinted again, so changing it is a no-op.
+    // That makes Secondary's pressed cue quiet — flagged in CLAUDE.md.
     base: "bg-surface-tinted text-action-primary",
-    active: "active:bg-surface-tinted-strong active:text-action-primary-pressed",
-    pressed: "bg-surface-tinted-strong text-action-primary-pressed",
+    active: "active:text-action-primary-pressed",
+    pressed: "text-action-primary-pressed",
     disabled: "bg-surface-subtle text-text-disabled",
   },
   // Not in the Figma component library, but every Onboarding screen uses it:

@@ -1,16 +1,14 @@
 import { redirect } from "next/navigation";
+import { User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveAccount } from "@/lib/account";
+import { getHomeData } from "@/lib/home-data";
+import { greeting, longDate } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
+import { MoodCard } from "@/components/home/mood-card";
+import { TodaysCare } from "@/components/home/todays-care";
 
-/**
- * Entry point. Routes to the right place rather than rendering a landing page:
- * signed out goes to Welcome, signed in without an account resumes onboarding,
- * and everyone else lands on Home.
- *
- * Home itself is Phase 4 — the placeholder below is scaffolding.
- */
-export default async function RootPage() {
+export default async function HomePage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/welcome");
@@ -18,22 +16,45 @@ export default async function RootPage() {
   const account = await getActiveAccount();
   if (!account) redirect("/onboarding/name");
 
+  const home = await getHomeData(account.accountId);
+
   return (
-    <div className="bg-surface-page flex min-h-dvh flex-col">
-      <main className="flex flex-1 flex-col gap-2 px-4 pt-6">
-        <h1 className="text-screen-title text-text-primary">
-          Good Morning, {account.displayName}
-        </h1>
-        <p className="text-body-secondary text-text-secondary">
-          Home is being built in Phase 4.
-        </p>
-        <form action="/auth/signout" method="post" className="mt-6">
-          <button type="submit" className="text-body-medium text-action-primary">
-            Sign out
-          </button>
-        </form>
+    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header
+        className="shrink-0 px-4 pb-4"
+        style={{ paddingTop: "var(--spacing-3)" }}
+      >
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/onboarding/sakha-mark.svg"
+            alt=""
+            width={40}
+            height={40}
+            className="size-10 shrink-0"
+          />
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+            <p className="text-action-primary truncate text-[20px] leading-[1.2] font-medium">
+              {greeting()}, {account.displayName}
+            </p>
+            <p className="text-action-primary text-[14px] leading-[1.2]">{longDate()}</p>
+          </div>
+          {/* Profile lands in Phase 6; this is the persistent avatar slot. */}
+          <span
+            title="Profile"
+            className="bg-action-primary text-text-on-brand flex size-[52px] shrink-0 items-center justify-center rounded-full"
+          >
+            <User size={24} aria-hidden />
+          </span>
+        </div>
+      </header>
+
+      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-2 pb-4">
+        <MoodCard mood={home.mood} />
+        <TodaysCare data={home} />
       </main>
-      <BottomNav active="home" />
+
+      <BottomNav active="home" className="shrink-0" />
     </div>
   );
 }

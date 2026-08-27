@@ -10,7 +10,7 @@ export function NameForm({ defaultName }: { defaultName: string }) {
   const [error, action, pending] = useActionState(saveName, null);
 
   return (
-    <form action={action}>
+    <form action={action} className="flex min-h-0 flex-1 flex-col">
       <OnboardingScreen
         icon={<User size={60} className="text-action-primary" aria-hidden />}
         title="What should we call you?"

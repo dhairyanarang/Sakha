@@ -16,10 +16,10 @@ export default async function WelcomePage() {
   if (data.user) redirect("/");
 
   return (
-    <div className="bg-surface-page flex min-h-dvh flex-col overflow-hidden">
+    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
       <header
         className="flex shrink-0 flex-col items-center px-4"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 31px)" }}
+        style={{ paddingTop: "31px" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -39,19 +39,22 @@ export default async function WelcomePage() {
         </p>
       </header>
 
-      <div className="relative min-h-[220px] flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/onboarding/welcome.webp"
           alt="An older woman and her son looking at a phone together"
-          className="absolute inset-x-0 bottom-0 w-full object-contain object-bottom"
+          /* Fills the box rather than being fitted inside it, so there are no
+             slivers of page down the sides. Anchored to the top so a short
+             screen crops the bottom of the frame and never their faces. */
+          className="absolute inset-0 size-full object-cover object-top"
         />
-        <div className="from-surface-page/0 to-surface-page absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
+        <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
 
       <footer
         className="shrink-0 px-4"
-        style={{ paddingBottom: "calc(var(--spacing-6) + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "var(--spacing-7)" }}
       >
         <Link
           href="/sign-in"

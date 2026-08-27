@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { ShieldUser } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleSignInButton } from "./google-sign-in-button";
+import { DEV_TOOLS } from "@/lib/dev";
 
 export default async function SignInPage({
   searchParams,
@@ -15,10 +16,10 @@ export default async function SignInPage({
   const { error } = await searchParams;
 
   return (
-    <div className="bg-surface-page flex min-h-dvh flex-col">
+    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
       <header
         className="flex shrink-0 flex-col items-center gap-6 px-4"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 46px)" }}
+        style={{ paddingTop: "46px" }}
       >
         <div className="flex flex-col items-center gap-[13px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -41,7 +42,7 @@ export default async function SignInPage({
       </header>
 
       {/* Figma places this at 372px wide, i.e. 15px margins rather than 16. */}
-      <div className="flex flex-1 items-center justify-center px-[15px]">
+      <div className="flex min-h-0 flex-1 items-center justify-center px-[15px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/onboarding/privacy-shield.webp"
@@ -52,7 +53,7 @@ export default async function SignInPage({
 
       <footer
         className="flex shrink-0 flex-col gap-6 px-4"
-        style={{ paddingBottom: "calc(var(--spacing-7) + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "var(--spacing-7)" }}
       >
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error text-center">
@@ -71,6 +72,19 @@ export default async function SignInPage({
         </div>
 
         <GoogleSignInButton />
+
+        {/* Testing only. Gated on NEXT_PUBLIC_DEV_TOOLS, which is set on
+            preview and development and never on production — so this button
+            cannot appear in a real build. Signs in as the QA account and goes
+            straight to Home. */}
+        {DEV_TOOLS ? (
+          <a
+            href="/dev/login"
+            className="text-text-tertiary flex h-[44px] items-center justify-center rounded-xl border border-dashed border-[color:var(--color-border-subtle)] text-[14px]"
+          >
+            Continue as guest (testing only)
+          </a>
+        ) : null}
       </footer>
     </div>
   );

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Agentation } from "agentation";
+import { DevTools } from "@/components/dev-tools";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,6 +17,18 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Sakha",
+    // Deliberately NOT black-translucent.
+    //
+    // That directive does nothing in a browser and everything once installed,
+    // which is precisely the shape of the bug it caused: it hands the web view
+    // the whole screen INCLUDING the status bar, then iOS offsets the content
+    // down by the status bar height while still reporting full height. The
+    // last ~47px end up empty — the block of page colour under the bottom nav,
+    // present on the home screen and never in Safari.
+    //
+    // "default" makes iOS reserve and paint the strip itself, so the web view
+    // starts below it, the bottom is the real bottom, and the status bar is
+    // light — which is what onboarding wants.
     statusBarStyle: "default",
   },
   formatDetection: {
@@ -28,7 +42,7 @@ export const viewport: Viewport = {
   // Deliberately NOT locking maximumScale or userScalable. Our reader is
   // presbyopic — pinch-zoom must keep working.
   viewportFit: "cover",
-  themeColor: "#F8F8FF", // surface/page
+  themeColor: "#F1F1FF", // surface/tinted — matches the canvas
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -39,10 +53,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           that don't exist, the app is capped at a phone-width column and
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
-      <body className="flex min-h-full flex-col bg-white">
-        <div className="bg-surface-page mx-auto flex w-full max-w-[430px] flex-1 flex-col">
+      <body className="bg-surface-tinted flex flex-col">
+        <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>
+        {/* Visual feedback toolbar. Dev only — the check compiles away in a
+            production build, so it never ships to a real device. */}
+        {process.env.NODE_ENV === "development" && <Agentation />}
+        <DevTools />
       </body>
     </html>
   );

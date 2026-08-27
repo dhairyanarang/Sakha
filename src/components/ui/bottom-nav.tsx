@@ -11,8 +11,9 @@ import { cn } from "@/lib/cn";
  * both icon and text; inactive icons use the icon/stroke token at 60% rather
  * than a flat solid. Icon stroke weights are taken from the Figma vectors.
  *
- * The 24px bottom padding is extended by the safe-area inset so the labels
- * clear the iPhone home indicator once installed to the home screen.
+ * The bar's white fill runs to the physical bottom edge; the safe-area inset
+ * is applied as padding INSIDE it, so the labels clear the iPhone home
+ * indicator without leaving a strip of page colour beneath the bar.
  */
 export type NavTab = "home" | "health" | "library";
 
@@ -30,9 +31,9 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
   return (
     <nav
       aria-label="Main"
-      style={{ paddingBottom: "calc(var(--spacing-6) + env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "var(--spacing-6)" }}
       className={cn(
-        "bg-surface-default border-border-faint flex w-full items-start border-t px-3 pt-3",
+        "bg-surface-default border-border-faint flex w-full shrink-0 items-start border-t px-3 pt-2",
         className,
       )}
       {...props}

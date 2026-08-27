@@ -125,8 +125,25 @@ Decided by the user on 2026-08-26:
   library. This is the sole authorised exception to "don't invent design."
 - Auth is **Google OAuth via Supabase**, as designed.
 
+## Development affordances (remove before launch)
+
+Gated on `NEXT_PUBLIC_DEV_TOOLS`, which is set on preview and development
+only — never production, so none of this exists in a real build.
+
+- `/dev/login` signs in as the QA account so the screens behind auth can be
+  driven in a browser. Credentials come from `DEV_LOGIN_EMAIL` /
+  `DEV_LOGIN_PASSWORD`, never the repo.
+- A small panel offers "Restart onboarding", which deletes the signed-in
+  user's own account so the flow starts from the top.
+- The QA account itself is `qa@sakha.internal`, created directly in
+  `auth.users`. **Delete it, the env vars, and this code before launch.**
+
 ## Known open issues
 
+- **`surface/tinted-strong` resolves to the same value as `surface/tinted`**
+  (both `brand/50`, #F1F1FF), so it is inert. Consequence: Secondary's pressed
+  state can only darken its label, which is a quiet cue. A dedicated token for
+  a pressed tinted surface would fix it.
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
@@ -179,3 +196,13 @@ node scripts/generate-icons.mjs   # regenerate PWA icons from placeholder mark
 pnpm db:types                     # regenerate DB types (needs `supabase login` once)
 vercel env pull .env.local --yes  # refresh local env from Vercel
 ```
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -19,7 +19,13 @@ export function GoogleSignInButton() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        // Without this Google silently reuses the last session, which on a
+        // shared or multi-account phone means typing an address instead of
+        // picking a face from a list.
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (error) {
       setBusy(false);

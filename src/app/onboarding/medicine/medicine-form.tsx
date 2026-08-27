@@ -46,10 +46,10 @@ export function MedicineForm({
   }
 
   return (
-    <form action={action}>
+    <form action={action} className="flex min-h-0 flex-1 flex-col">
       <OnboardingScreen
         align="start"
-        backHref="/onboarding/family"
+        backHref="/onboarding/language"
         skipHref="/onboarding/reminders"
         title="Let’s add your Medicine"
         subtitle="Please add the medicines you take regularly"
@@ -58,7 +58,7 @@ export function MedicineForm({
             <Button type="submit" name="intent" value="next" disabled={pending}>
               {pending ? "Saving…" : "Next"}
             </Button>
-            <Button type="submit" name="intent" value="another" variant="ghost" disabled={pending}>
+            <Button type="submit" name="intent" value="another" variant="ghost" disabled={pending} className="h-[48px]">
               Add Another Medicine
             </Button>
           </>
