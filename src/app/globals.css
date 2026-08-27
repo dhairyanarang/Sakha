@@ -9,11 +9,15 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html {
+  /* The canvas behind everything, including the area under the status bar in
+     a standalone PWA and the overscroll area. Painting it here stops a white
+     band appearing above the app. */
+  background-color: var(--color-surface-tinted);
+}
+
 body {
-  /* White beyond the phone-width column. The column itself paints
-     surface/page — see the wrapper in app/layout.tsx. This rule is unlayered
-     and would otherwise beat any Tailwind background utility on <body>. */
-  background-color: var(--color-neutral-0, #ffffff);
+  background-color: var(--color-surface-tinted);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */
@@ -31,4 +35,17 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Bottom sheet entrance. Driven by CSS rather than React state so the sheet
+   needs no mount/animate bookkeeping — and the reduced-motion rule above
+   already collapses these to nothing for anyone who asks for that. */
+@keyframes sheet-rise {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes scrim-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

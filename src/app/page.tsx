@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { redirect } from "next/navigation";
 import { User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +8,10 @@ import { greeting, longDate } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
 import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
+
+/* Home's header is the indigo gradient, so the status bar behind it should be
+   too — otherwise a pale band sits above the gradient in a standalone PWA. */
+export const viewport: Viewport = { themeColor: "#5551FF" };
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -49,9 +54,7 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* Figma draws these top corners at 36 and 30 — reproduced as authored,
-          but the asymmetry looks unintentional and is flagged. */}
-      <main className="bg-surface-tinted flex flex-1 flex-col gap-6 overflow-y-auto rounded-tl-[36px] rounded-tr-[30px] p-4">
+      <main className="bg-surface-tinted flex flex-1 flex-col gap-6 overflow-y-auto rounded-t-[36px] p-4">
         <MoodCard mood={home.mood} />
         <TodaysCare data={home} />
       </main>

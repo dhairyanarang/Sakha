@@ -39,7 +39,7 @@ export function FamilyForm({
             <Button type="submit" name="intent" value="next" disabled={pending}>
               {pending ? "Saving…" : "Next"}
             </Button>
-            <Button type="submit" name="intent" value="another" variant="ghost" disabled={pending}>
+            <Button type="submit" name="intent" value="another" variant="ghost" disabled={pending} className="h-[48px]">
               Add Another Member
             </Button>
           </>

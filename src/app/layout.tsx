@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   // Deliberately NOT locking maximumScale or userScalable. Our reader is
   // presbyopic — pinch-zoom must keep working.
   viewportFit: "cover",
-  themeColor: "#F8F8FF", // surface/page
+  themeColor: "#F1F1FF", // surface/tinted — matches the canvas
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -39,8 +39,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           that don't exist, the app is capped at a phone-width column and
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
-      <body className="flex min-h-full flex-col bg-white">
-        <div className="bg-surface-page mx-auto flex w-full max-w-[430px] flex-1 flex-col">
+      <body className="bg-surface-tinted flex min-h-full flex-col">
+        <div className="bg-surface-tinted mx-auto flex w-full max-w-[430px] flex-1 flex-col">
           {children}
         </div>
       </body>

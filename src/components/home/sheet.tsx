@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { cn } from "@/lib/cn";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Bottom sheet.
@@ -10,10 +10,16 @@ import { cn } from "@/lib/cn";
  * Radix only for a select and a future date picker, and adding a component
  * library for this would breach "one visual system only".
  *
- * The scrim is real runtime opacity over whatever is actually rendered behind
- * it, never a pre-computed solid — that distinction is explicit in the Design
- * MD. Dismissal is Escape, the scrim, or Cancel: never a swipe, because no
- * action here may depend on a gesture beyond a tap.
+ * Portalled to <body> so it positions against the viewport rather than Home's
+ * full-height flex column; rendered inline, the iOS keyboard resizing the
+ * viewport shunted the page behind it upwards.
+ *
+ * The rise is a CSS animation, not React state, so there's no mount/animate
+ * bookkeeping — and reduced-motion collapses it globally.
+ *
+ * The scrim is real runtime opacity over whatever is actually behind it, never
+ * a pre-computed solid. Dismissal is Escape, the scrim, or Cancel — never a
+ * swipe, because no action may depend on a gesture beyond a tap.
  */
 export function Sheet({
   open,
@@ -26,45 +32,46 @@ export function Sheet({
   title: string;
   children: React.ReactNode;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    // Stop the page behind from scrolling while the sheet is up.
-    const prev = document.body.style.overflow;
+    const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panelRef.current?.querySelector<HTMLElement>("input, button")?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = previous;
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  // No portal target during server rendering; `open` is always false there.
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <button
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/40 animate-[scrim-fade_200ms_ease-out]"
       />
       <div
-        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={cn(
-          "bg-surface-default relative flex w-full max-w-[430px] flex-col gap-2",
-          "rounded-t-[38px] pb-2",
-        )}
+        // Tapping any non-field part of the sheet dismisses the keyboard,
+        // which is otherwise awkward to put away on iOS.
+        onPointerDown={(e) => {
+          const target = e.target as HTMLElement;
+          if (!target.closest("input, textarea, select, button")) {
+            (document.activeElement as HTMLElement | null)?.blur();
+          }
+        }}
+        className="bg-surface-default relative flex max-h-[92dvh] w-full max-w-[430px] flex-col gap-2 overflow-y-auto rounded-t-[38px] pb-2 animate-[sheet-rise_260ms_cubic-bezier(0.32,0.72,0,1)]"
       >
-        <div className="flex h-3 w-full items-end justify-center">
+        <div className="flex h-3 w-full shrink-0 items-end justify-center">
           <span className="bg-border-default h-1 w-12 rounded-full" aria-hidden />
         </div>
         <h2 className="text-screen-title text-text-primary px-4 pt-4">{title}</h2>
@@ -76,6 +83,7 @@ export function Sheet({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

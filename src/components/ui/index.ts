@@ -10,5 +10,6 @@ export { InfoCallout } from "./info-callout";
 export { Radio } from "./radio";
 export { SettingsRow } from "./settings-row";
 export { StatusTag } from "./status-tag";
+export { Toast } from "./toast";
 export { TextInput } from "./text-input";
 export { Toggle } from "./toggle";

@@ -105,7 +105,7 @@ export function OnboardingScreen({
         className="border-border-faint bg-surface-page flex shrink-0 flex-col gap-1 border-t px-4 pt-3"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
-        style={{ paddingBottom: "calc(var(--spacing-1) + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {footer}
       </footer>
