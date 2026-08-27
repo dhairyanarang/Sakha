@@ -46,7 +46,7 @@ export function MedicineForm({
   }
 
   return (
-    <form action={action}>
+    <form action={action} className="flex min-h-0 flex-1 flex-col">
       <OnboardingScreen
         align="start"
         backHref="/onboarding/family"
