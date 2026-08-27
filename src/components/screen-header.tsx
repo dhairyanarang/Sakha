@@ -23,18 +23,26 @@ export function ScreenHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="bg-surface-default border-border-soft flex h-[62px] shrink-0 items-center justify-between border-b-[0.5px] px-2.5">
-      <div className="flex min-w-0 items-center gap-1">
-        <Link
-          href={backHref}
-          aria-label="Go back"
-          className="text-text-primary flex size-[42px] shrink-0 items-center justify-center"
-        >
-          <ChevronLeft size={24} aria-hidden />
-        </Link>
-        <h1 className="text-screen-title text-text-primary truncate">{title}</h1>
-      </div>
-      {action ? <div className="flex shrink-0 items-center">{action}</div> : null}
-    </header>
+    <>
+      {/* Fixed, not sticky: going back is a persistent control and must stay
+          reachable however far down the list she is. Its height is a constant,
+          so the spacer below needs no measuring and this stays a server
+          component. */}
+      <header className="bg-surface-default border-border-soft fixed top-0 left-1/2 z-30 flex h-[62px] w-full max-w-[430px] -translate-x-1/2 items-center justify-between border-b-[0.5px] px-2.5">
+        <div className="flex min-w-0 items-center gap-1">
+          <Link
+            href={backHref}
+            aria-label="Go back"
+            className="text-text-primary flex size-[42px] shrink-0 items-center justify-center"
+          >
+            <ChevronLeft size={24} aria-hidden />
+          </Link>
+          <h1 className="text-screen-title text-text-primary truncate">{title}</h1>
+        </div>
+        {action ? <div className="flex shrink-0 items-center">{action}</div> : null}
+      </header>
+      {/* Holds the bar's place, so the page keeps its natural length. */}
+      <div aria-hidden className="h-[62px] shrink-0" />
+    </>
   );
 }

@@ -4,6 +4,7 @@ export { Button } from "./button";
 export { Card } from "./card";
 export { Chip } from "./chip";
 export { EmptyState } from "./empty-state";
+export { FixedBar } from "./fixed-bar";
 export { FamilyMemberCard } from "./family-member-card";
 export { IconCircle } from "./icon-circle";
 export { InfoCallout } from "./info-callout";

@@ -52,7 +52,7 @@ export default async function SignInPage({
       </div>
 
       <footer
-        className="bg-surface-tinted sticky bottom-0 z-30 flex shrink-0 flex-col gap-6 px-4"
+        className="flex shrink-0 flex-col gap-6 px-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         {error ? (

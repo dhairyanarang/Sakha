@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { HeartPulse, House, LibraryBig } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { FixedBar } from "./fixed-bar";
 
 /**
  * Bottom Nav — 88px tall, white, border/faint hairline on top. Three tabs.
@@ -36,11 +37,12 @@ export interface BottomNavProps extends React.ComponentPropsWithoutRef<"nav"> {
 
 export function BottomNav({ active, className, ...props }: BottomNavProps) {
   return (
+    <FixedBar reserve={75}>
     <nav
       aria-label="Main"
       style={{ paddingBottom: "var(--spacing-6)" }}
       className={cn(
-        "bg-surface-default border-border-faint sticky bottom-0 z-30 flex w-full shrink-0 items-start border-t px-3 pt-2",
+        "bg-surface-default border-border-faint flex w-full items-start border-t px-3 pt-2",
         className,
       )}
       {...props}
@@ -74,5 +76,6 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
         );
       })}
     </nav>
+    </FixedBar>
   );
 }

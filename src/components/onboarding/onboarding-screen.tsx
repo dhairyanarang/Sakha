@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { FixedBar } from "@/components/ui";
 
 /**
  * Shared shell for the onboarding sequence, matching the Figma frames.
@@ -101,17 +102,19 @@ export function OnboardingScreen({
         ) : null}
       </main>
 
+      <FixedBar reserve={112}>
       <footer
         /* No divider: Next should sit exactly as Get Started does, not read
            as a separate bar. The background still hides content scrolling
            beneath it. */
-        className="bg-surface-tinted sticky bottom-0 z-30 flex shrink-0 flex-col gap-1 px-4 pt-4"
+        className="bg-surface-tinted flex flex-col gap-1 px-4 pt-4"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
         style={{ paddingBottom: "calc(var(--spacing-6) + var(--spacing-3))" }}
       >
         {footer}
       </footer>
+      </FixedBar>
     </div>
   );
 }

@@ -53,7 +53,7 @@ export default async function WelcomePage() {
       </div>
 
       <footer
-        className="bg-surface-tinted sticky bottom-0 z-30 shrink-0 px-4"
+        className="shrink-0 px-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         <Link

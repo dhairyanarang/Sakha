@@ -4,7 +4,7 @@ import { requireAccount } from "@/lib/account";
 import { getDocument } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
 import { ScreenHeader } from "@/components/screen-header";
-import { IconCircle } from "@/components/ui";
+import { FixedBar, IconCircle } from "@/components/ui";
 
 /**
  * One stored document.
@@ -88,8 +88,9 @@ export default async function DocumentPage({
       </main>
 
       {doc.signedUrl ? (
+        <FixedBar reserve={120}>
         <footer
-          className="bg-surface-page sticky bottom-0 z-30 shrink-0 px-4 pt-4"
+          className="bg-surface-page px-4 pt-4"
           style={{ paddingBottom: "var(--spacing-7)" }}
         >
           <a
@@ -102,6 +103,7 @@ export default async function DocumentPage({
             Open document
           </a>
         </footer>
+        </FixedBar>
       ) : null}
     </div>
   );

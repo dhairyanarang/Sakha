@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Pill } from "lucide-react";
-import { EmptyState, IconCircle, Toast } from "@/components/ui";
+import { EmptyState, FixedBar, IconCircle, Toast } from "@/components/ui";
 import { MedicineRow } from "./medicine-row";
 import { MedicineSheet } from "./medicine-sheet";
 import type { MedicineDetail, MedicineGroup } from "@/lib/health-data";
@@ -66,8 +66,9 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
         )}
       </main>
 
+      <FixedBar reserve={120}>
       <footer
-        className="bg-surface-page sticky bottom-0 z-30 shrink-0 px-4 pt-4"
+        className="bg-surface-page px-4 pt-4"
         style={{ paddingBottom: "var(--spacing-7)" }}
       >
         <button
@@ -78,6 +79,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
           Add Medicine
         </button>
       </footer>
+      </FixedBar>
 
       <MedicineSheet
         key={editing?.id ?? "new"}

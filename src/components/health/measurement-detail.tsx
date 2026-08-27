@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Calendar } from "lucide-react";
-import { InfoCallout, Toast } from "@/components/ui";
+import { FixedBar, InfoCallout, Toast } from "@/components/ui";
 import { RecordMeasurementSheet } from "@/components/home/record-measurement-sheet";
 import { MeasurementChart, type ChartPoint, type Series } from "./measurement-chart";
 import { readingStamp, relativeWhen } from "@/lib/today";
@@ -173,7 +173,7 @@ export function MeasurementDetail({
 
       {/* The list fades under the pinned button rather than stopping dead
           against it, as drawn. */}
-      <div className="sticky bottom-0 z-30 shrink-0">
+      <FixedBar reserve={112}>
         <div
           aria-hidden
           className="from-surface-page/0 to-surface-page pointer-events-none absolute inset-x-0 bottom-full h-10 bg-gradient-to-b"
@@ -190,7 +190,7 @@ export function MeasurementDetail({
             Record new reading
           </button>
         </footer>
-      </div>
+      </FixedBar>
 
       <RecordMeasurementSheet
         open={recording}
