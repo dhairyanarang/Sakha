@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { StatusBarBackdrop } from "@/components/status-bar-backdrop";
 import { ThemeColor } from "@/components/theme-color";
 import { Agentation } from "agentation";
 
@@ -18,16 +17,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Sakha",
-    // black-translucent is the only style that lets the page draw behind the
-    // status bar; "default" fills that strip with a flat light colour and
-    // ignores theme_color entirely, which is why it kept coming back white.
+    // Deliberately NOT black-translucent.
     //
-    // It also makes the web view claim the whole screen, which is what
-    // previously inflated every footer by 34px through
-    // env(safe-area-inset-bottom). Nothing consumes the BOTTOM inset any more
-    // — bottom spacing is a fixed 24px — so only the top inset is used, which
-    // is exactly what it is for.
-    statusBarStyle: "black-translucent",
+    // That directive does nothing in a browser and everything once installed,
+    // which is precisely the shape of the bug it caused: it hands the web view
+    // the whole screen INCLUDING the status bar, then iOS offsets the content
+    // down by the status bar height while still reporting full height. The
+    // last ~47px end up empty — the block of page colour under the bottom nav,
+    // present on the home screen and never in Safari.
+    //
+    // "default" makes iOS reserve and paint the strip itself, so the web view
+    // starts below it, the bottom is the real bottom, and the status bar is
+    // light — which is what onboarding wants.
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
@@ -53,7 +55,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex flex-col">
         <ThemeColor />
-        <StatusBarBackdrop />
         <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>

@@ -41,7 +41,7 @@ export function OnboardingScreen({
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
       <div
         className="flex h-[42px] shrink-0 items-center justify-between px-2.5"
-        style={{ marginTop: "calc(env(safe-area-inset-top) + var(--spacing-2))" }}
+        style={{ marginTop: "var(--spacing-2)" }}
       >
         {backHref ? (
           <Link

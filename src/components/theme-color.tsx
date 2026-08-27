@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
  * Purely a DOM side effect, which is exactly what an effect is for.
  */
 const HOME = "#5551FF"; // brand/500 — the gradient's starting colour
-const REST = "#5551FF"; // matches the manifest — iOS ignores per-route values in standalone anyway
+const REST = "#F1F1FF"; // surface/tinted — the light strip onboarding wants
 
 export function ThemeColor() {
   const pathname = usePathname();

@@ -31,7 +31,7 @@ export default async function HomePage() {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]">
       <header
         className="shrink-0 px-4 pb-4"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + var(--spacing-3))" }}
+        style={{ paddingTop: "var(--spacing-3)" }}
       >
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
