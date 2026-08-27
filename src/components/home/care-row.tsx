@@ -16,6 +16,7 @@ export function CareRow({
   title,
   children,
   action,
+  highlight = false,
   className,
 }: {
   tone: Tone;
@@ -23,13 +24,26 @@ export function CareRow({
   title: string;
   children?: React.ReactNode;
   action: React.ReactNode;
+  /** The one row that wants doing now — brand wash and a brand hairline. */
+  highlight?: boolean;
   className?: string;
 }) {
   const t = TONE[tone];
   return (
     <div
+      style={
+        highlight
+          ? {
+              backgroundImage:
+                "linear-gradient(180deg, rgb(85 81 255 / 0.16) 0%, rgb(85 81 255 / 0.04) 100%), linear-gradient(0deg, var(--color-surface-default), var(--color-surface-default))",
+            }
+          : undefined
+      }
       className={cn(
-        "bg-surface-default border-border-soft flex shrink-0 items-center gap-3 rounded-xl border-[0.5px] px-3 py-4",
+        "flex shrink-0 items-center gap-3 rounded-xl border-[0.5px] px-3 py-4",
+        highlight
+          ? "border-[rgb(85_81_255/0.6)]"
+          : "bg-surface-default border-border-soft",
         className,
       )}
     >

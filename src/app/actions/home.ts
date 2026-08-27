@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveAccountId } from "@/lib/account";
-import { localDate } from "@/lib/today";
+import { localDate, slotHasStarted } from "@/lib/today";
 import type { Enums } from "@/lib/supabase/types";
 
 const SAVE_FAILED = "We couldn't save this. Please try again.";
@@ -40,6 +40,13 @@ export async function confirmDoses(
 ): Promise<string | null> {
   const accountId = await getActiveAccountId();
   if (!accountId) return SAVE_FAILED;
+
+  // The UI hides Confirm on a slot that has not come round yet; this makes it
+  // true rather than merely displayed, so a stale page cannot record a dose
+  // for tonight at breakfast.
+  if (status === "confirmed" && !slotHasStarted(slot)) {
+    return "You can confirm this later today.";
+  }
 
   const supabase = await createClient();
   const now = new Date().toISOString();

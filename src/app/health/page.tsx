@@ -26,7 +26,10 @@ export default async function HealthPage() {
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <AppHeader name={account.displayName} />
+      <AppHeader>
+        <p className="text-text-primary text-[20px] leading-[1.2] font-medium">Your Health</p>
+        <p className="text-text-primary mt-0.5 text-[14px] leading-[1.2]">Manage your Health</p>
+      </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 p-4">
         <MedicinesCard medicines={medicines} />

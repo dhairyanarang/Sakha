@@ -21,7 +21,14 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
     <Link
       href="/health/medicines"
       prefetch
-      className="bg-surface-default border-border-soft relative flex w-full shrink-0 flex-col gap-6 overflow-hidden rounded-xl border-[0.5px] px-3 py-4"
+      /* Brand wash over white, and a brand hairline instead of the usual soft
+         one — this card is the way in to her medicines and the design lifts it
+         off the page rather than leaving it as one more white block. */
+      style={{
+        backgroundImage:
+          "linear-gradient(180deg, rgb(85 81 255 / 0.16) 0%, rgb(85 81 255 / 0.04) 100%), linear-gradient(0deg, var(--color-surface-default), var(--color-surface-default))",
+      }}
+      className="relative flex w-full shrink-0 flex-col gap-6 overflow-hidden rounded-xl border-[0.5px] border-[rgb(85_81_255/0.6)] px-3 py-4"
     >
       <div className="flex items-center gap-2.5">
         <p className="text-text-primary flex-1 text-[18px] leading-[1.2] font-medium">

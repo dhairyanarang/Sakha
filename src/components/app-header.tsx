@@ -1,17 +1,20 @@
 import { User } from "lucide-react";
-import { greeting, longDate } from "@/lib/today";
 
 /**
- * The greeting header, shared by Home and Health.
+ * The header at the top of Home and Health.
  *
- * Both screens draw it identically in Figma, so it lives here rather than
- * being copied. The avatar is the persistent Profile slot — Profile itself
- * lands in Phase 6, so this is the placeholder that holds its position and
- * size rather than a working link.
+ * The text block is passed in rather than assembled here, because the two
+ * screens stack it differently: Home leads with the greeting and puts her name
+ * underneath in the heavier weight, Health leads with the screen name and puts
+ * the description under it. Everything around the text — the mark, the
+ * spacing, the avatar — is the same on both.
+ *
+ * The avatar is the persistent Profile slot. Profile lands in Phase 6, so this
+ * holds its position and size rather than being a working link.
  */
-export function AppHeader({ name }: { name: string }) {
+export function AppHeader({ children }: { children: React.ReactNode }) {
   return (
-    <header className="shrink-0 px-4 pb-4" style={{ paddingTop: "var(--spacing-3)" }}>
+    <header className="shrink-0 px-4 pb-3" style={{ paddingTop: "var(--spacing-2)" }}>
       <div className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -21,12 +24,7 @@ export function AppHeader({ name }: { name: string }) {
           height={40}
           className="size-10 shrink-0"
         />
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-          <p className="text-action-primary truncate text-[20px] leading-[1.2] font-medium">
-            {greeting()}, {name}
-          </p>
-          <p className="text-action-primary text-[14px] leading-[1.2]">{longDate()}</p>
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center">{children}</div>
         <span
           title="Profile"
           className="bg-action-primary text-text-on-brand flex size-[52px] shrink-0 items-center justify-center rounded-full"

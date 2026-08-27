@@ -1,5 +1,6 @@
 import { requireAccount } from "@/lib/account";
 import { getHomeData } from "@/lib/home-data";
+import { greeting } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
 import { MoodCard } from "@/components/home/mood-card";
@@ -12,7 +13,13 @@ export default async function HomePage() {
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <AppHeader name={account.displayName} />
+      <AppHeader>
+        {/* rgba(0,0,0,0.6) over surface/page, resolved to a solid value. */}
+        <p className="text-[16px] leading-[1.2] text-[#636366]">{greeting()},</p>
+        <p className="text-text-primary mt-1.5 truncate text-[20px] leading-[1.2] font-medium">
+          {account.displayName}
+        </p>
+      </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
         <MoodCard mood={home.mood} />

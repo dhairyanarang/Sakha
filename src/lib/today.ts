@@ -61,6 +61,25 @@ export const SLOT_LABEL: Record<Enums<"time_of_day">, string> = {
 
 export const SLOT_ORDER: Enums<"time_of_day">[] = ["morning", "afternoon", "evening"];
 
+/**
+ * Has this time of day arrived yet?
+ *
+ * Confirming a dose she has not taken is the one mistake worth designing
+ * against: a mis-tap on the evening row in the morning marks it Done, and she
+ * may then skip the real dose because the app says she took it.
+ *
+ * The window opens at the START of the period rather than at the displayed
+ * time, so taking an evening tablet at six is still recordable. Earlier slots
+ * never close — confirmation stays possible at any time afterwards, which is a
+ * hard rule and the whole point of it.
+ */
+export function slotHasStarted(slot: Enums<"time_of_day">, at: Date = new Date()): boolean {
+  const h = hourIST(at);
+  if (slot === "morning") return true;
+  if (slot === "afternoon") return h >= 12;
+  return h >= 17;
+}
+
 /** Which slot we're currently in, so the soonest unconfirmed dose leads. */
 export function currentSlot(at: Date = new Date()): Enums<"time_of_day"> {
   const h = hourIST(at);
