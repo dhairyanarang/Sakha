@@ -8,12 +8,16 @@ import { cn } from "@/lib/cn";
  * a placeholder disappears the moment she starts typing, which is exactly when
  * she may need reminding what the field was for.
  *
- * Field is 54px tall, radius/md. Focus takes the border to action/primary at
- * 1.5px in Figma; we hold the border at 1px and add a 0.5px ring so focusing
- * doesn't nudge the layout.
+ * One spec everywhere: a 14px Medium label and an 18px value in a 54px field.
+ * The library previously specified a 16px value; every real screen drew 18.
+ * We standardised UP rather than down — this is the text she reads back to
+ * check she typed her own name correctly, and she is presbyopic.
+ *
+ * Focus takes the border to action/primary at 1.5px in Figma; we hold it at
+ * 1px and add a 0.5px ring so focusing doesn't nudge the layout.
  */
 export interface TextInputProps
-  extends Omit<React.ComponentPropsWithoutRef<"input">, "id"> {
+  extends Omit<React.ComponentPropsWithoutRef<"input">, "id" | "size"> {
   label: string;
 }
 
@@ -21,15 +25,16 @@ export function TextInput({ label, className, disabled, ...props }: TextInputPro
   const id = useId();
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>
-      <label htmlFor={id} className="text-body-secondary text-text-secondary">
+      {/* rgba(0,0,0,0.6) over surface/page, resolved to a solid value. */}
+      <label htmlFor={id} className="text-[14px] leading-[1.2] font-medium text-[#636366]">
         {label}
       </label>
       <input
         id={id}
         disabled={disabled}
         className={cn(
-          "text-body-primary h-[54px] w-full rounded-md border px-4 transition-shadow outline-none",
-          "placeholder:text-text-tertiary",
+          "h-[54px] w-full rounded-md border px-4 text-[18px] leading-[1.2] font-medium transition-shadow outline-none",
+          "placeholder:text-text-tertiary placeholder:font-normal",
           disabled
             ? "bg-surface-subtle border-border-default text-text-disabled"
             : [

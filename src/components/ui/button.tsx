@@ -13,7 +13,7 @@ import { cn } from "@/lib/cn";
  * class assembled at runtime (`active:${x}`) would never be generated.
  */
 
-type ButtonStyleName = "primary" | "secondary" | "tertiary";
+type ButtonStyleName = "primary" | "secondary" | "tertiary" | "ghost";
 type ButtonSize = "full" | "compact";
 
 const SIZE: Record<ButtonSize, string> = {
@@ -38,6 +38,14 @@ const STYLE: Record<
     active: "active:bg-surface-tinted-strong active:text-action-primary-pressed",
     pressed: "bg-surface-tinted-strong text-action-primary-pressed",
     disabled: "bg-surface-subtle text-text-disabled",
+  },
+  // Not in the Figma component library, but every Onboarding screen uses it:
+  // a full-height button with no fill or border, just a brand label. Flagged.
+  ghost: {
+    base: "bg-transparent text-action-primary",
+    active: "active:text-action-primary-pressed",
+    pressed: "text-action-primary-pressed",
+    disabled: "text-text-disabled",
   },
   tertiary: {
     // Pressed picks up a tinted fill and darkens border and label together.

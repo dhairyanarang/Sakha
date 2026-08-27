@@ -10,7 +10,10 @@ html {
 }
 
 body {
-  background-color: var(--color-surface-page);
+  /* White beyond the phone-width column. The column itself paints
+     surface/page — see the wrapper in app/layout.tsx. This rule is unlayered
+     and would otherwise beat any Tailwind background utility on <body>. */
+  background-color: var(--color-neutral-0, #ffffff);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */
