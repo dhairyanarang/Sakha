@@ -31,18 +31,16 @@ export function RemindersPrompt() {
   return (
     <OnboardingScreen
       backHref="/onboarding/medicine"
+      skipHref="/"
       icon={<Bell size={60} className="text-action-primary" aria-hidden />}
       title="Stay on track with reminders"
       subtitle="Sakha can remind you about medicines and things you need to do."
+      /* "Not now" is gone: the top-right Skip is the single way past this
+         screen, so there aren't two competing ways to decline. */
       footer={
-        <>
-          <Button onClick={allow} disabled={busy}>
-            Allow Reminders
-          </Button>
-          <Button variant="ghost" onClick={() => router.push("/")} disabled={busy}>
-            Not now
-          </Button>
-        </>
+        <Button onClick={allow} disabled={busy}>
+          Allow Reminders
+        </Button>
       }
     >
       {/* Same family as the sign-in privacy note, but roomier padding and a

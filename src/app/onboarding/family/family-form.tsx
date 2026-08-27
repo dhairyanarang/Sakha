@@ -44,10 +44,10 @@ export function FamilyForm({ justAdded }: { justAdded: boolean }) {
           </p>
         ) : null}
 
-        <TextInput label="Name" size="lg" name="name" placeholder="Rahul Sharma" autoComplete="name" />
+        <TextInput label="Name" name="name" placeholder="Rahul Sharma" autoComplete="name" />
         <TextInput
           label="Phone Number"
-          size="lg"
+         
           name="phone"
           type="tel"
           inputMode="tel"
@@ -62,7 +62,7 @@ export function FamilyForm({ justAdded }: { justAdded: boolean }) {
             {RELATIONS.map((r) => (
               <Chip
                 key={r}
-                size="compact"
+               
                 selected={relation === r}
                 onClick={() => setRelation(relation === r ? "" : r)}
               >

@@ -63,7 +63,7 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
           </p>
         ) : null}
 
-        <TextInput label="Medicine Name" size="lg" name="name" placeholder="Gliptagrate" />
+        <TextInput label="Medicine Name" name="name" placeholder="Gliptagrate" />
 
         <div className="flex flex-col gap-2.5">
           <FieldLabel>When do you take it?</FieldLabel>
@@ -74,7 +74,7 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
             {TIMES.map((t) => (
               <Chip
                 key={t.value}
-                size="compact"
+               
                 selected={times.includes(t.value)}
                 onClick={() => toggleTime(t.value)}
               >
@@ -92,7 +92,7 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
             {CONDITIONS.map((c) => (
               <Chip
                 key={c}
-                size="compact"
+               
                 selected={!custom && condition === c}
                 onClick={() => {
                   setCustom(false);
@@ -103,7 +103,7 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
               </Chip>
             ))}
             <Chip
-              size="compact"
+             
               selected={custom}
               onClick={() => {
                 setCustom(!custom);
@@ -114,11 +114,11 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
             </Chip>
           </div>
           {custom ? (
-            <TextInput label="Condition" size="lg" name="condition_tag" placeholder="Type a condition" />
+            <TextInput label="Condition" name="condition_tag" placeholder="Type a condition" />
           ) : null}
         </div>
 
-        <TextInput label="Remarks (optional)" size="lg" name="remarks" placeholder="Add Remarks" />
+        <TextInput label="Remarks (optional)" name="remarks" placeholder="Add Remarks" />
 
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error">{error}</p>

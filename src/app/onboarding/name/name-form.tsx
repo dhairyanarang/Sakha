@@ -24,7 +24,7 @@ export function NameForm() {
         {/* Figma labels this "You Name" — corrected to "Your Name". */}
         <TextInput
           label="Your Name"
-          size="lg"
+         
           name="name"
           placeholder="Asha Sharma"
           autoComplete="name"
