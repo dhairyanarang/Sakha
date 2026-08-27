@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Calendar } from "lucide-react";
 import { Sheet } from "./sheet";
+import { RulerPicker } from "./ruler-picker";
 import { Button } from "@/components/ui";
 import { recordMeasurement } from "@/app/actions/home";
 import type { Enums } from "@/lib/supabase/types";
@@ -63,6 +64,8 @@ export function RecordMeasurementSheet({
   const unit = isBp ? "mmHg" : "mg/dL";
 
   const [primary, setPrimary] = useState("");
+  // Sensible mid-range starting points so the scale opens somewhere useful.
+  const [sugar, setSugar] = useState(120);
   const [secondary, setSecondary] = useState("");
   const [at, setAt] = useState(nowLocalInput);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +76,7 @@ export function RecordMeasurementSheet({
     startTransition(async () => {
       const err = await recordMeasurement({
         type,
-        value: Number(primary),
+        value: isBp ? Number(primary) : sugar,
         valueSecondary: isBp ? Number(secondary) : null,
         unit,
         measuredAt: new Date(at).toISOString(),
@@ -90,20 +93,22 @@ export function RecordMeasurementSheet({
   return (
     <Sheet open={open} onClose={onClose} title={isBp ? "Record BP Reading" : "Record Sugar Reading"}>
       <div className="flex flex-col gap-6">
-        <ValueField
-          label={isBp ? "Systolic (Top Number)" : "Sugar Level (mg/dL)"}
-          unit={unit}
-          value={primary}
-          onChange={setPrimary}
-          autoFocus
-        />
         {isBp ? (
-          <ValueField
-            label="Diastolic (Bottom Number)"
-            unit={unit}
-            value={secondary}
-            onChange={setSecondary}
-          />
+          <>
+            <ValueField
+              label="Systolic (Top Number)"
+              unit={unit}
+              value={primary}
+              onChange={setPrimary}
+              autoFocus
+            />
+            <ValueField
+              label="Diastolic (Bottom Number)"
+              unit={unit}
+              value={secondary}
+              onChange={setSecondary}
+            />
+          </>
         ) : null}
 
         <div className="flex w-full flex-col gap-2">
@@ -120,6 +125,19 @@ export function RecordMeasurementSheet({
             <Calendar size={22} className="text-text-tertiary shrink-0" aria-hidden />
           </div>
         </div>
+
+        {!isBp ? (
+          /* The scale comes after Date & Time, as drawn — and needs no
+             keyboard, so nothing can cover the sheet. */
+          <RulerPicker
+            label="Sugar level"
+            unit="mg/dL"
+            min={40}
+            max={400}
+            value={sugar}
+            onChange={setSugar}
+          />
+        ) : null}
 
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error">{error}</p>

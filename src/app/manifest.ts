@@ -10,7 +10,11 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "portrait",
     background_color: "#F1F1FF", // surface/tinted
-    theme_color: "#F1F1FF",
+    // iOS reads THIS at install time and uses it for the status bar. A
+    // per-route <meta name="theme-color"> does not reach a standalone app, so
+    // the brand colour is set here to continue Home's header gradient. The
+    // cost is that the other screens get an indigo strip too.
+    theme_color: "#5551FF",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

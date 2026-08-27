@@ -48,58 +48,44 @@ export function Sheet({
     document.addEventListener("keydown", onKey);
 
     const vv = window.visualViewport;
-    // The keyboard's height has to be measured RELATIVE to the resting
-    // viewport, not to window.innerHeight. In a standalone app those two
-    // already differ by the reserved status bar, so subtracting innerHeight
-    // over-lifted the sheet by roughly 47px and left a strip of the page
-    // showing between it and the keyboard.
-    //
-    // Tracking the tallest viewport seen gives a reliable zero: only the
-    // keyboard makes it shrink.
-    // Seed from the layout viewport too: if a field autofocuses, the keyboard
-    // may already be animating in by the time this runs, and the visual
-    // viewport alone would give a baseline that is already too short.
-    let restingHeight = Math.max(
-      vv ? vv.height : 0,
-      document.documentElement.clientHeight,
-    );
-
-    // Style is written straight to the node: this is a browser measurement
-    // being mirrored into the DOM, not application state.
-    const applyKeyboardInset = () => {
-      if (!vv || !wrapRef.current || !panelRef.current) return;
-      restingHeight = Math.max(restingHeight, vv.height);
-      const keyboard = Math.max(0, restingHeight - vv.height);
-      wrapRef.current.style.paddingBottom = `${keyboard}px`;
-      // Leave a little of the scrim visible so the sheet still reads as a
-      // sheet rather than a full-screen page.
-      panelRef.current.style.maxHeight = `${Math.max(240, vv.height - 24)}px`;
+    // Rather than computing how tall the keyboard is and padding around it,
+    // the container simply BECOMES the visual viewport: same height, same
+    // offset. Anything aligned to its bottom then sits exactly above the
+    // keyboard, whatever iOS does with scroll position or reserved bars.
+    // This is what production sheet libraries do, and it self-corrects.
+    const trackViewport = () => {
+      if (!vv || !wrapRef.current) return;
+      wrapRef.current.style.height = `${vv.height}px`;
+      wrapRef.current.style.transform = `translateY(${vv.offsetTop}px)`;
+      if (panelRef.current) {
+        panelRef.current.style.maxHeight = `${Math.max(240, vv.height - 24)}px`;
+      }
     };
-    applyKeyboardInset();
-    vv?.addEventListener("resize", applyKeyboardInset);
-    vv?.addEventListener("scroll", applyKeyboardInset);
+    trackViewport();
+    vv?.addEventListener("resize", trackViewport);
+    vv?.addEventListener("scroll", trackViewport);
 
     return () => {
       document.removeEventListener("keydown", onKey);
-      vv?.removeEventListener("resize", applyKeyboardInset);
-      vv?.removeEventListener("scroll", applyKeyboardInset);
+      vv?.removeEventListener("resize", trackViewport);
+      vv?.removeEventListener("scroll", trackViewport);
     };
   }, [open, onClose]);
 
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div
+      ref={wrapRef}
+      className="fixed inset-x-0 top-0 z-50 flex items-end justify-center"
+    >
       <button
         type="button"
         aria-label="Close"
         onClick={onClose}
         className="absolute inset-0 animate-[scrim-fade_200ms_ease-out] bg-black/40"
       />
-      <div
-        ref={wrapRef}
-        className="bg-surface-default relative flex w-full max-w-[430px] justify-center transition-[padding] duration-200 ease-out"
-      >
+      <div className="relative flex w-full max-w-[430px] justify-center">
         <div
           ref={panelRef}
           role="dialog"

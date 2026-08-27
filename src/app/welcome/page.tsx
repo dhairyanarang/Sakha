@@ -51,7 +51,7 @@ export default async function WelcomePage() {
 
       <footer
         className="shrink-0 px-4"
-        style={{ paddingBottom: "var(--spacing-4)" }}
+        style={{ paddingBottom: "var(--spacing-6)" }}
       >
         <Link
           href="/sign-in"
