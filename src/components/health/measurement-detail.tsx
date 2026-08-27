@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, ChevronRight } from "lucide-react";
 import { FixedBar, InfoCallout, Toast } from "@/components/ui";
 import { RecordMeasurementSheet } from "@/components/home/record-measurement-sheet";
 import { MeasurementChart, type ChartPoint, type Series } from "./measurement-chart";
 import { readingStamp, relativeWhen } from "@/lib/today";
-import type { MeasurementMonth } from "@/lib/health-data";
+import type { MeasurementEntry, MeasurementMonth } from "@/lib/health-data";
 import type { Enums } from "@/lib/supabase/types";
 
 export type RangeNote =
@@ -21,6 +21,12 @@ export type RangeNote =
  * The chart plots at most the last 30 readings. Anything older stays in the
  * history below rather than being crushed into a few pixels — the list is the
  * complete record, the chart is the shape of it.
+ *
+ * Tapping a reading edits it. The row IS the target, so nothing is added to a
+ * dense list and no row carries competing buttons; a chevron marks it as going
+ * somewhere, the way every other row in this app does. It opens the same sheet
+ * used to record one, with Delete inside it — so correcting a number and
+ * removing one are the same move she already knows from Edit Medicine.
  */
 export function MeasurementDetail({
   type,
@@ -36,7 +42,27 @@ export function MeasurementDetail({
   months: MeasurementMonth[];
 }) {
   const [recording, setRecording] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<MeasurementEntry | null>(null);
+  // Bumped on every open so the sheet always remounts clean and never shows
+  // the previous reading's values.
+  const [sheetNonce, setSheetNonce] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+
+  function openNew() {
+    setEditingEntry(null);
+    setSheetNonce((n) => n + 1);
+    setRecording(true);
+  }
+
+  function openEdit(entry: MeasurementEntry) {
+    setEditingEntry(entry);
+    setSheetNonce((n) => n + 1);
+    setRecording(true);
+  }
+
+  function closeSheet() {
+    setRecording(false);
+  }
 
   const isBp = type === "blood_pressure";
   const latest = months[0]?.entries[0] ?? null;
@@ -152,7 +178,12 @@ export function MeasurementDetail({
               {month.entries.map((e, i) => (
                 <div key={e.id} className="flex flex-col gap-5">
                   {i > 0 ? <div className="border-border-default border-t" /> : null}
-                  <div className="flex items-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(e)}
+                    aria-label={`Edit reading, ${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`}
+                    className="active:bg-surface-tinted -mx-2 flex items-end gap-2 rounded-md px-2 py-1 text-left transition-colors"
+                  >
                     <p className="flex flex-1 items-end gap-1">
                       <span className="text-text-primary text-[18px] leading-[1.2] font-medium">
                         {format(e)}
@@ -163,7 +194,12 @@ export function MeasurementDetail({
                     <span className="shrink-0 text-[14px] leading-[1.2] text-[#999999]">
                       {readingStamp(e.measuredAt)}
                     </span>
-                  </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-text-tertiary shrink-0"
+                      aria-hidden
+                    />
+                  </button>
                 </div>
               ))}
             </div>
@@ -184,7 +220,7 @@ export function MeasurementDetail({
         >
           <button
             type="button"
-            onClick={() => setRecording(true)}
+            onClick={openNew}
             className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center rounded-xl transition-colors"
           >
             Record new reading
@@ -193,10 +229,12 @@ export function MeasurementDetail({
       </FixedBar>
 
       <RecordMeasurementSheet
+        key={`${editingEntry?.id ?? "new"}-${sheetNonce}`}
         open={recording}
-        onClose={() => setRecording(false)}
+        onClose={closeSheet}
         type={type}
         onSaved={setToast}
+        entry={editingEntry}
       />
 
       <Toast message={toast ?? ""} open={toast !== null} onDone={() => setToast(null)} />

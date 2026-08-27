@@ -198,3 +198,37 @@ export async function getDocumentUrl(storagePath: string): Promise<string | null
     .createSignedUrl(storagePath, 60 * 10);
   return data?.signedUrl ?? null;
 }
+
+/**
+ * Removes a document, file and all.
+ *
+ * The row goes first: it is what makes the document visible to her, so if the
+ * object delete fails afterwards she still sees it gone rather than a listing
+ * pointing at nothing. A stranded object costs storage and is invisible;
+ * a stranded row is a broken screen.
+ */
+export async function deleteDocument(id: string): Promise<string | null> {
+  const accountId = await getActiveAccountId();
+  if (!accountId) return SAVE_FAILED;
+
+  const supabase = await createClient();
+  const { data: doc } = await supabase
+    .from("health_documents")
+    .select("storage_path")
+    .eq("id", id)
+    .eq("account_id", accountId)
+    .maybeSingle();
+  if (!doc) return "We couldn't remove this. Please try again.";
+
+  const { error } = await supabase
+    .from("health_documents")
+    .delete()
+    .eq("id", id)
+    .eq("account_id", accountId);
+  if (error) return "We couldn't remove this. Please try again.";
+
+  await supabase.storage.from("health-documents").remove([doc.storage_path]);
+
+  revalidatePath("/health");
+  return null;
+}

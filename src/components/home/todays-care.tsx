@@ -13,6 +13,13 @@ import type { HomeData } from "@/lib/home-data";
 
 export function TodaysCare({ data }: { data: HomeData }) {
   const [sheet, setSheet] = useState<null | "sugar" | "bp" | "walk">(null);
+  // Every open remounts the sheet. Without this a second reading reused the
+  // first one's date and time, which is a wrong reading, not just stale UI.
+  const [sheetNonce, setSheetNonce] = useState(0);
+  const openSheet = (which: "sugar" | "bp" | "walk") => {
+    setSheetNonce((n) => n + 1);
+    setSheet(which);
+  };
   const [confirming, setConfirming] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -84,7 +91,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
         icon={<Droplet size={22} aria-hidden />}
         title="Record Sugar level"
         action={
-          <RowAction tone="tinted" onClick={() => setSheet("sugar")}>
+          <RowAction tone="tinted" onClick={() => openSheet("sugar")}>
             Record
           </RowAction>
         }
@@ -99,7 +106,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
         icon={<HeartPulse size={22} aria-hidden />}
         title="Record BP"
         action={
-          <RowAction tone="tinted" onClick={() => setSheet("bp")}>
+          <RowAction tone="tinted" onClick={() => openSheet("bp")}>
             Record
           </RowAction>
         }
@@ -119,7 +126,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
           /* One walk entry per day, so once it exists the action edits it
              rather than adding another. Measurements are the opposite —
              several readings a day are normal — so those keep "Record". */
-          <RowAction tone="tinted" onClick={() => setSheet("walk")}>
+          <RowAction tone="tinted" onClick={() => openSheet("walk")}>
             {data.walk === null ? "Log Walk" : "Update"}
           </RowAction>
         }
@@ -136,18 +143,21 @@ export function TodaysCare({ data }: { data: HomeData }) {
       </CareRow>
 
       <RecordMeasurementSheet
+        key={`sugar-${sheetNonce}`}
         open={sheet === "sugar"}
         onClose={() => setSheet(null)}
         type="blood_sugar"
         onSaved={setToast}
       />
       <RecordMeasurementSheet
+        key={`bp-${sheetNonce}`}
         open={sheet === "bp"}
         onClose={() => setSheet(null)}
         type="blood_pressure"
         onSaved={setToast}
       />
       <LogWalkSheet
+        key={`walk-${sheetNonce}`}
         open={sheet === "walk"}
         onClose={() => setSheet(null)}
         onSaved={setToast}

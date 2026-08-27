@@ -21,6 +21,9 @@ import type { DocumentSummary } from "@/lib/health-data";
  */
 export function DocumentsSection({ documents }: { documents: DocumentSummary[] }) {
   const [adding, setAdding] = useState(false);
+  // Remount on each open, so a second document never opens on the first one's
+  // title, date and type.
+  const [openCount, setOpenCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
   return (
@@ -44,9 +47,10 @@ export function DocumentsSection({ documents }: { documents: DocumentSummary[] }
         ))
       )}
 
-      <AddTile onClick={() => setAdding(true)}>+ Add Document</AddTile>
+      <AddTile onClick={() => { setOpenCount((n) => n + 1); setAdding(true); }}>+ Add Document</AddTile>
 
       <AddDocumentSheet
+        key={openCount}
         open={adding}
         onClose={() => setAdding(false)}
         onSaved={setToast}

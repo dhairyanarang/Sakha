@@ -72,7 +72,38 @@ export function RulerPicker({
 
   useEffect(() => {
     const el = trackRef.current;
-    if (el) el.scrollLeft = offsetFor(value);
+    if (!el) return;
+
+    /**
+     * Put the scale on the starting value — after layout, not during it.
+     *
+     * The sheet animates in, so on the first frame this track has no settled
+     * width and the half-width spacers either side are still 0. Setting
+     * scrollLeft then lands somewhere the browser clamps, and the scroll
+     * handler reads the value back one tick low: opening a 124 reading showed
+     * 123, which in edit mode would have saved the wrong number. Re-applying
+     * across the next two frames lets layout finish first.
+     *
+     * scroll-behavior is forced to auto for the write, or the smooth scrolling
+     * used by the arrow keys would animate this and settle off by a tick.
+     */
+    const apply = () => {
+      const previous = el.style.scrollBehavior;
+      el.style.scrollBehavior = "auto";
+      el.scrollLeft = offsetFor(value);
+      el.style.scrollBehavior = previous;
+    };
+
+    apply();
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      apply();
+      second = requestAnimationFrame(apply);
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
     // Mount only — after this the scroll position belongs to the user.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

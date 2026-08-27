@@ -115,3 +115,71 @@ export async function logWalk(
   revalidatePath("/");
   return null;
 }
+
+/**
+ * Corrects a reading she already took.
+ *
+ * Same validation as recording a new one — a corrected reading is not a
+ * lesser one, and must not be allowed to become nonsense.
+ */
+export async function updateMeasurement(
+  id: string,
+  input: {
+    type: Enums<"measurement_type">;
+    value: number;
+    valueSecondary?: number | null;
+    unit: string;
+    measuredAt: string;
+  },
+): Promise<string | null> {
+  const accountId = await getActiveAccountId();
+  if (!accountId) return SAVE_FAILED;
+
+  if (!Number.isFinite(input.value) || input.value <= 0) {
+    return "Please enter a number.";
+  }
+  if (input.type === "blood_pressure" && !Number.isFinite(input.valueSecondary ?? NaN)) {
+    return "Please enter both numbers.";
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("health_measurements")
+    .update({
+      value: input.value,
+      value_secondary: input.type === "blood_pressure" ? input.valueSecondary : null,
+      unit: input.unit,
+      measured_at: input.measuredAt,
+    })
+    .eq("id", id)
+    .eq("account_id", accountId);
+  if (error) return SAVE_FAILED;
+
+  revalidatePath("/health");
+  revalidatePath("/");
+  return null;
+}
+
+/**
+ * Removes a reading.
+ *
+ * A real delete, unlike a medicine: nothing else in the schema points at a
+ * measurement, so there is no history to strand by removing it. A wrong number
+ * she never took is worth being able to get rid of properly.
+ */
+export async function deleteMeasurement(id: string): Promise<string | null> {
+  const accountId = await getActiveAccountId();
+  if (!accountId) return SAVE_FAILED;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("health_measurements")
+    .delete()
+    .eq("id", id)
+    .eq("account_id", accountId);
+  if (error) return "We couldn't remove this. Please try again.";
+
+  revalidatePath("/health");
+  revalidatePath("/");
+  return null;
+}

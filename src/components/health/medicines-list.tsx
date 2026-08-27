@@ -13,23 +13,27 @@ import type { MedicineDetail, MedicineGroup } from "@/lib/health-data";
  * Add and Edit are sheets over this screen rather than pushed routes, which is
  * how Figma draws them — the list stays visible behind the scrim.
  *
- * The sheet is keyed by what it is editing so that switching from one medicine
- * to another, or from editing to adding, rebuilds it with the right values.
- * Without the key it would keep the first medicine's state and quietly save
- * the wrong thing.
+ * The sheet is keyed by what it is editing AND by how many times it has been
+ * opened. The id alone was not enough: adding a medicine leaves that key at
+ * "new", so opening Add again reused the component and showed the medicine she
+ * had just saved. The counter forces a fresh mount every time, so Add always
+ * starts empty while Edit still fills itself in from the medicine.
  */
 export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
   const [editing, setEditing] = useState<MedicineDetail | null>(null);
   const [open, setOpen] = useState(false);
+  const [openCount, setOpenCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
   function add() {
     setEditing(null);
+    setOpenCount((n) => n + 1);
     setOpen(true);
   }
 
   function edit(medicine: MedicineDetail) {
     setEditing(medicine);
+    setOpenCount((n) => n + 1);
     setOpen(true);
   }
 
@@ -82,7 +86,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
       </FixedBar>
 
       <MedicineSheet
-        key={editing?.id ?? "new"}
+        key={`${editing?.id ?? "new"}-${openCount}`}
         open={open}
         onClose={() => setOpen(false)}
         onSaved={setToast}
