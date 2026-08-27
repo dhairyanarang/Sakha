@@ -116,3 +116,24 @@ export function relativeWhen(value: string, now: Date = new Date()): string {
     month: "long",
   }).format(at);
 }
+
+/**
+ * How a single reading is stamped in the history list: "Today, 10:20 AM",
+ * otherwise "Aug 22, 10:20 AM".
+ *
+ * Deliberately not relativeWhen — a list of readings is being compared
+ * against itself, and "3 days ago" beside "5 days ago" is harder to place
+ * than two real dates.
+ */
+export function readingStamp(iso: string, now: Date = new Date()): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return "";
+  const time = clockTime(at);
+  if (localDate(at) === localDate(now)) return `Today, ${time}`;
+  const day = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    month: "short",
+    day: "2-digit",
+  }).format(at);
+  return `${day}, ${time}`;
+}

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { localDate, SLOT_ORDER } from "@/lib/today";
+import { localDate, SLOT_ORDER, TZ } from "@/lib/today";
 import type { Enums } from "@/lib/supabase/types";
 
 export type MedicineSummary = {
@@ -205,4 +205,70 @@ export async function getMedicine(
       confirmed: false,
     })),
   };
+}
+
+export type MeasurementEntry = {
+  id: string;
+  value: number;
+  valueSecondary: number | null;
+  unit: string;
+  measuredAt: string;
+  note: string | null;
+};
+
+/** Readings grouped under the month they were taken in, newest first. */
+export type MeasurementMonth = {
+  /** "August", or "August 2025" once it is not this year. */
+  label: string;
+  entries: MeasurementEntry[];
+};
+
+/**
+ * Every reading of one kind, newest first, grouped by month.
+ *
+ * The month heading drops the year while it is still the current one — she
+ * does not need "August 2026" told to her in August 2026 — and adds it once
+ * that stops being obvious.
+ */
+export async function getMeasurementHistory(
+  accountId: string,
+  type: Enums<"measurement_type">,
+): Promise<MeasurementMonth[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("health_measurements")
+    .select("id, value, value_secondary, unit, measured_at, note")
+    .eq("account_id", accountId)
+    .eq("type", type)
+    .order("measured_at", { ascending: false });
+
+  const thisYear = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric" })
+    .format(new Date());
+
+  const months = new Map<string, MeasurementMonth>();
+  for (const row of data ?? []) {
+    const at = new Date(row.measured_at);
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: TZ,
+      month: "long",
+      year: "numeric",
+    }).formatToParts(at);
+    const month = parts.find((p) => p.type === "month")!.value;
+    const year = parts.find((p) => p.type === "year")!.value;
+    const key = `${year}-${month}`;
+
+    if (!months.has(key)) {
+      months.set(key, { label: year === thisYear ? month : `${month} ${year}`, entries: [] });
+    }
+    months.get(key)!.entries.push({
+      id: row.id,
+      value: Number(row.value),
+      valueSecondary: row.value_secondary == null ? null : Number(row.value_secondary),
+      unit: row.unit,
+      measuredAt: row.measured_at,
+      note: row.note,
+    });
+  }
+
+  return [...months.values()];
 }

@@ -25,7 +25,17 @@ const RANGE = {
   blood_sugar: { min: 40, max: 400 },
   systolic: { min: 70, max: 220 },
   diastolic: { min: 40, max: 140 },
+  // Weight steps in whole kilograms. The ruler cannot express half a kilo,
+  // which is a real limit for a bathroom scale — flagged rather than papered
+  // over with a keypad this flow deliberately does not have.
+  weight: { min: 30, max: 150 },
 };
+
+const COPY = {
+  blood_sugar: { title: "Record Sugar Reading", field: "Sugar Level (mg/dL)", unit: "mg/dL", saved: "Sugar level recorded." },
+  blood_pressure: { title: "Record BP Reading", field: "", unit: "mmHg", saved: "Blood pressure recorded." },
+  weight: { title: "Record Weight", field: "Weight (kg)", unit: "kg", saved: "Weight recorded." },
+} as const;
 
 export function RecordMeasurementSheet({
   open,
@@ -39,9 +49,13 @@ export function RecordMeasurementSheet({
   onSaved: (message: string) => void;
 }) {
   const isBp = type === "blood_pressure";
-  const unit = isBp ? "mmHg" : "mg/dL";
+  const copy = COPY[type];
+  const unit = copy.unit;
+  // Sugar and weight are both a single number on one scale; only the range,
+  // the label and the starting point differ.
+  const singleRange = isBp ? RANGE.blood_sugar : RANGE[type as "blood_sugar" | "weight"];
 
-  const [sugar, setSugar] = useState(120);
+  const [single, setSingle] = useState(type === "weight" ? 65 : 120);
   const [systolic, setSystolic] = useState(120);
   const [diastolic, setDiastolic] = useState(80);
   const [at, setAt] = useState(nowLocalInput);
@@ -53,31 +67,37 @@ export function RecordMeasurementSheet({
     startTransition(async () => {
       const err = await recordMeasurement({
         type,
-        value: isBp ? systolic : sugar,
+        value: isBp ? systolic : single,
         valueSecondary: isBp ? diastolic : null,
         unit,
         measuredAt: new Date(at).toISOString(),
       });
       if (err) setError(err);
       else {
-        onSaved(isBp ? "Blood pressure recorded." : "Sugar level recorded.");
+        onSaved(copy.saved);
         onClose();
       }
     });
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={isBp ? "Record BP Reading" : "Record Sugar Reading"}>
+    <Sheet open={open} onClose={onClose} title={copy.title}>
       <div className="flex flex-col gap-6">
         {/* Date & Time first, then the scale(s) — as drawn. */}
         <div className="flex w-full flex-col gap-2">
           <label className="text-subsection-heading text-text-secondary">Date &amp; Time</label>
-          <div className="bg-surface-default border-border-default focus-within:border-action-primary flex h-[52px] items-center gap-3 rounded-md border p-4 transition-colors">
+          <div className="bg-surface-default border-border-default focus-within:border-action-primary relative flex h-[52px] items-center gap-3 rounded-md border p-4 transition-colors">
             <input
               type="datetime-local"
               value={at}
               onChange={(e) => setAt(e.target.value)}
-              className="text-text-primary min-w-0 flex-1 text-[16px] leading-[1.2] font-medium outline-none"
+              /* The browser draws its own picker button, which sat next to
+                 ours and showed two calendars. Rather than delete one icon and
+                 lose the other's tap target, the native one is stretched over
+                 the whole field and made invisible: the Figma calendar is what
+                 she sees, and a tap anywhere on the row opens the real picker
+                 — a far bigger target than a 22px glyph for unsteady hands. */
+              className="text-text-primary min-w-0 flex-1 text-[16px] leading-[1.2] font-medium outline-none [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
             />
             <Calendar size={22} className="text-text-tertiary shrink-0" aria-hidden />
           </div>
@@ -114,16 +134,14 @@ export function RecordMeasurementSheet({
           </>
         ) : (
           <div className="flex w-full flex-col gap-1">
-            <span className="text-subsection-heading text-text-secondary">
-              Sugar Level (mg/dL)
-            </span>
+            <span className="text-subsection-heading text-text-secondary">{copy.field}</span>
             <RulerPicker
-              label="Sugar level"
-              unit="mg/dL"
-              min={RANGE.blood_sugar.min}
-              max={RANGE.blood_sugar.max}
-              value={sugar}
-              onChange={setSugar}
+              label={copy.field}
+              unit={unit}
+              min={singleRange.min}
+              max={singleRange.max}
+              value={single}
+              onChange={setSingle}
             />
           </div>
         )}
