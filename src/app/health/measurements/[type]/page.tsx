@@ -1,6 +1,5 @@
-import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { notFound } from "next/navigation";
+import { requireAccount } from "@/lib/account";
 import { getMeasurementHistory } from "@/lib/health-data";
 import { ScreenHeader } from "@/components/screen-header";
 import {
@@ -70,12 +69,7 @@ export default async function MeasurementPage({
   const config = TYPES[slug];
   if (!config) notFound();
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const { account } = await requireAccount();
 
   const months = await getMeasurementHistory(account.accountId, config.type);
 

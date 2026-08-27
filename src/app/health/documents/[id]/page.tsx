@@ -1,7 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Calendar, ExternalLink, FileText } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { requireAccount } from "@/lib/account";
 import { getDocument } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
 import { ScreenHeader } from "@/components/screen-header";
@@ -28,12 +27,7 @@ export default async function DocumentPage({
 }) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const { account } = await requireAccount();
 
   const doc = await getDocument(account.accountId, id);
   if (!doc) notFound();

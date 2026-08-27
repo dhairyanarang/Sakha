@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { requireAccount } from "@/lib/account";
 import { getHomeData } from "@/lib/home-data";
 import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
@@ -8,12 +6,7 @@ import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const { account } = await requireAccount();
 
   const home = await getHomeData(account.accountId);
 

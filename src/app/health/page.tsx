@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
 import { Droplet, HeartPulse, Weight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { requireAccount } from "@/lib/account";
 import { getHealthOverview } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
@@ -19,12 +17,7 @@ import { DocumentsSection } from "@/components/health/documents-section";
  * frame behind it, so both are invisible and neither is reproduced here.
  */
 export default async function HealthPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const { account } = await requireAccount();
 
   const { medicines, latest, documents } = await getHealthOverview(account.accountId);
   const sugar = latest.blood_sugar;

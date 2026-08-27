@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -44,20 +46,41 @@ export type Membership = {
   role: "owner" | "family";
 };
 
-export async function getMemberships(): Promise<Membership[]> {
+/**
+ * Who is asking, and what they can see — in one round trip.
+ *
+ * Both halves used to be awaited one after the other on every page: the auth
+ * check, then the memberships query, each its own trip to Mumbai. They do not
+ * depend on each other — the memberships query authenticates itself, because
+ * RLS reads auth.uid() straight from the JWT — so they run together instead.
+ *
+ * Wrapped in React's cache() so that a page, its layout and any component
+ * below them all share a single result per request rather than each paying for
+ * their own.
+ */
+export const getViewer = cache(async () => {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("account_members")
-    .select("role, accounts(id, display_name, language)")
-    .order("created_at", { ascending: true });
+  const [userResult, membershipResult] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("account_members")
+      .select("role, accounts(id, display_name, language)")
+      .order("created_at", { ascending: true }),
+  ]);
 
-  return (data ?? []).flatMap((row) => {
+  const memberships: Membership[] = (membershipResult.data ?? []).flatMap((row) => {
     const a = row.accounts as unknown as
       | { id: string; display_name: string; language: string }
       | null;
     if (!a) return [];
     return [{ accountId: a.id, displayName: a.display_name, language: a.language, role: row.role }];
   });
+
+  return { user: userResult.data.user, memberships };
+});
+
+export async function getMemberships(): Promise<Membership[]> {
+  return (await getViewer()).memberships;
 }
 
 /**
@@ -74,7 +97,7 @@ export async function getOwnedAccount(): Promise<Membership | null> {
 
 /** The active account, or null if the user has none yet (mid-onboarding). */
 export async function getActiveAccount(): Promise<Membership | null> {
-  const memberships = await getMemberships();
+  const { memberships } = await getViewer();
   if (memberships.length === 0) return null;
 
   const store = await cookies();
@@ -82,4 +105,25 @@ export async function getActiveAccount(): Promise<Membership | null> {
   // Never trust the cookie on its own — only honour it if it names an account
   // this user is actually a member of.
   return memberships.find((m) => m.accountId === preferred) ?? memberships[0];
+}
+
+/**
+ * The gate every signed-in screen sits behind.
+ *
+ * One call, one round trip. Both branches redirect rather than returning null,
+ * so a page that gets past this line always has a real account to render and
+ * never has to guard again further down.
+ *
+ * Signed out and signed-in-but-not-set-up are different situations and go to
+ * different places: the first has nothing yet, the second is mid-onboarding.
+ */
+export async function requireAccount(): Promise<{ account: Membership }> {
+  const { user } = await getViewer();
+  if (!user) redirect("/welcome");
+
+  // Reads the same cached getViewer() result — no second trip.
+  const account = await getActiveAccount();
+  if (!account) redirect("/onboarding/name");
+
+  return { account };
 }

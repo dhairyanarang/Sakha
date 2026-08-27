@@ -14,6 +14,13 @@ import { cn } from "@/lib/cn";
  * The bar's white fill runs to the physical bottom edge; the safe-area inset
  * is applied as padding INSIDE it, so the labels clear the iPhone home
  * indicator without leaving a strip of page colour beneath the bar.
+ *
+ * Every tab prefetches in full. These routes are dynamic, and for a dynamic
+ * route the default prefetch only reaches the nearest loading boundary — of
+ * which there are none here, so the default fetched nothing at all and each
+ * tab switch waited on a cold server render. prefetch forces the whole route,
+ * data included, and the bar is always on screen so all three warm up as soon
+ * as a tab renders. (Prefetching only runs in production builds.)
  */
 export type NavTab = "home" | "health" | "library";
 
@@ -44,6 +51,7 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
           <Link
             key={id}
             href={href}
+            prefetch
             aria-current={isActive ? "page" : undefined}
             className="flex flex-1 flex-col items-center justify-center gap-1"
           >

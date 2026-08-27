@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { requireAccount } from "@/lib/account";
 import { getMedicines } from "@/lib/health-data";
 import { MedicinesHeader } from "@/components/health/medicines-header";
 import { MedicinesList } from "@/components/health/medicines-list";
@@ -13,12 +11,7 @@ import { MedicinesList } from "@/components/health/medicines-list";
  * stays a server component that only fetches.
  */
 export default async function MedicinesPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const { account } = await requireAccount();
 
   const groups = await getMedicines(account.accountId);
 

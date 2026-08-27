@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount } from "@/lib/account";
+import { requireAccount } from "@/lib/account";
 import { BottomNav, EmptyState } from "@/components/ui";
 
 /**
@@ -8,10 +6,7 @@ import { BottomNav, EmptyState } from "@/components/ui";
  * content is P1 and may launch with little or nothing in it.
  */
 export default async function LibraryPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/welcome");
-  if (!(await getActiveAccount())) redirect("/onboarding/name");
+  await requireAccount();
 
   return (
     <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
