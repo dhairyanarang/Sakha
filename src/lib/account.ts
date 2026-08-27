@@ -45,6 +45,18 @@ export async function getMemberships(): Promise<Membership[]> {
   });
 }
 
+/**
+ * The account this user owns, if any.
+ *
+ * Distinct from getActiveAccount: a person can be a family member on someone
+ * else's account while owning none of their own, and onboarding must only ever
+ * act on their own.
+ */
+export async function getOwnedAccount(): Promise<Membership | null> {
+  const memberships = await getMemberships();
+  return memberships.find((m) => m.role === "owner") ?? null;
+}
+
 /** The active account, or null if the user has none yet (mid-onboarding). */
 export async function getActiveAccount(): Promise<Membership | null> {
   const memberships = await getMemberships();

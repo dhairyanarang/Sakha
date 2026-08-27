@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Users } from "lucide-react";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, Chip, TextInput } from "@/components/ui";
+import { AddedList } from "@/components/onboarding/added-list";
 import { saveContact } from "../actions";
 
 const RELATIONS = ["Spouse", "Son", "Daughter"];
@@ -15,7 +16,13 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function FamilyForm({ justAdded }: { justAdded: boolean }) {
+export function FamilyForm({
+  justAdded,
+  existing,
+}: {
+  justAdded: boolean;
+  existing: { id: string; name: string; relation: string | null }[];
+}) {
   const [error, action, pending] = useActionState(saveContact, null);
   const [relation, setRelation] = useState("");
 
@@ -38,6 +45,13 @@ export function FamilyForm({ justAdded }: { justAdded: boolean }) {
           </>
         }
       >
+        <AddedList
+          items={existing.map((c) => ({
+            id: c.id,
+            primary: c.name,
+            secondary: c.relation ?? undefined,
+          }))}
+        />
         {justAdded ? (
           <p className="text-body-secondary text-feedback-success-text">
             Saved. You can add another below.

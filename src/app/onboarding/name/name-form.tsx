@@ -6,7 +6,7 @@ import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, TextInput } from "@/components/ui";
 import { saveName } from "../actions";
 
-export function NameForm() {
+export function NameForm({ defaultName }: { defaultName: string }) {
   const [error, action, pending] = useActionState(saveName, null);
 
   return (
@@ -26,6 +26,7 @@ export function NameForm() {
           label="Your Name"
          
           name="name"
+          defaultValue={defaultName}
           placeholder="Asha Sharma"
           autoComplete="name"
           autoFocus

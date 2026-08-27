@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, Chip, TextInput } from "@/components/ui";
+import { AddedList } from "@/components/onboarding/added-list";
 import { saveMedicine } from "../actions";
 import type { Enums } from "@/lib/supabase/types";
 
@@ -26,7 +27,13 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function MedicineForm({ justAdded }: { justAdded: boolean }) {
+export function MedicineForm({
+  justAdded,
+  existing,
+}: {
+  justAdded: boolean;
+  existing: { id: string; name: string; times_of_day: string[] }[];
+}) {
   const [error, action, pending] = useActionState(saveMedicine, null);
   // Multi-select: Morning AND Evening on one entry. An earlier draft made you
   // add the medicine twice; that requirement is gone.
@@ -57,6 +64,15 @@ export function MedicineForm({ justAdded }: { justAdded: boolean }) {
           </>
         }
       >
+        <AddedList
+          items={existing.map((m) => ({
+            id: m.id,
+            primary: m.name,
+            secondary: m.times_of_day
+              .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+              .join(", "),
+          }))}
+        />
         {justAdded ? (
           <p className="text-body-secondary text-feedback-success-text">
             Saved. You can add another below.

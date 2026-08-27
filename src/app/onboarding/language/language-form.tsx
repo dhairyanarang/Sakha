@@ -19,9 +19,9 @@ const OPTIONS = [
   { value: "hi", native: "हिन्दी", latin: "Hindi", nativeSize: "text-[18px]" },
 ];
 
-export function LanguageForm() {
+export function LanguageForm({ defaultLanguage }: { defaultLanguage: string }) {
   const [error, action, pending] = useActionState(saveLanguage, null);
-  const [selected, setSelected] = useState("en");
+  const [selected, setSelected] = useState(defaultLanguage);
 
   return (
     <form action={action}>

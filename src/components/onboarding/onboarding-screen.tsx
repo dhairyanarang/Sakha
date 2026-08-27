@@ -37,7 +37,7 @@ export function OnboardingScreen({
   align?: "center" | "start";
 }) {
   return (
-    <div className="bg-surface-page flex min-h-dvh flex-col">
+    <div className="bg-surface-page flex h-dvh flex-col overflow-hidden">
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
       <div
         className="flex h-[42px] shrink-0 items-center justify-between px-2.5"
@@ -64,7 +64,8 @@ export function OnboardingScreen({
         ) : null}
       </div>
 
-      <main className="flex flex-1 flex-col pt-[34px]">
+      {/* Content scrolls; the footer never leaves the viewport. */}
+      <main className="flex flex-1 flex-col overflow-y-auto pt-[34px]">
         <div
           className={cn(
             "flex w-full flex-col gap-6",
@@ -101,7 +102,7 @@ export function OnboardingScreen({
       </main>
 
       <footer
-        className="flex shrink-0 flex-col gap-1 px-4 pt-4"
+        className="border-border-faint bg-surface-page flex shrink-0 flex-col gap-1 border-t px-4 pt-4"
         style={{ paddingBottom: "calc(var(--spacing-6) + env(safe-area-inset-bottom))" }}
       >
         {footer}

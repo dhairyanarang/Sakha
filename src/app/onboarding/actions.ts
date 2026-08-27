@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount, setActiveAccount } from "@/lib/account";
+import { getActiveAccount, getOwnedAccount, setActiveAccount } from "@/lib/account";
 import type { Enums } from "@/lib/supabase/types";
 
 /**
@@ -16,6 +16,11 @@ const SAVE_FAILED = "We couldn't save this. Please try again.";
  * The account is created as soon as we have a name, not at the end of
  * onboarding. If she stops halfway she still has a usable account, rather than
  * a half-filled form that evaporates.
+ *
+ * Idempotent by design. Submitting this screen twice — which happens the
+ * moment someone goes back a step and presses Next again — used to create a
+ * SECOND account, silently splitting their contacts and medicines across two.
+ * If they already own one, we rename it instead.
  */
 export async function saveName(
   _prev: string | null,
@@ -25,10 +30,21 @@ export async function saveName(
   if (!name) return "Please enter your name.";
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("create_account", { p_display_name: name });
-  if (error || !data) return SAVE_FAILED;
+  const owned = await getOwnedAccount();
 
-  await setActiveAccount(data);
+  if (owned) {
+    const { error } = await supabase
+      .from("accounts")
+      .update({ display_name: name })
+      .eq("id", owned.accountId);
+    if (error) return SAVE_FAILED;
+    await setActiveAccount(owned.accountId);
+  } else {
+    const { data, error } = await supabase.rpc("create_account", { p_display_name: name });
+    if (error || !data) return SAVE_FAILED;
+    await setActiveAccount(data);
+  }
+
   redirect("/onboarding/language");
 }
 
