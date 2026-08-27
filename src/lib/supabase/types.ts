@@ -253,6 +253,51 @@ export type Database = {
           },
         ]
       }
+      library_items: {
+        Row: {
+          category: Database["public"]["Enums"]["library_category"]
+          content_type: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          external_url: string
+          id: string
+          language: string
+          published: boolean
+          sort_order: number
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["library_category"]
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          external_url: string
+          id?: string
+          language?: string
+          published?: boolean
+          sort_order?: number
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["library_category"]
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          external_url?: string
+          id?: string
+          language?: string
+          published?: boolean
+          sort_order?: number
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       medication_logs: {
         Row: {
           account_id: string
@@ -472,6 +517,12 @@ export type Database = {
     }
     Enums: {
       account_role: "owner" | "family"
+      library_category:
+        | "morning_routine"
+        | "movement"
+        | "mind"
+        | "health_education"
+        | "food"
       measurement_type: "blood_pressure" | "blood_sugar" | "weight"
       medication_status: "confirmed" | "skipped" | "unconfirmed"
       mood_level: "not_good" | "good" | "very_good"
@@ -604,6 +655,13 @@ export const Constants = {
   public: {
     Enums: {
       account_role: ["owner", "family"],
+      library_category: [
+        "morning_routine",
+        "movement",
+        "mind",
+        "health_education",
+        "food",
+      ],
       measurement_type: ["blood_pressure", "blood_sugar", "weight"],
       medication_status: ["confirmed", "skipped", "unconfirmed"],
       mood_level: ["not_good", "good", "very_good"],
