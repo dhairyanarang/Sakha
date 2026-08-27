@@ -54,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="bg-surface-tinted flex flex-col">
         <ThemeColor />
         <StatusBarBackdrop />
-        <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
+        <div className="bg-surface-tinted fixed top-0 left-1/2 flex h-[100dvh] w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>
         {/* Visual feedback toolbar. Dev only — the check compiles away in a
