@@ -28,7 +28,7 @@ export default async function HomePage() {
        area behind the status bar and shows through the tinted sheet's rounded
        top corners. Rounding against the body — the same colour — made those
        corners invisible. */
-    <div className="flex h-dvh flex-col overflow-hidden bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]">
       <header
         className="shrink-0 px-4 pb-4"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + var(--spacing-3))" }}

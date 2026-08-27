@@ -16,7 +16,7 @@ export default async function WelcomePage() {
   if (data.user) redirect("/");
 
   return (
-    <div className="bg-surface-page flex min-h-dvh flex-col overflow-hidden">
+    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
       <header
         className="flex shrink-0 flex-col items-center px-4"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 31px)" }}
@@ -46,7 +46,7 @@ export default async function WelcomePage() {
           alt="An older woman and her son looking at a phone together"
           className="absolute inset-x-0 bottom-0 w-full object-contain object-bottom"
         />
-        <div className="from-surface-page/0 to-surface-page absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
+        <div className="from-surface-tinted/0 to-surface-tinted absolute inset-x-0 bottom-0 h-[125px] bg-gradient-to-b" />
       </div>
 
       <footer

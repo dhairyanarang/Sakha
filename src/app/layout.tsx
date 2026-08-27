@@ -46,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex min-h-full flex-col">
         <StatusBarBackdrop />
-        <div className="bg-surface-tinted mx-auto flex w-full max-w-[430px] flex-1 flex-col">
+        <div className="bg-surface-tinted mx-auto flex min-h-dvh w-full max-w-[430px] flex-1 flex-col">
           {children}
         </div>
         {/* Visual feedback toolbar. Dev only — the check compiles away in a

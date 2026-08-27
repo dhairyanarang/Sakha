@@ -1,20 +1,31 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 /**
  * Paints the area behind the iOS status bar.
  *
- * With `black-translucent` the page draws under the status bar and its text is
- * always white — which is what lets Home's gradient reach the top, but would
- * leave white-on-near-white text unreadable on the light screens. A single
- * strip in the same gradient keeps it legible everywhere, and on Home it sits
- * invisibly over the identical gradient already there.
+ * `black-translucent` lets the page draw under the status bar — the only way
+ * Home's gradient can reach the top — but it also forces the status bar text
+ * white on every screen. So Home continues its gradient up there, and every
+ * other screen gets the plain page colour rather than a blue band floating
+ * above a light screen.
  *
- * Height is zero on any device without an inset, so nothing changes on
- * Android or desktop.
+ * Height is the safe-area inset, so this collapses to nothing on Android and
+ * desktop where no such inset exists.
  */
 export function StatusBarBackdrop() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 z-40 bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]"
+      className={
+        isHome
+          ? "pointer-events-none fixed inset-x-0 top-0 z-40 bg-[linear-gradient(to_right,var(--brand-500),var(--brand-700))]"
+          : "bg-surface-tinted pointer-events-none fixed inset-x-0 top-0 z-40"
+      }
       style={{ height: "env(safe-area-inset-top)" }}
     />
   );

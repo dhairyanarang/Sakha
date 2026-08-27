@@ -37,7 +37,7 @@ export function OnboardingScreen({
   align?: "center" | "start";
 }) {
   return (
-    <div className="bg-surface-page flex h-dvh flex-col overflow-hidden">
+    <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
       <div
         className="flex h-[42px] shrink-0 items-center justify-between px-2.5"
@@ -102,7 +102,7 @@ export function OnboardingScreen({
       </main>
 
       <footer
-        className="border-border-faint bg-surface-page flex shrink-0 flex-col gap-1 border-t px-4 pt-3"
+        className="border-border-faint bg-surface-tinted flex shrink-0 flex-col gap-1 border-t px-4 pt-3"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
