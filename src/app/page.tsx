@@ -42,14 +42,14 @@ export default async function HomePage() {
           {/* Profile lands in Phase 6; this is the persistent avatar slot. */}
           <span
             title="Profile"
-            className="bg-surface-tinted text-action-primary flex size-[52px] shrink-0 items-center justify-center rounded-full"
+            className="bg-action-primary text-text-on-brand flex size-[52px] shrink-0 items-center justify-center rounded-full"
           >
             <User size={24} aria-hidden />
           </span>
         </div>
       </header>
 
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 pb-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 pt-2 pb-4">
         <MoodCard mood={home.mood} />
         <TodaysCare data={home} />
       </main>
