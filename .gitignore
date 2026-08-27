@@ -42,3 +42,7 @@ next-env.d.ts
 
 # playwright mcp scratch output
 .playwright-mcp/
+
+# macOS/iCloud conflict copies ("page 2.tsx", "family 2/")
+* [0-9].*
+* [0-9]/

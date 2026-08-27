@@ -63,31 +63,7 @@ export async function saveLanguage(
     .eq("id", accountId);
   if (error) return SAVE_FAILED;
 
-  redirect("/onboarding/family");
-}
-
-export async function saveContact(
-  _prev: string | null,
-  formData: FormData,
-): Promise<string | null> {
-  const name = String(formData.get("name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const relation = String(formData.get("relation") ?? "").trim() || null;
-  const andAnother = formData.get("intent") === "another";
-
-  if (!name || !phone) return "Please add both a name and a phone number.";
-
-  const accountId = await getActiveAccountId();
-  if (!accountId) redirect("/onboarding/name");
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("trusted_contacts")
-    .insert({ account_id: accountId, name, phone, relation });
-  if (error) return SAVE_FAILED;
-
-  revalidatePath("/onboarding/family");
-  redirect(andAnother ? "/onboarding/family?added=1" : "/onboarding/medicine");
+  redirect("/onboarding/medicine");
 }
 
 export async function saveMedicine(

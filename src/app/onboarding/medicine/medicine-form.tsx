@@ -49,7 +49,7 @@ export function MedicineForm({
     <form action={action} className="flex min-h-0 flex-1 flex-col">
       <OnboardingScreen
         align="start"
-        backHref="/onboarding/family"
+        backHref="/onboarding/language"
         skipHref="/onboarding/reminders"
         title="Let’s add your Medicine"
         subtitle="Please add the medicines you take regularly"
