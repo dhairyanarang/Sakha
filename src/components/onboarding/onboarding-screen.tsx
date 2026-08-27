@@ -65,7 +65,7 @@ export function OnboardingScreen({
       </div>
 
       {/* Content scrolls; the footer never leaves the viewport. */}
-      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pt-[34px] animate-[step-in_320ms_cubic-bezier(0.34,1.28,0.64,1)]">
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-[34px] animate-[step-in_320ms_cubic-bezier(0.34,1.28,0.64,1)]">
         <div
           className={cn(
             "flex w-full flex-col gap-6",
@@ -108,7 +108,7 @@ export function OnboardingScreen({
         className="bg-surface-tinted flex shrink-0 flex-col gap-1 px-4 pt-4"
         /* The home-indicator inset already reads as blank space; adding a
            full 24px on top of it just pushed content off the screen. */
-        style={{ paddingBottom: "var(--spacing-6)" }}
+        style={{ paddingBottom: "calc(var(--spacing-6) + var(--spacing-3))" }}
       >
         {footer}
       </footer>

@@ -25,12 +25,10 @@ body {
      with height:100%, which on iOS does not reliably cover the safe areas. */
   height: 100%;
   overflow: hidden;
-  overscroll-behavior: none;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   /* Flat design: hierarchy comes from borders and fills, not shadows. */
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
 }
 
 /* Motion is subtle and functional, never decorative — and always optional. */

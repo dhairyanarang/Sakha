@@ -49,7 +49,7 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 pt-2 pb-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-2 pb-4">
         <MoodCard mood={home.mood} />
         <TodaysCare data={home} />
       </main>

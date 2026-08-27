@@ -18,7 +18,7 @@ export default async function LibraryPage() {
       <header className="shrink-0 px-4 pb-4" style={{ paddingTop: "var(--spacing-3)" }}>
         <h1 className="text-screen-title text-text-primary">Library</h1>
       </header>
-      <main className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain px-4 pb-4">
+      <main className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-4 pb-4">
         <EmptyState message="Gentle exercises and guidance will appear here." />
       </main>
       <BottomNav active="library" className="shrink-0" />
