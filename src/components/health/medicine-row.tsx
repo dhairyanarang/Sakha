@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import { PenLine, Pill } from "lucide-react";
 import { IconCircle, StatusTag } from "@/components/ui";
 import { SLOT_LABEL } from "@/lib/today";
@@ -11,11 +12,17 @@ import type { MedicineDetail } from "@/lib/health-data";
  * The dots are per slot and read morning to evening. An outlined dot means
  * not yet confirmed — never "missed", which is not a state this product has.
  *
- * Edit is a real link rather than the whole row being tappable, because the
- * row itself has no other destination and a card that navigates on any tap
- * makes the explicit button pointless.
+ * Only the Edit button is interactive, not the whole row. Editing opens a
+ * sheet over this screen, as drawn, so a card that also swallowed taps would
+ * make the explicit button pointless and give the same action two targets.
  */
-export function MedicineRow({ medicine }: { medicine: MedicineDetail }) {
+export function MedicineRow({
+  medicine,
+  onEdit,
+}: {
+  medicine: MedicineDetail;
+  onEdit: () => void;
+}) {
   const doses = medicine.slots
     .map((s) => `${SLOT_LABEL[s.slot]} ${s.confirmed ? "confirmed" : "not confirmed"}`)
     .join(", ");
@@ -42,14 +49,15 @@ export function MedicineRow({ medicine }: { medicine: MedicineDetail }) {
         />
       </div>
 
-      <Link
-        href={`/health/medicines/${medicine.id}`}
+      <button
+        type="button"
+        onClick={onEdit}
         aria-label={`Edit ${medicine.name}`}
         className="bg-surface-tinted text-action-primary active:text-action-primary-pressed flex shrink-0 items-center gap-2 rounded-sm px-3 py-2 text-[16px] leading-[1.2] transition-colors"
       >
         <PenLine size={18} aria-hidden />
         Edit
-      </Link>
+      </button>
     </div>
   );
 }
