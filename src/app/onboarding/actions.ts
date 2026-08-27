@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveAccount, getOwnedAccount, setActiveAccount } from "@/lib/account";
+import { getActiveAccountId, getOwnedAccount, setActiveAccount } from "@/lib/account";
 import type { Enums } from "@/lib/supabase/types";
 
 /**
@@ -53,14 +53,14 @@ export async function saveLanguage(
   formData: FormData,
 ): Promise<string | null> {
   const language = String(formData.get("language") ?? "en");
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const accountId = await getActiveAccountId();
+  if (!accountId) redirect("/onboarding/name");
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("accounts")
     .update({ language })
-    .eq("id", account.accountId);
+    .eq("id", accountId);
   if (error) return SAVE_FAILED;
 
   redirect("/onboarding/family");
@@ -77,13 +77,13 @@ export async function saveContact(
 
   if (!name || !phone) return "Please add both a name and a phone number.";
 
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const accountId = await getActiveAccountId();
+  if (!accountId) redirect("/onboarding/name");
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("trusted_contacts")
-    .insert({ account_id: account.accountId, name, phone, relation });
+    .insert({ account_id: accountId, name, phone, relation });
   if (error) return SAVE_FAILED;
 
   revalidatePath("/onboarding/family");
@@ -104,12 +104,12 @@ export async function saveMedicine(
   // Multi-select: one medicine can be Morning AND Evening on a single entry.
   if (times.length === 0) return "Please choose when you take it.";
 
-  const account = await getActiveAccount();
-  if (!account) redirect("/onboarding/name");
+  const accountId = await getActiveAccountId();
+  if (!accountId) redirect("/onboarding/name");
 
   const supabase = await createClient();
   const { error } = await supabase.from("medications").insert({
-    account_id: account.accountId,
+    account_id: accountId,
     name,
     times_of_day: times,
     condition_tag: conditionTag,

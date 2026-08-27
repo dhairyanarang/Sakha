@@ -22,6 +22,21 @@ export async function setActiveAccount(accountId: string) {
   });
 }
 
+/**
+ * The active account id, without the membership join.
+ *
+ * Every write already passes through RLS, which is the real guard — so for a
+ * write path we can trust the cookie and let the database reject it if it's
+ * wrong, rather than spending a round trip proving it first.
+ */
+export async function getActiveAccountId(): Promise<string | null> {
+  const store = await cookies();
+  const fromCookie = store.get(ACTIVE_ACCOUNT_COOKIE)?.value;
+  if (fromCookie) return fromCookie;
+  const owned = await getOwnedAccount();
+  return owned?.accountId ?? null;
+}
+
 export type Membership = {
   accountId: string;
   displayName: string;
