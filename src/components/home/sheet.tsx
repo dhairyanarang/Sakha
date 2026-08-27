@@ -48,12 +48,29 @@ export function Sheet({
     document.addEventListener("keydown", onKey);
 
     const vv = window.visualViewport;
+    // The keyboard's height has to be measured RELATIVE to the resting
+    // viewport, not to window.innerHeight. In a standalone app those two
+    // already differ by the reserved status bar, so subtracting innerHeight
+    // over-lifted the sheet by roughly 47px and left a strip of the page
+    // showing between it and the keyboard.
+    //
+    // Tracking the tallest viewport seen gives a reliable zero: only the
+    // keyboard makes it shrink.
+    // Seed from the layout viewport too: if a field autofocuses, the keyboard
+    // may already be animating in by the time this runs, and the visual
+    // viewport alone would give a baseline that is already too short.
+    let restingHeight = Math.max(
+      vv ? vv.height : 0,
+      document.documentElement.clientHeight,
+    );
+
     // Style is written straight to the node: this is a browser measurement
     // being mirrored into the DOM, not application state.
     const applyKeyboardInset = () => {
       if (!vv || !wrapRef.current || !panelRef.current) return;
-      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      wrapRef.current.style.paddingBottom = `${overlap}px`;
+      restingHeight = Math.max(restingHeight, vv.height);
+      const keyboard = Math.max(0, restingHeight - vv.height);
+      wrapRef.current.style.paddingBottom = `${keyboard}px`;
       // Leave a little of the scrim visible so the sheet still reads as a
       // sheet rather than a full-screen page.
       panelRef.current.style.maxHeight = `${Math.max(240, vv.height - 24)}px`;
@@ -81,7 +98,7 @@ export function Sheet({
       />
       <div
         ref={wrapRef}
-        className="relative flex w-full max-w-[430px] justify-center transition-[padding] duration-200 ease-out"
+        className="bg-surface-default relative flex w-full max-w-[430px] justify-center transition-[padding] duration-200 ease-out"
       >
         <div
           ref={panelRef}

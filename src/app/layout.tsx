@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeColor } from "@/components/theme-color";
 import { Agentation } from "agentation";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex flex-col">
+        <ThemeColor />
         <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>
