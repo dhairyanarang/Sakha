@@ -46,7 +46,7 @@ export function MeasurementDetail({
   return (
     <>
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
-        <section className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] p-3">
+        <section className="bg-surface-default border-border-soft flex shrink-0 flex-col gap-4 rounded-xl border-[0.5px] p-3">
           <div className="flex items-start gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <p className="text-eyebrow-label text-action-primary uppercase tracking-[0.04em]">
@@ -95,7 +95,7 @@ export function MeasurementDetail({
         </section>
 
         {months.map((month) => (
-          <section key={month.label} className="flex flex-col gap-2.5">
+          <section key={month.label} className="flex shrink-0 flex-col gap-2.5">
             <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
               {month.label}
             </h2>

@@ -30,8 +30,10 @@ history — do not build from them.
 - `src/app/tokens.css` is **generated**. Do not hand-edit values. To change a
   colour, change it in Figma and regenerate.
 - **If a screen or state is not in Figma, stop and ask.** Do not improvise
-  design. The one authorised exception is the walk check-in, which the user has
-  explicitly asked to be designed in code from the existing system.
+  design. Two authorised exceptions, both asked for explicitly by the user, and
+  both to be built from the existing system rather than invented: the walk
+  check-in, and **adding and viewing a health document** (2026-08-27) — Figma
+  has the Documents section on the Health screen but no frame for either.
 
 ## Hard rules
 
@@ -144,7 +146,14 @@ only — never production, so none of this exists in a real build.
   (both `brand/50`, #F1F1FF), so it is inert. Consequence: Secondary's pressed
   state can only darken its label, which is a quiet cue. A dedicated token for
   a pressed tinted surface would fix it.
-- Chart (dual-line BP, single-line sugar) is deliberately not built yet.
+- Chart (dual-line BP, single-line sugar) is deliberately not built yet. The
+  measurement detail screens ship without it, and without the 7 days / 30 days
+  / 3 months pills that exist only to drive it — so the one sanctioned shadow,
+  which lives on the selected pill, is still unused anywhere in the app.
+- **Weight has no detail frame.** It reuses the sugar/BP screen shape because
+  Health links to it, and it carries no range note because none was written.
+- The Medicines screen's info icon has no designed destination. It currently
+  toggles a legend for the dots — a guess at intent, not a decision.
 - No Accessibility or general app-settings screen has been designed.
 - The family invite *acceptance* flow has never been designed.
 - PWA file upload on installed iOS has not been tested on a real device.

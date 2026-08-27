@@ -8,8 +8,7 @@ import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
 import { MedicinesCard } from "@/components/health/medicines-card";
 import { MeasurementRow } from "@/components/health/measurement-row";
-import { DocumentRow } from "@/components/health/document-row";
-import { AddTile } from "@/components/health/add-tile";
+import { DocumentsSection } from "@/components/health/documents-section";
 
 /**
  * Health — Medicines, Measurements and Documents, in that order.
@@ -39,7 +38,7 @@ export default async function HealthPage() {
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
         <MedicinesCard medicines={medicines} />
 
-        <section className="flex flex-col gap-2.5">
+        <section className="flex shrink-0 flex-col gap-2.5">
           <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
             Measurements
           </h2>
@@ -78,20 +77,7 @@ export default async function HealthPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-            Documents
-          </h2>
-          {documents.map((d) => (
-            <DocumentRow
-              key={d.id}
-              href={`/health/documents/${d.id}`}
-              title={d.title}
-              when={relativeWhen(d.at)}
-            />
-          ))}
-          <AddTile href="/health/documents/new">+ Add Document</AddTile>
-        </section>
+        <DocumentsSection documents={documents} />
       </main>
 
       <BottomNav active="health" className="shrink-0" />

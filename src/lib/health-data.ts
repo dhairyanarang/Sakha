@@ -74,8 +74,9 @@ export async function getHealthOverview(accountId: string): Promise<HealthOvervi
       .from("health_documents")
       .select("id, title, doc_date, created_at")
       .eq("account_id", accountId)
-      .order("created_at", { ascending: false })
-      .limit(3),
+      // No limit: Figma gives the Documents heading no chevron and the file
+      // has no Documents screen, so this list is the only way to reach them.
+      .order("created_at", { ascending: false }),
   ]);
 
   const logged = new Map(
@@ -271,4 +272,48 @@ export async function getMeasurementHistory(
   }
 
   return [...months.values()];
+}
+
+export type StoredDocument = {
+  id: string;
+  title: string;
+  docDate: string | null;
+  docType: string | null;
+  storagePath: string;
+  notes: string | null;
+  createdAt: string;
+  /** Short-lived; the bucket is private and has no public URL. */
+  signedUrl: string | null;
+  isImage: boolean;
+};
+
+/** One document, with a link that can actually be opened. */
+export async function getDocument(
+  accountId: string,
+  id: string,
+): Promise<StoredDocument | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("health_documents")
+    .select("id, title, doc_date, doc_type, storage_path, notes, created_at")
+    .eq("account_id", accountId)
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return null;
+
+  const { data: signed } = await supabase.storage
+    .from("health-documents")
+    .createSignedUrl(data.storage_path, 60 * 10);
+
+  return {
+    id: data.id,
+    title: data.title,
+    docDate: data.doc_date,
+    docType: data.doc_type,
+    storagePath: data.storage_path,
+    notes: data.notes,
+    createdAt: data.created_at,
+    signedUrl: signed?.signedUrl ?? null,
+    isImage: !/\.pdf$/i.test(data.storage_path),
+  };
 }

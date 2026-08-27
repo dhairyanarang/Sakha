@@ -51,7 +51,7 @@ export function MedicinesList({ groups }: { groups: MedicineGroup[] }) {
           groups.map((group) => (
             <section
               key={group.conditionTag ?? "__untagged"}
-              className="flex flex-col gap-2.5"
+              className="flex shrink-0 flex-col gap-2.5"
             >
               <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
                 {/* She never chose a condition for these, so the heading must
