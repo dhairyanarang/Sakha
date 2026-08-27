@@ -19,7 +19,7 @@ export default async function WelcomePage() {
     <div className="bg-surface-tinted flex min-h-0 flex-1 flex-col overflow-hidden">
       <header
         className="flex shrink-0 flex-col items-center px-4"
-        style={{ paddingTop: "31px" }}
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 31px)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

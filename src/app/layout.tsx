@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { StatusBarBackdrop } from "@/components/status-bar-backdrop";
 import { ThemeColor } from "@/components/theme-color";
 import { Agentation } from "agentation";
 
@@ -17,14 +18,16 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Sakha",
-    // NOT black-translucent. That setting applies only once installed to the
-    // home screen, and it makes the web view claim the whole screen — which
-    // flips env(safe-area-inset-bottom) from ~0 in the browser to 34px in
-    // standalone. Every footer then gained 34px the moment the app was
-    // installed, which is why it looked right in Safari and floated on the
-    // home screen. The cost is that Home's gradient stops at the status bar
-    // rather than running under it.
-    statusBarStyle: "default",
+    // black-translucent is the only style that lets the page draw behind the
+    // status bar; "default" fills that strip with a flat light colour and
+    // ignores theme_color entirely, which is why it kept coming back white.
+    //
+    // It also makes the web view claim the whole screen, which is what
+    // previously inflated every footer by 34px through
+    // env(safe-area-inset-bottom). Nothing consumes the BOTTOM inset any more
+    // — bottom spacing is a fixed 24px — so only the top inset is used, which
+    // is exactly what it is for.
+    statusBarStyle: "black-translucent",
   },
   formatDetection: {
     telephone: false,
@@ -50,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="bg-surface-tinted flex flex-col">
         <ThemeColor />
+        <StatusBarBackdrop />
         <div className="bg-surface-tinted fixed inset-y-0 left-1/2 flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden">
           {children}
         </div>

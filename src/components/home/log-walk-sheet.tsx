@@ -15,9 +15,20 @@ import { logWalk } from "@/app/actions/home";
  */
 const DURATIONS = [10, 15, 20, 30, 45, 60];
 
-export function LogWalkSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [didWalk, setDidWalk] = useState<boolean | null>(null);
-  const [minutes, setMinutes] = useState<number | null>(null);
+export function LogWalkSheet({
+  open,
+  onClose,
+  onSaved,
+  existing,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+  existing: { didWalk: boolean; minutes: number | null } | null;
+}) {
+  // Pre-fill from today's entry so updating it isn't starting over.
+  const [didWalk, setDidWalk] = useState<boolean | null>(existing?.didWalk ?? null);
+  const [minutes, setMinutes] = useState<number | null>(existing?.minutes ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -31,8 +42,7 @@ export function LogWalkSheet({ open, onClose }: { open: boolean; onClose: () => 
       const err = await logWalk(didWalk, minutes);
       if (err) setError(err);
       else {
-        setDidWalk(null);
-        setMinutes(null);
+        onSaved(didWalk ? "Walk logged." : "Noted, no walk today.");
         onClose();
       }
     });

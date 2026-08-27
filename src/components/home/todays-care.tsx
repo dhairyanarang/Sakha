@@ -6,6 +6,7 @@ import { CareRow } from "./care-row";
 import { RowAction } from "./row-action";
 import { RecordMeasurementSheet } from "./record-measurement-sheet";
 import { LogWalkSheet } from "./log-walk-sheet";
+import { Toast } from "@/components/ui";
 import { confirmDoses } from "@/app/actions/home";
 import { SLOT_LABEL, SLOT_TIME } from "@/lib/today";
 import type { HomeData } from "@/lib/home-data";
@@ -13,6 +14,7 @@ import type { HomeData } from "@/lib/home-data";
 export function TodaysCare({ data }: { data: HomeData }) {
   const [sheet, setSheet] = useState<null | "sugar" | "bp" | "walk">(null);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   function confirm(group: HomeData["doses"][number]) {
@@ -20,6 +22,7 @@ export function TodaysCare({ data }: { data: HomeData }) {
     startTransition(async () => {
       await confirmDoses(group.medicationIds, group.slot);
       setConfirming(null);
+      setToast(`${SLOT_LABEL[group.slot]} confirmed.`);
     });
   }
 
@@ -113,8 +116,11 @@ export function TodaysCare({ data }: { data: HomeData }) {
         icon={<Footprints size={22} aria-hidden />}
         title="Walk"
         action={
+          /* One walk entry per day, so once it exists the action edits it
+             rather than adding another. Measurements are the opposite —
+             several readings a day are normal — so those keep "Record". */
           <RowAction tone="tinted" onClick={() => setSheet("walk")}>
-            Log Walk
+            {data.walk === null ? "Log Walk" : "Update"}
           </RowAction>
         }
       >
@@ -133,13 +139,22 @@ export function TodaysCare({ data }: { data: HomeData }) {
         open={sheet === "sugar"}
         onClose={() => setSheet(null)}
         type="blood_sugar"
+        onSaved={setToast}
       />
       <RecordMeasurementSheet
         open={sheet === "bp"}
         onClose={() => setSheet(null)}
         type="blood_pressure"
+        onSaved={setToast}
       />
-      <LogWalkSheet open={sheet === "walk"} onClose={() => setSheet(null)} />
+      <LogWalkSheet
+        open={sheet === "walk"}
+        onClose={() => setSheet(null)}
+        onSaved={setToast}
+        existing={data.walk}
+      />
+
+      <Toast message={toast ?? ""} open={toast !== null} onDone={() => setToast(null)} />
     </section>
   );
 }

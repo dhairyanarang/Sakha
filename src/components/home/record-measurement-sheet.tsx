@@ -8,38 +8,6 @@ import { Button } from "@/components/ui";
 import { recordMeasurement } from "@/app/actions/home";
 import type { Enums } from "@/lib/supabase/types";
 
-/** A field with a unit suffix, as drawn on the Record sheets. */
-function ValueField({
-  label,
-  unit,
-  value,
-  onChange,
-  autoFocus,
-}: {
-  label: string;
-  unit: string;
-  value: string;
-  onChange: (v: string) => void;
-  autoFocus?: boolean;
-}) {
-  return (
-    <div className="flex w-full flex-col gap-2">
-      <label className="text-subsection-heading text-text-secondary">{label}</label>
-      <div className="bg-surface-default border-border-default focus-within:border-action-primary flex items-center gap-3 rounded-md border p-4 transition-colors">
-        <input
-          // Numeric keypad, not a full keyboard — fewer wrong taps.
-          inputMode="decimal"
-          value={value}
-          autoFocus={autoFocus}
-          onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
-          className="text-text-primary min-w-0 flex-1 text-[18px] leading-[1.2] font-medium outline-none"
-        />
-        <span className="text-metadata text-text-tertiary shrink-0">{unit}</span>
-      </div>
-    </div>
-  );
-}
-
 /** Local datetime string for a datetime-local input, in her timezone. */
 function nowLocalInput() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -51,22 +19,31 @@ function nowLocalInput() {
   return `${g("year")}-${g("month")}-${g("day")}T${g("hour")}:${g("minute")}`;
 }
 
+// Ranges wide enough to cover anything real, narrow enough that the scale
+// stays usable. The picker can't produce a value outside them.
+const RANGE = {
+  blood_sugar: { min: 40, max: 400 },
+  systolic: { min: 70, max: 220 },
+  diastolic: { min: 40, max: 140 },
+};
+
 export function RecordMeasurementSheet({
   open,
   onClose,
   type,
+  onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   type: Enums<"measurement_type">;
+  onSaved: (message: string) => void;
 }) {
   const isBp = type === "blood_pressure";
   const unit = isBp ? "mmHg" : "mg/dL";
 
-  const [primary, setPrimary] = useState("");
-  // Sensible mid-range starting points so the scale opens somewhere useful.
   const [sugar, setSugar] = useState(120);
-  const [secondary, setSecondary] = useState("");
+  const [systolic, setSystolic] = useState(120);
+  const [diastolic, setDiastolic] = useState(80);
   const [at, setAt] = useState(nowLocalInput);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -76,15 +53,14 @@ export function RecordMeasurementSheet({
     startTransition(async () => {
       const err = await recordMeasurement({
         type,
-        value: isBp ? Number(primary) : sugar,
-        valueSecondary: isBp ? Number(secondary) : null,
+        value: isBp ? systolic : sugar,
+        valueSecondary: isBp ? diastolic : null,
         unit,
         measuredAt: new Date(at).toISOString(),
       });
       if (err) setError(err);
       else {
-        setPrimary("");
-        setSecondary("");
+        onSaved(isBp ? "Blood pressure recorded." : "Sugar level recorded.");
         onClose();
       }
     });
@@ -93,28 +69,9 @@ export function RecordMeasurementSheet({
   return (
     <Sheet open={open} onClose={onClose} title={isBp ? "Record BP Reading" : "Record Sugar Reading"}>
       <div className="flex flex-col gap-6">
-        {isBp ? (
-          <>
-            <ValueField
-              label="Systolic (Top Number)"
-              unit={unit}
-              value={primary}
-              onChange={setPrimary}
-              autoFocus
-            />
-            <ValueField
-              label="Diastolic (Bottom Number)"
-              unit={unit}
-              value={secondary}
-              onChange={setSecondary}
-            />
-          </>
-        ) : null}
-
+        {/* Date & Time first, then the scale(s) — as drawn. */}
         <div className="flex w-full flex-col gap-2">
           <label className="text-subsection-heading text-text-secondary">Date &amp; Time</label>
-          {/* Native picker rather than a custom one: it's the control she
-              already knows from her phone, and needs no extra library. */}
           <div className="bg-surface-default border-border-default focus-within:border-action-primary flex h-[52px] items-center gap-3 rounded-md border p-4 transition-colors">
             <input
               type="datetime-local"
@@ -126,18 +83,50 @@ export function RecordMeasurementSheet({
           </div>
         </div>
 
-        {!isBp ? (
-          /* The scale comes after Date & Time, as drawn — and needs no
-             keyboard, so nothing can cover the sheet. */
-          <RulerPicker
-            label="Sugar level"
-            unit="mg/dL"
-            min={40}
-            max={400}
-            value={sugar}
-            onChange={setSugar}
-          />
-        ) : null}
+        {isBp ? (
+          <>
+            <div className="flex w-full flex-col gap-1">
+              <span className="text-subsection-heading text-text-secondary">
+                Systolic (Top Number)
+              </span>
+              <RulerPicker
+                label="Systolic"
+                unit={unit}
+                min={RANGE.systolic.min}
+                max={RANGE.systolic.max}
+                value={systolic}
+                onChange={setSystolic}
+              />
+            </div>
+            <div className="flex w-full flex-col gap-1">
+              <span className="text-subsection-heading text-text-secondary">
+                Diastolic (Bottom Number)
+              </span>
+              <RulerPicker
+                label="Diastolic"
+                unit={unit}
+                min={RANGE.diastolic.min}
+                max={RANGE.diastolic.max}
+                value={diastolic}
+                onChange={setDiastolic}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex w-full flex-col gap-1">
+            <span className="text-subsection-heading text-text-secondary">
+              Sugar Level (mg/dL)
+            </span>
+            <RulerPicker
+              label="Sugar level"
+              unit="mg/dL"
+              min={RANGE.blood_sugar.min}
+              max={RANGE.blood_sugar.max}
+              value={sugar}
+              onChange={setSugar}
+            />
+          </div>
+        )}
 
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error">{error}</p>
