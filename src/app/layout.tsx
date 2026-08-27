@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Agentation } from "agentation";
 import { StatusBarBackdrop } from "@/components/status-bar-backdrop";
 
 const inter = Inter({
@@ -48,6 +49,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="bg-surface-tinted mx-auto flex w-full max-w-[430px] flex-1 flex-col">
           {children}
         </div>
+        {/* Visual feedback toolbar. Dev only — the check compiles away in a
+            production build, so it never ships to a real device. */}
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );
