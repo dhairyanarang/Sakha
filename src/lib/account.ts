@@ -43,6 +43,8 @@ export type Membership = {
   accountId: string;
   displayName: string;
   language: string;
+  /** Her own photo in the avatars bucket. Null means fall back to Google's. */
+  avatarPath: string | null;
   role: "owner" | "family";
 };
 
@@ -64,16 +66,24 @@ export const getViewer = cache(async () => {
     supabase.auth.getUser(),
     supabase
       .from("account_members")
-      .select("role, accounts(id, display_name, language)")
+      .select("role, accounts(id, display_name, language, avatar_path)")
       .order("created_at", { ascending: true }),
   ]);
 
   const memberships: Membership[] = (membershipResult.data ?? []).flatMap((row) => {
     const a = row.accounts as unknown as
-      | { id: string; display_name: string; language: string }
+      | { id: string; display_name: string; language: string; avatar_path: string | null }
       | null;
     if (!a) return [];
-    return [{ accountId: a.id, displayName: a.display_name, language: a.language, role: row.role }];
+    return [
+      {
+        accountId: a.id,
+        displayName: a.display_name,
+        language: a.language,
+        avatarPath: a.avatar_path,
+        role: row.role,
+      },
+    ];
   });
 
   return { user: userResult.data.user, memberships };

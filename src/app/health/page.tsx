@@ -4,6 +4,7 @@ import { getHealthOverview } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
+import { getHeaderAvatar } from "@/lib/profile-data";
 import { MedicinesCard } from "@/components/health/medicines-card";
 import { MeasurementRow } from "@/components/health/measurement-row";
 import { DocumentsSection } from "@/components/health/documents-section";
@@ -20,13 +21,14 @@ export default async function HealthPage() {
   const { account } = await requireAccount();
 
   const { medicines, latest, documents } = await getHealthOverview(account.accountId);
+  const avatarUrl = await getHeaderAvatar();
   const sugar = latest.blood_sugar;
   const bp = latest.blood_pressure;
   const weight = latest.weight;
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <AppHeader>
+      <AppHeader avatarUrl={avatarUrl}>
         <p className="text-text-primary text-[20px] leading-[1.2] font-medium">Your Health</p>
         <p className="text-text-primary mt-0.5 text-[14px] leading-[1.2]">Manage your Health</p>
       </AppHeader>

@@ -117,7 +117,14 @@ Decided by the user on 2026-08-26:
   guardrail. Revisit after the core ships.
 - **Get Help is out of P0.** No emergency call/WhatsApp flow. Consequently
   `is_emergency_contact` is dropped — do not build it.
-- Trusted contacts **remain** in scope — they are the family-linking mechanism.
+- **Trusted contacts are gone** (2026-08-28). The table is dropped. There is
+  exactly one sharing concept: a family member invited to **view** the account.
+  Do not reintroduce a second notion of "someone close to her".
+- **Family access is view-only.** A member can read everything on the account
+  and change nothing. Reads gate on `private.is_account_member`, writes on
+  `private.is_account_owner`. The avatars bucket is the first policy set
+  written this way; the rest still gate writes on membership and need
+  tightening when invitations ship.
 - **Daily check-in is on the Home screen**, already designed: a "how do you feel
   today" question, medicine confirmation for today, and log actions for sugar,
   BP and walking. *Verify the exact mood options against the Home frame in

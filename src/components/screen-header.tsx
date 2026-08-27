@@ -16,19 +16,25 @@ import { ChevronLeft } from "lucide-react";
 export function ScreenHeader({
   backHref,
   title,
+  subtitle,
   action,
 }: {
   backHref: string;
   title: string;
+  /** A second line under the title, as Profile has. */
+  subtitle?: string;
   action?: React.ReactNode;
 }) {
+  const height = subtitle ? "h-[76px]" : "h-[62px]";
   return (
     <>
       {/* Fixed, not sticky: going back is a persistent control and must stay
           reachable however far down the list she is. Its height is a constant,
           so the spacer below needs no measuring and this stays a server
           component. */}
-      <header className="bg-surface-default border-border-soft fixed top-0 left-1/2 z-30 flex h-[62px] w-full max-w-[430px] -translate-x-1/2 items-center justify-between border-b-[0.5px] px-2.5">
+      <header
+        className={`bg-surface-default border-border-soft fixed top-0 left-1/2 z-30 flex ${height} w-full max-w-[430px] -translate-x-1/2 items-center justify-between border-b-[0.5px] px-2.5`}
+      >
         <div className="flex min-w-0 items-center gap-1">
           <Link
             href={backHref}
@@ -38,12 +44,19 @@ export function ScreenHeader({
           >
             <ChevronLeft size={24} aria-hidden />
           </Link>
-          <h1 className="text-screen-title text-text-primary truncate">{title}</h1>
+          <div className="flex min-w-0 flex-col justify-center">
+            <h1 className="text-screen-title text-text-primary truncate">{title}</h1>
+            {subtitle ? (
+              <p className="text-text-primary mt-0.5 truncate text-[14px] leading-[1.2]">
+                {subtitle}
+              </p>
+            ) : null}
+          </div>
         </div>
         {action ? <div className="flex shrink-0 items-center">{action}</div> : null}
       </header>
       {/* Holds the bar's place, so the page keeps its natural length. */}
-      <div aria-hidden className="h-[62px] shrink-0" />
+      <div aria-hidden className={`${height} shrink-0`} />
     </>
   );
 }

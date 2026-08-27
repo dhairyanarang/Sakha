@@ -3,6 +3,7 @@ import { getHomeData } from "@/lib/home-data";
 import { greeting } from "@/lib/today";
 import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
+import { getHeaderAvatar } from "@/lib/profile-data";
 import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
 
@@ -10,10 +11,11 @@ export default async function HomePage() {
   const { account } = await requireAccount();
 
   const home = await getHomeData(account.accountId);
+  const avatarUrl = await getHeaderAvatar();
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <AppHeader>
+      <AppHeader avatarUrl={avatarUrl}>
         {/* rgba(0,0,0,0.6) over surface/page, resolved to a solid value. */}
         <p className="text-[16px] leading-[1.2] text-[#636366]">{greeting()},</p>
         <p className="text-text-primary mt-1.5 truncate text-[20px] leading-[1.2] font-medium">
