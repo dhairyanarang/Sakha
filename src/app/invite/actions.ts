@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { setActiveAccount } from "@/lib/account";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * Claims an invitation for the signed-in person.
@@ -20,15 +21,15 @@ export async function acceptInvitation(token: string): Promise<string | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return "Please sign in first.";
+  if (!user) return (await getMessages()).invitations.signInFirst;
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data, error } = await supabase.rpc("accept_invitation", {
     p_token_hash: tokenHash,
   });
 
-  if (error) return "We couldn't open this invitation. Please try again.";
-  if (!data) return "This invitation is no longer valid.";
+  if (error) return (await getMessages()).invitations.couldNotOpen;
+  if (!data) return (await getMessages()).invitations.noLongerValid;
 
   await setActiveAccount(data);
   redirect("/");

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Eye, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AcceptInvitation } from "@/components/profile/accept-invitation";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * Opening a family invitation.
@@ -20,6 +21,7 @@ export default async function InvitePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  const t = await getMessages();
 
   const supabase = await createClient();
   const {
@@ -34,10 +36,10 @@ export default async function InvitePage({
           <img src="/onboarding/sakha-mark.svg" alt="" width={69} height={69} className="size-[69px]" />
           <div className="flex flex-col gap-2">
             <h1 className="text-text-primary text-[24px] leading-[1.4] font-semibold">
-              You have been invited
+              {t.invitations.acceptTitle}
             </h1>
             <p className="text-[16px] leading-[1.4] text-[#636366]">
-              Sign in to see who invited you and what you would be able to see.
+              {t.invitations.acceptSignIn}
             </p>
           </div>
         </main>
@@ -46,7 +48,7 @@ export default async function InvitePage({
             href={`/sign-in?next=/invite/${encodeURIComponent(token)}`}
             className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center rounded-xl transition-colors"
           >
-            Continue
+            {t.common.continue}
           </Link>
         </footer>
       </div>
@@ -61,12 +63,12 @@ export default async function InvitePage({
   if (!invitation || state !== "pending") {
     const reason =
       state === "accepted"
-        ? "This invitation has already been used."
+        ? t.invitations.alreadyUsed
         : state === "cancelled"
-          ? "This invitation was cancelled."
+          ? t.invitations.wasCancelled
           : state === "expired"
-            ? "This invitation has expired."
-            : "We couldn't find this invitation.";
+            ? t.invitations.expired
+            : t.invitations.notFound;
     return (
       <div className="bg-surface-page flex flex-1 flex-col">
         <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
@@ -75,7 +77,7 @@ export default async function InvitePage({
           </span>
           <h1 className="text-text-primary text-[20px] leading-[1.4] font-medium">{reason}</h1>
           <p className="text-[16px] leading-[1.4] text-[#636366]">
-            Ask them to send you a new one.
+            {t.invitations.askForNew}
           </p>
         </main>
         <footer className="shrink-0 px-4" style={{ paddingBottom: "var(--spacing-7)" }}>
@@ -83,7 +85,7 @@ export default async function InvitePage({
             href="/"
             className="bg-surface-default border-action-primary text-action-primary text-button-label flex h-[60px] w-full items-center justify-center rounded-xl border"
           >
-            Go to Sakha
+            {t.invitations.goToSakha}
           </Link>
         </footer>
       </div>
@@ -99,22 +101,21 @@ export default async function InvitePage({
           </span>
           <div className="flex flex-col gap-2">
             <h1 className="text-text-primary text-[24px] leading-[1.4] font-semibold">
-              {invitation.inviter_name} has invited you
+              {t.invitations.invitedBy(invitation.inviter_name)}
             </h1>
             <p className="text-[16px] leading-[1.4] text-[#636366]">
-              As their {invitation.relation.toLowerCase()}, you can keep an eye on
-              how they are doing.
+              {t.invitations.asTheirRelation(invitation.relation)}
             </p>
           </div>
         </div>
 
         <div className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] p-4">
-          <p className="text-body-medium text-text-primary">What you will be able to see</p>
+          <p className="text-body-medium text-text-primary">{t.invitations.youWillSee}</p>
           <ul className="flex flex-col gap-3">
             {[
-              "Their medicines and what they have taken today",
-              "Their blood sugar, blood pressure and weight",
-              "Documents they have saved",
+              t.invitations.seeMedicines,
+              t.invitations.seeReadings,
+              t.invitations.seeDocuments,
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <Check size={20} className="text-feedback-success-text mt-0.5 shrink-0" aria-hidden />
@@ -127,8 +128,7 @@ export default async function InvitePage({
           <div className="flex items-start gap-3">
             <X size={20} className="text-text-tertiary mt-0.5 shrink-0" aria-hidden />
             <span className="text-body-primary text-text-secondary">
-              You cannot add, change or delete anything. Only {invitation.inviter_name} can
-              do that.
+              {t.invitations.cannotChange(invitation.inviter_name)}
             </span>
           </div>
         </div>

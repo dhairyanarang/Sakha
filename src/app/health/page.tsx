@@ -2,7 +2,8 @@ import { Droplet, HeartPulse, Weight } from "lucide-react";
 import { requireAccount } from "@/lib/account";
 import { getHealthOverview } from "@/lib/health-data";
 import { relativeWhen } from "@/lib/today";
-import { BottomNav } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
+import { BottomNav, SectionHeading } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
 import { getHeaderAvatar } from "@/lib/profile-data";
 import { MedicinesCard } from "@/components/health/medicines-card";
@@ -19,6 +20,7 @@ import { DocumentsSection } from "@/components/health/documents-section";
  */
 export default async function HealthPage() {
   const { account, canEdit } = await requireAccount();
+  const { t, locale } = await getT();
 
   const { medicines, latest, documents } = await getHealthOverview(account.accountId);
   const avatarUrl = await getHeaderAvatar();
@@ -29,26 +31,28 @@ export default async function HealthPage() {
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
       <AppHeader avatarUrl={avatarUrl}>
-        <p className="text-text-primary text-[20px] leading-[1.2] font-medium">Your Health</p>
-        <p className="text-text-primary mt-0.5 text-[14px] leading-[1.2]">Manage your Health</p>
+        <p className="text-text-primary text-[20px] leading-[1.2] font-medium">
+          {t.health.headerTitle}
+        </p>
+        <p className="text-text-primary mt-0.5 text-[14px] leading-[1.2]">
+          {t.health.headerSubtitle}
+        </p>
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 p-4">
         <MedicinesCard medicines={medicines} />
 
         <section className="flex shrink-0 flex-col gap-2.5">
-          <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-            Measurements
-          </h2>
+          <SectionHeading>{t.health.measurements}</SectionHeading>
           <div className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] px-3 py-4">
             <MeasurementRow
               href="/health/measurements/blood-sugar"
               tone="error"
               icon={<Droplet size={22} className="text-feedback-error" aria-hidden />}
-              label="Blood Sugar"
+              label={t.health.bloodSugar}
               value={sugar ? String(sugar.value) : null}
               unit={sugar?.unit ?? "mg/dL"}
-              when={sugar ? relativeWhen(sugar.measuredAt) : null}
+              when={sugar ? relativeWhen(sugar.measuredAt, locale) : null}
             />
             <div className="border-border-default border-t" />
             <MeasurementRow
@@ -58,10 +62,10 @@ export default async function HealthPage() {
                  for the single reading that is genuinely about blood. */
               tone="brand"
               icon={<HeartPulse size={22} className="text-action-primary" aria-hidden />}
-              label="Blood Pressure"
+              label={t.health.bloodPressure}
               value={bp ? `${bp.value}/${bp.valueSecondary}` : null}
               unit={bp?.unit ?? "mmHg"}
-              when={bp ? relativeWhen(bp.measuredAt) : null}
+              when={bp ? relativeWhen(bp.measuredAt, locale) : null}
             />
             <div className="border-border-default border-t" />
             <MeasurementRow
@@ -70,10 +74,10 @@ export default async function HealthPage() {
               /* Figma draws a hugeicons weight-scale here. Icons are Lucide
                  only, so this is Lucide's nearest equivalent — flagged. */
               icon={<Weight size={22} className="text-feedback-success-text" aria-hidden />}
-              label="Weight"
+              label={t.health.weight}
               value={weight ? String(weight.value) : null}
               unit={weight?.unit ?? "kg"}
-              when={weight ? relativeWhen(weight.measuredAt) : null}
+              when={weight ? relativeWhen(weight.measuredAt, locale) : null}
             />
           </div>
         </section>

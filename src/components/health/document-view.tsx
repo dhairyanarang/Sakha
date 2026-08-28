@@ -9,6 +9,8 @@ import { PdfPreview } from "./pdf-preview";
 import { deleteDocument } from "@/app/health/actions";
 import { relativeWhen } from "@/lib/today";
 import type { StoredDocument } from "@/lib/health-data";
+import { useI18n } from "@/lib/i18n/client";
+import { documentTypeLabel } from "@/lib/i18n/labels";
 
 /**
  * One stored document, with the document itself leading.
@@ -25,6 +27,7 @@ import type { StoredDocument } from "@/lib/health-data";
  */
 export function DocumentView({ doc }: { doc: StoredDocument }) {
   const router = useRouter();
+  const { t, locale } = useI18n();
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
             disabled={pending}
             className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
           >
-            Delete
+            {t.common.delete}
           </button>
         }
       />
@@ -65,9 +68,9 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
         {confirmingDelete ? (
           <section className="bg-feedback-error-surface flex flex-col gap-4 rounded-md p-4">
             <div className="flex flex-col gap-1">
-              <p className="text-body-medium text-text-primary">Remove this document?</p>
+              <p className="text-body-medium text-text-primary">{t.documents.removeTitle}</p>
               <p className="text-body-secondary text-text-secondary">
-                It will be deleted from your documents. This cannot be undone.
+                {t.documents.removeBody}
               </p>
             </div>
             <div className="flex items-start gap-3">
@@ -78,7 +81,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
                 disabled={pending}
                 className="flex-1"
               >
-                Keep it
+                {t.common.keepIt}
               </Button>
               {/* Not a Button variant: the library has no destructive style,
                   and this matches Edit Medicine rather than inventing one. */}
@@ -88,7 +91,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
                 disabled={pending}
                 className="bg-feedback-error text-text-on-brand text-button-label flex h-[60px] flex-1 items-center justify-center rounded-xl transition-colors disabled:opacity-60"
               >
-                {pending ? "Removing…" : "Remove"}
+                {pending ? t.common.removing : t.common.remove}
               </button>
             </div>
             {error ? (
@@ -103,7 +106,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
           <section className="bg-surface-default border-border-soft relative overflow-hidden rounded-xl border-[0.5px]">
             {pageCount && pageCount > 1 ? (
               <span className="bg-surface-default/90 text-text-secondary absolute top-3 right-3 z-10 rounded-full px-3 py-1.5 text-[14px] leading-[1.2]">
-                Page 1 of {pageCount}
+                {t.documents.pageOf(1, pageCount)}
               </span>
             ) : null}
 
@@ -121,7 +124,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
         ) : (
           <section className="bg-surface-default border-border-soft rounded-xl border-[0.5px] p-4">
             <p className="text-body-secondary text-text-secondary">
-              We couldn&apos;t load this document right now. Please try again.
+              {t.documents.loadFailed}
             </p>
           </section>
         )}
@@ -133,12 +136,12 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
               <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
               {/* rgba(0,0,0,0.4) over surface/page, resolved to a solid value. */}
               <span className="text-[14px] leading-[1.2] text-[#999999]">
-                {relativeWhen(when)}
+                {relativeWhen(when, locale)}
               </span>
             </span>
             {doc.docType ? (
               <span className="bg-surface-tinted text-action-primary rounded-full px-4 py-2 text-[14px] leading-[1.2]">
-                {doc.docType}
+                {documentTypeLabel(doc.docType, t)}
               </span>
             ) : null}
           </div>
@@ -166,7 +169,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
                 className="bg-surface-default border-action-primary text-action-primary text-button-label active:bg-surface-tinted flex h-[60px] flex-1 items-center justify-center gap-2 rounded-xl border transition-colors"
               >
                 <ExternalLink size={22} aria-hidden />
-                Open
+                {t.documents.open}
               </a>
             ) : null}
             <a
@@ -174,7 +177,7 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
               className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] flex-1 items-center justify-center gap-2 rounded-xl transition-colors"
             >
               <Download size={22} aria-hidden />
-              Download
+              {t.common.download}
             </a>
           </footer>
         </FixedBar>

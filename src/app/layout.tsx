@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
 import { DevTools } from "@/components/dev-tools";
+import { LocaleProvider } from "@/lib/i18n/client";
+import { getLocale } from "@/lib/i18n/server";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -58,9 +60,13 @@ export const viewport: Viewport = {
   themeColor: "#F8F8FF", // surface/page — matches the canvas
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Read once, here, from a cookie — no database round trip on the shell, and
+  // every screen below (server or client) reads the same answer.
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className={`${inter.variable} antialiased`}>
+    <html lang={locale} className={`${inter.variable} antialiased`}>
       {/* Sakha is a mobile-only design — one 402px artboard, no tablet or
           desktop layout has ever been drawn. Rather than inventing breakpoints
           that don't exist, the app is capped at a phone-width column and
@@ -68,7 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="flex flex-col">
         <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col">
-          {children}
+          <LocaleProvider locale={locale}>{children}</LocaleProvider>
         </div>
         {/* Visual feedback toolbar. Dev only — the check compiles away in a
             production build, so it never ships to a real device. */}

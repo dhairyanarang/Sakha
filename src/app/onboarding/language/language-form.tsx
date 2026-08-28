@@ -5,6 +5,8 @@ import { Languages } from "lucide-react";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button, Radio } from "@/components/ui";
 import { saveLanguage } from "../actions";
+import { LANGUAGE_NAMES } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Radio-style here, tap-chips in Profile. That inconsistency between the two
@@ -14,12 +16,18 @@ import { saveLanguage } from "../actions";
  * हिन्दी is set at 18px against English's 16px, as authored: Devanagari needs
  * the extra size to stay as legible.
  */
+/**
+ * Each option is written in the language it offers — she has to be able to
+ * recognise her own language here without already reading the other one. The
+ * roman spelling underneath is the bridge between the two.
+ */
 const OPTIONS = [
-  { value: "en", native: "English", latin: "English", nativeSize: "text-[16px]" },
-  { value: "hi", native: "हिन्दी", latin: "Hindi", nativeSize: "text-[18px]" },
+  { value: "en", native: LANGUAGE_NAMES.en, latin: "English", nativeSize: "text-[16px]" },
+  { value: "hi", native: LANGUAGE_NAMES.hi, latin: "Hindi", nativeSize: "text-[18px]" },
 ];
 
 export function LanguageForm({ defaultLanguage }: { defaultLanguage: string }) {
+  const t = useT();
   const [error, action, pending] = useActionState(saveLanguage, null);
   const [selected, setSelected] = useState(defaultLanguage);
 
@@ -28,15 +36,15 @@ export function LanguageForm({ defaultLanguage }: { defaultLanguage: string }) {
       <OnboardingScreen
         backHref="/onboarding/name"
         icon={<Languages size={60} className="text-action-primary" aria-hidden />}
-        title="Which language are you comfortable with?"
-        subtitle="You can change this later."
+        title={t.onboarding.languageTitle}
+        subtitle={t.onboarding.languageSubtitle}
         footer={
           <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Next"}
+            {pending ? t.common.saving : t.common.next}
           </Button>
         }
       >
-        <div role="radiogroup" aria-label="Language" className="flex flex-col gap-2.5">
+        <div role="radiogroup" aria-label={t.onboarding.languageGroupLabel} className="flex flex-col gap-2.5">
           {OPTIONS.map((o) => (
             <label
               key={o.value}

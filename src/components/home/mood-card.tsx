@@ -5,6 +5,7 @@ import { FaceExpressionless, FaceGrinning, FaceSlightlyFrowning } from "lucide-r
 import { setMood } from "@/app/actions/home";
 import { Toast } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/i18n/client";
 import type { Enums } from "@/lib/supabase/types";
 
 /**
@@ -19,14 +20,20 @@ import type { Enums } from "@/lib/supabase/types";
  * coded — mood is a soft personal signal and must never read as an alarm, so
  * "Not Good" is deliberately NOT rendered in the error red.
  */
-const MOODS: { value: Enums<"mood_level">; label: string; Icon: typeof FaceGrinning }[] = [
-  { value: "not_good", label: "Not Good", Icon: FaceSlightlyFrowning },
-  { value: "good", label: "Good", Icon: FaceExpressionless },
-  { value: "very_good", label: "Very Good", Icon: FaceGrinning },
+const MOODS: { value: Enums<"mood_level">; Icon: typeof FaceGrinning }[] = [
+  { value: "not_good", Icon: FaceSlightlyFrowning },
+  { value: "good", Icon: FaceExpressionless },
+  { value: "very_good", Icon: FaceGrinning },
 ];
 
 export function MoodCard({ mood }: { mood: Enums<"mood_level"> | null }) {
   // Already answered today — nothing to ask.
+  const t = useT();
+  const MOOD_LABEL: Record<Enums<"mood_level">, string> = {
+    not_good: t.home.moodNotGood,
+    good: t.home.moodGood,
+    very_good: t.home.moodVeryGood,
+  };
   const [answered, setAnswered] = useState(mood !== null);
   const [chosen, setChosen] = useState<Enums<"mood_level"> | null>(mood);
   const [toast, setToast] = useState(false);
@@ -48,9 +55,9 @@ export function MoodCard({ mood }: { mood: Enums<"mood_level"> | null }) {
     <>
       {!answered ? (
         <section className="bg-surface-default border-border-soft flex shrink-0 flex-col gap-4 rounded-xl border-[0.5px] p-3">
-          <h2 className="text-body-medium text-text-primary">How are you feeling today?</h2>
+          <h2 className="text-body-medium text-text-primary">{t.home.moodQuestion}</h2>
           <div className="flex items-start gap-2">
-            {MOODS.map(({ value, label, Icon }) => {
+            {MOODS.map(({ value, Icon }) => {
               const selected = chosen === value;
               return (
                 <button
@@ -78,7 +85,7 @@ export function MoodCard({ mood }: { mood: Enums<"mood_level"> | null }) {
                       selected ? "font-medium" : "font-normal",
                     )}
                   >
-                    {label}
+                    {MOOD_LABEL[value]}
                   </span>
                 </button>
               );
@@ -87,7 +94,7 @@ export function MoodCard({ mood }: { mood: Enums<"mood_level"> | null }) {
         </section>
       ) : null}
 
-      <Toast message="Thank you, that's noted." open={toast} onDone={() => setToast(false)} />
+      <Toast message={t.home.moodNoted} open={toast} onDone={() => setToast(false)} />
     </>
   );
 }

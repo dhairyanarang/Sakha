@@ -5,22 +5,24 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveAccountId } from "@/lib/account";
+import { setLocaleCookie } from "@/lib/i18n/set-locale";
+import { getMessages } from "@/lib/i18n/server";
 
-const SAVE_FAILED = "We couldn't save this. Please try again.";
+const saveFailed = async () => (await getMessages()).errors.saveFailed;
 
 export async function updateDisplayName(name: string): Promise<string | null> {
   const trimmed = name.trim();
-  if (!trimmed) return "Please enter your name.";
+  if (!trimmed) return (await getMessages()).errors.enterName;
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("accounts")
     .update({ display_name: trimmed })
     .eq("id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/profile");
   revalidatePath("/");
@@ -29,19 +31,23 @@ export async function updateDisplayName(name: string): Promise<string | null> {
 }
 
 export async function updateLanguage(language: string): Promise<string | null> {
-  if (language !== "en" && language !== "hi") return SAVE_FAILED;
+  if (language !== "en" && language !== "hi") return await saveFailed();
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("accounts")
     .update({ language })
     .eq("id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
-  revalidatePath("/profile");
+  await setLocaleCookie(language);
+  // Every screen is server-rendered in the old language right now, Home and
+  // Health included — revalidating only /profile would leave her tapping
+  // through a half-translated app.
+  revalidatePath("/", "layout");
   return null;
 }
 
@@ -57,15 +63,15 @@ export async function updateLanguage(language: string): Promise<string | null> {
  */
 export async function setAvatarPath(path: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
-  if (!path.startsWith(`${accountId}/`)) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
+  if (!path.startsWith(`${accountId}/`)) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("accounts")
     .update({ avatar_path: path })
     .eq("id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/profile");
   revalidatePath("/profile/me");
@@ -77,7 +83,7 @@ export async function setAvatarPath(path: string): Promise<string | null> {
 /** Drops back to the Google picture. */
 export async function removeAvatar(): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { data: account } = await supabase
@@ -90,7 +96,7 @@ export async function removeAvatar(): Promise<string | null> {
     .from("accounts")
     .update({ avatar_path: null })
     .eq("id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   if (account?.avatar_path) {
     await supabase.storage.from("avatars").remove([account.avatar_path]);
@@ -116,11 +122,11 @@ export async function createInvitation(input: {
 }): Promise<{ url: string } | { error: string }> {
   const name = input.name.trim();
   const relation = input.relation.trim();
-  if (!name) return { error: "Please enter their name." };
-  if (!relation) return { error: "Please choose how they are related to you." };
+  if (!name) return { error: (await getMessages()).errors.enterTheirName };
+  if (!relation) return { error: (await getMessages()).errors.chooseRelation };
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return { error: SAVE_FAILED };
+  if (!accountId) return { error: await saveFailed() };
 
   const token = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(token).digest("hex");
@@ -132,7 +138,7 @@ export async function createInvitation(input: {
     relation,
     token_hash: tokenHash,
   });
-  if (error) return { error: SAVE_FAILED };
+  if (error) return { error: await saveFailed() };
 
   const host = (await headers()).get("host");
   const protocol = host?.startsWith("localhost") ? "http" : "https";
@@ -144,7 +150,7 @@ export async function createInvitation(input: {
 /** Withdraws an invitation that has not been accepted. */
 export async function cancelInvitation(id: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -153,7 +159,7 @@ export async function cancelInvitation(id: string): Promise<string | null> {
     .eq("id", id)
     .eq("account_id", accountId)
     .eq("status", "pending");
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/profile");
   return null;
@@ -167,7 +173,7 @@ export async function cancelInvitation(id: string): Promise<string | null> {
  */
 export async function revokeAccess(userId: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -176,7 +182,7 @@ export async function revokeAccess(userId: string): Promise<string | null> {
     .eq("account_id", accountId)
     .eq("user_id", userId)
     .eq("role", "family");
-  if (error) return "We couldn't remove this. Please try again.";
+  if (error) return (await getMessages()).errors.removeFailed;
 
   revalidatePath("/profile");
   return null;

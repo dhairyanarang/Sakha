@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { EmptyState, Toast } from "@/components/ui";
+import { EmptyState, SectionHeading, Toast } from "@/components/ui";
 import { DocumentRow } from "./document-row";
 import { AddTile } from "./add-tile";
 import { AddDocumentSheet } from "./add-document-sheet";
 import { relativeWhen } from "@/lib/today";
 import type { DocumentSummary } from "@/lib/health-data";
+import { useI18n } from "@/lib/i18n/client";
 
 /**
  * The Documents section of the Health screen.
@@ -28,6 +29,7 @@ export function DocumentsSection({
   accountId: string;
   canEdit?: boolean;
 }) {
+  const { t, locale } = useI18n();
   const [adding, setAdding] = useState(false);
   // Remount on each open, so a second document never opens on the first one's
   // title, date and type.
@@ -36,13 +38,11 @@ export function DocumentsSection({
 
   return (
     <section className="flex shrink-0 flex-col gap-2.5">
-      <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-        Documents
-      </h2>
+      <SectionHeading>{t.documents.title}</SectionHeading>
 
       {documents.length === 0 ? (
         <EmptyState
-          message="You have no uploaded documents."
+          message={t.documents.none}
           illustration={
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -59,14 +59,14 @@ export function DocumentsSection({
             key={d.id}
             href={`/health/documents/${d.id}`}
             title={d.title}
-            when={relativeWhen(d.at)}
+            when={relativeWhen(d.at, locale)}
           />
         ))
       )}
 
       {canEdit ? (
         <AddTile onClick={() => { setOpenCount((n) => n + 1); setAdding(true); }}>
-          + Add Document
+          + {t.documents.addDocument}
         </AddTile>
       ) : null}
 

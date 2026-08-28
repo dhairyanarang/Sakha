@@ -2,8 +2,10 @@
 
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { Bell, Languages } from "lucide-react";
-import { Chip, Toast, Toggle } from "@/components/ui";
+import { Chip, SectionHeading, Toast, Toggle } from "@/components/ui";
 import { updateLanguage } from "@/app/profile/actions";
+import { useT } from "@/lib/i18n/client";
+import { LANGUAGE_NAMES, LOCALES } from "@/lib/i18n";
 
 /**
  * Preferences: reminders and language.
@@ -17,12 +19,19 @@ import { updateLanguage } from "@/app/profile/actions";
  * Language is tap-chips here and radio buttons in onboarding. That difference
  * is deliberate and recorded in the IA — each screen follows its own design.
  */
-const LANGUAGES = [
-  { value: "en", label: "English", native: false },
-  { value: "hi", label: "हिन्दी", native: true },
-];
+/**
+ * Each language names ITSELF, always. Showing "Hindi" in English to someone
+ * who reads only Hindi is exactly backwards — she has to recognise her own
+ * language in a script she may not read to switch into it.
+ */
+const LANGUAGES = LOCALES.map((value) => ({
+  value,
+  label: LANGUAGE_NAMES[value],
+  native: value !== "en",
+}));
 
 export function Preferences({ language }: { language: string }) {
+  const t = useT();
   const [selected, setSelected] = useState(language);
   /**
    * Read the browser's permission without an effect, so the server renders
@@ -45,14 +54,14 @@ export function Preferences({ language }: { language: string }) {
     setSelected(value);
     startTransition(async () => {
       const err = await updateLanguage(value);
-      setToast(err ?? "Language updated.");
+      setToast(err ?? t.profile.languageUpdated);
     });
   }
 
   async function toggleReminders() {
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "granted") {
-      setToast("You can turn reminders off in your phone's settings.");
+      setToast(t.profile.remindersOffHint);
       return;
     }
     try {
@@ -66,26 +75,24 @@ export function Preferences({ language }: { language: string }) {
 
   return (
     <section className="flex shrink-0 flex-col gap-3">
-      <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-        Preferences
-      </h2>
+      <SectionHeading>{t.profile.preferences}</SectionHeading>
 
       <div className="bg-surface-default border-border-soft flex flex-col gap-[18px] rounded-xl border-[0.5px] px-4 py-[18px]">
         <div className="flex items-center gap-4">
           <Bell size={22} className="text-text-primary shrink-0" aria-hidden />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <p className="text-text-primary text-[18px] leading-[1.2] font-medium">
-              Notification
+              {t.profile.notification}
             </p>
             {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
             <p className="text-[16px] leading-[1.2] text-[#999999]">
-              Reminders: {remindersOn ? "On" : "Off"}
+              {t.profile.remindersOn(remindersOn ? t.profile.on : t.profile.off)}
             </p>
           </div>
           <Toggle
             checked={remindersOn}
             onCheckedChange={toggleReminders}
-            aria-label="Reminders"
+            aria-label={t.profile.remindersLabel}
           />
         </div>
 
@@ -95,9 +102,11 @@ export function Preferences({ language }: { language: string }) {
           <div className="flex items-center gap-4">
             <Languages size={22} className="text-text-primary shrink-0" aria-hidden />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <p className="text-text-primary text-[18px] leading-[1.2] font-medium">Language</p>
+              <p className="text-text-primary text-[18px] leading-[1.2] font-medium">
+                {t.profile.language}
+              </p>
               <p className="text-[16px] leading-[1.2] text-[#999999]">
-                {selected === "hi" ? "हिन्दी" : "English"}
+                {LANGUAGE_NAMES[selected as keyof typeof LANGUAGE_NAMES] ?? selected}
               </p>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { Button, TextInput, Toast } from "@/components/ui";
 import { removeAvatar, setAvatarPath, updateDisplayName } from "@/app/profile/actions";
 import { extensionFor, uploadToStorage } from "@/lib/upload";
 import type { ProfileView } from "@/lib/profile-data";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * My Profile — her photo, her name, and the account she signed in with.
@@ -24,6 +25,7 @@ import type { ProfileView } from "@/lib/profile-data";
  * back to the Google one.
  */
 export function MyProfile({ profile }: { profile: ProfileView }) {
+  const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(profile.displayName);
@@ -39,11 +41,11 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setToast("Please choose a photo.");
+      setToast(t.errors.choosePhoto);
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setToast("That photo is too large. Please choose one under 10 MB.");
+      setToast(t.errors.photoTooLarge);
       return;
     }
 
@@ -56,20 +58,21 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
         path,
         file,
         upsert: true,
+        t,
       });
       if (uploadError) {
         setToast(uploadError);
         return;
       }
       const err = await setAvatarPath(path);
-      setToast(err ?? "Photo updated.");
+      setToast(err ?? t.profile.photoUpdated);
     });
   }
 
   function useGooglePhoto() {
     startTransition(async () => {
       const err = await removeAvatar();
-      setToast(err ?? "Using your Google photo.");
+      setToast(err ?? t.profile.usingGooglePhoto);
     });
   }
 
@@ -80,7 +83,7 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
       if (err) setError(err);
       else {
         setEditingName(false);
-        setToast("Name updated.");
+        setToast(t.profile.nameUpdated);
       }
     });
   }
@@ -109,7 +112,7 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={pending}
-              aria-label="Change your photo"
+              aria-label={t.profile.changePhoto}
               className="bg-action-primary border-surface-page text-text-on-brand absolute right-0 bottom-0 flex size-[36px] items-center justify-center rounded-full border"
             >
               <PenLine size={18} aria-hidden />
@@ -117,7 +120,9 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
           </div>
 
           <div className="flex flex-col items-center gap-1">
-            <p className="text-text-primary text-[20px] leading-[1.2] font-medium">You</p>
+            <p className="text-text-primary text-[20px] leading-[1.2] font-medium">
+              {t.profile.you}
+            </p>
             {profile.hasOwnPhoto ? (
               <button
                 type="button"
@@ -125,7 +130,7 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
                 disabled={pending}
                 className="text-action-primary text-[14px] leading-[1.2]"
               >
-                Use my Google photo
+                {t.profile.useGooglePhoto}
               </button>
             ) : null}
           </div>
@@ -142,7 +147,9 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
             </span>
             <span className="flex min-w-0 flex-1 flex-col gap-1.5">
               {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
-              <span className="text-[14px] leading-[1.2] text-[#999999]">Full Name</span>
+              <span className="text-[14px] leading-[1.2] text-[#999999]">
+                {t.profile.fullNameLabel}
+              </span>
               <span className="text-text-primary truncate text-[16px] leading-[1.2]">
                 {profile.displayName}
               </span>
@@ -157,7 +164,9 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
               <Mail size={22} className="text-action-primary" aria-hidden />
             </span>
             <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <span className="text-[14px] leading-[1.2] text-[#999999]">Email ID</span>
+              <span className="text-[14px] leading-[1.2] text-[#999999]">
+                {t.profile.emailLabel}
+              </span>
               <span className="text-text-primary truncate text-[16px] leading-[1.2]">
                 {profile.email ?? "—"}
               </span>
@@ -169,14 +178,14 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
       <Sheet
         open={editingName}
         onClose={() => setEditingName(false)}
-        title="Your Name"
+        title={t.profile.yourNameSheet}
       >
         <div className="flex flex-col gap-6">
           <TextInput
-            label="Full Name"
+            label={t.profile.fullNameLabel}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Asha Sharma"
+            placeholder={t.profile.namePlaceholder}
             autoComplete="name"
           />
           {error ? (
@@ -192,10 +201,10 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
             disabled={pending}
             className="flex-1"
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button onClick={saveName} disabled={pending} className="flex-1">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t.common.saving : t.common.save}
           </Button>
         </div>
       </Sheet>

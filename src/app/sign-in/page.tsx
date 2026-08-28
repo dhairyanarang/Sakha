@@ -3,6 +3,7 @@ import { ShieldUser } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleSignInButton } from "./google-sign-in-button";
 import { DEV_TOOLS } from "@/lib/dev";
+import { getMessages } from "@/lib/i18n/server";
 
 export default async function SignInPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function SignInPage({
   if (data.user) redirect("/");
 
   const { error } = await searchParams;
+  const t = await getMessages();
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
@@ -34,10 +36,10 @@ export default async function SignInPage({
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-text-primary text-[24px] leading-[1.4] font-medium">
-            Welcome to Sakha
+            {t.signIn.title}
           </p>
           {/* rgba(0,0,0,0.6) over surface/page, resolved to a solid value. */}
-          <p className="text-[18px] leading-[1.4] text-[#636366]">Sign in to continue</p>
+          <p className="text-[18px] leading-[1.4] text-[#636366]">{t.signIn.subtitle}</p>
         </div>
       </header>
 
@@ -57,7 +59,7 @@ export default async function SignInPage({
       >
         {error ? (
           <p role="alert" className="text-body-secondary text-feedback-error text-center">
-            We couldn&apos;t sign you in. Please try again.
+            {t.signIn.failed}
           </p>
         ) : null}
 
@@ -67,7 +69,7 @@ export default async function SignInPage({
         <div className="flex items-center gap-3 rounded-md bg-[rgb(85_81_255/0.08)] px-3 py-2.5">
           <ShieldUser size={24} className="text-action-primary shrink-0" aria-hidden />
           <p className="text-action-primary text-[16px] leading-[1.4]">
-            We respect your privacy and keep your information safe
+            {t.signIn.privacy}
           </p>
         </div>
 
@@ -82,7 +84,7 @@ export default async function SignInPage({
             href="/dev/login"
             className="text-text-tertiary flex h-[44px] items-center justify-center rounded-xl border border-dashed border-[color:var(--color-border-subtle)] text-[14px]"
           >
-            Continue as guest (testing only)
+            {t.signIn.guestTesting}
           </a>
         ) : null}
       </footer>

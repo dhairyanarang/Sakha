@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/profile-data";
 import { ScreenHeader } from "@/components/screen-header";
 import { MyProfile } from "@/components/profile/my-profile";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * My Profile.
@@ -12,10 +13,11 @@ import { MyProfile } from "@/components/profile/my-profile";
 export default async function MyProfilePage() {
   const profile = await getProfile();
   if (!profile) redirect("/welcome");
+  const t = await getMessages();
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <ScreenHeader backHref="/profile" title="My Profile" />
+      <ScreenHeader backHref="/profile" title={t.profile.myProfile} />
       <MyProfile profile={profile} />
     </div>
   );

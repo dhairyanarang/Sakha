@@ -1,4 +1,8 @@
-import { TZ } from "@/lib/today";
+"use client";
+
+import { TZ, clockLabel } from "@/lib/today";
+import { useLocale } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n";
 
 /**
  * The progression chart, hand-built as inline SVG.
@@ -84,21 +88,26 @@ function labelFor(value: number): string {
   return String(Number(value.toFixed(6)));
 }
 
-/** Dates get coarser as the span widens, so labels stay readable and distinct. */
-function dateFormatter(spanMs: number): (d: Date) => string {
+/**
+ * Dates get coarser as the span widens, so labels stay readable and distinct.
+ *
+ * Hindi uses the SHORT month here even though the reading list uses the long
+ * one: an axis tick has a few characters of room before its neighbours collide,
+ * and "अग॰" fits where "अगस्त" would overlap the next tick.
+ */
+function dateFormatter(spanMs: number, locale: Locale): (d: Date) => string {
+  const intl = locale === "hi" ? "hi-IN" : "en-US";
   const day = 86_400_000;
   if (spanMs <= day) {
-    return (d) =>
-      new Intl.DateTimeFormat("en-US", {
-        timeZone: TZ, hour: "numeric", minute: "2-digit", hour12: true,
-      }).format(d);
+    // A bare clock time; Hindi says "सुबह 9:12" rather than "9:12 AM".
+    return (d) => clockLabel(d, locale);
   }
   if (spanMs <= 365 * day) {
     return (d) =>
-      new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" }).format(d);
+      new Intl.DateTimeFormat(intl, { timeZone: TZ, month: "short", day: "numeric" }).format(d);
   }
   return (d) =>
-    new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", year: "numeric" }).format(d);
+    new Intl.DateTimeFormat(intl, { timeZone: TZ, month: "short", year: "numeric" }).format(d);
 }
 
 export function MeasurementChart({
@@ -113,6 +122,8 @@ export function MeasurementChart({
   unit: string;
   summary: string;
 }) {
+  const locale = useLocale();
+
   // Nothing to plot. The caller shows "No readings yet" instead.
   if (points.length === 0) return null;
 
@@ -137,7 +148,7 @@ export function MeasurementChart({
   const yFor = (value: number) =>
     PLOT.bottom - ((value - y.min) / (y.max - y.min)) * (PLOT.bottom - PLOT.top);
 
-  const format = dateFormatter(span);
+  const format = dateFormatter(span, locale);
   const xTickCount = span === 0 ? 1 : 5;
   const xTicks = Array.from({ length: xTickCount }, (_, i) => {
     const at = xTickCount === 1 ? firstAt : firstAt + (span * i) / (xTickCount - 1);

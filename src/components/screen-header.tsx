@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * The header on a pushed screen: back, title, and an optional action.
@@ -25,6 +28,7 @@ export function ScreenHeader({
   subtitle?: string;
   action?: React.ReactNode;
 }) {
+  const t = useT();
   const height = subtitle ? "h-[76px]" : "h-[62px]";
   return (
     <>
@@ -39,7 +43,7 @@ export function ScreenHeader({
           <Link
             href={backHref}
             prefetch
-            aria-label="Go back"
+            aria-label={t.common.goBack}
             className="text-text-primary flex size-[42px] shrink-0 items-center justify-center"
           >
             <ChevronLeft size={24} aria-hidden />

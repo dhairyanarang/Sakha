@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Calendar, ChevronRight } from "lucide-react";
-import { FixedBar, InfoCallout, Toast } from "@/components/ui";
+import { FixedBar, InfoCallout, SectionHeading, Toast } from "@/components/ui";
 import { RecordMeasurementSheet } from "@/components/home/record-measurement-sheet";
 import { MeasurementChart, type ChartPoint, type Series } from "./measurement-chart";
 import { readingStamp, relativeWhen } from "@/lib/today";
+import { useI18n } from "@/lib/i18n/client";
+import type { Locale, Messages } from "@/lib/i18n";
 import type { MeasurementEntry, MeasurementMonth } from "@/lib/health-data";
 import type { Enums } from "@/lib/supabase/types";
 
@@ -66,6 +68,7 @@ export function MeasurementDetail({
     setRecording(false);
   }
 
+  const { t, locale } = useI18n();
   const isBp = type === "blood_pressure";
   const latest = months[0]?.entries[0] ?? null;
   const format = (e: { value: number; valueSecondary: number | null }) =>
@@ -80,12 +83,12 @@ export function MeasurementDetail({
 
   const series: Series[] = isBp
     ? [
-        { label: "Systolic", color: "var(--color-chart-systolic)", values: [] },
-        { label: "Diastolic", color: "var(--color-chart-diastolic)", values: [] },
+        { label: t.health.systolic, color: "var(--color-chart-systolic)", values: [] },
+        { label: t.health.diastolic, color: "var(--color-chart-diastolic)", values: [] },
       ]
     : [{ label: title, color: "var(--color-action-primary)", values: [] }];
 
-  const summary = buildSummary(title, unit, chronological, isBp);
+  const summary = buildSummary(title, unit, chronological, isBp, t, locale);
 
   return (
     <>
@@ -93,9 +96,9 @@ export function MeasurementDetail({
         <section className="bg-surface-default border-border-soft flex shrink-0 flex-col gap-4 rounded-xl border-[0.5px] p-3">
           <div className="flex items-start gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <p className="text-eyebrow-label text-action-primary uppercase tracking-[0.04em]">
-                Latest
-              </p>
+              <SectionHeading as="p" size="eyebrow">
+                {t.health.latest}
+              </SectionHeading>
               {latest ? (
                 <>
                   <p className="text-text-primary leading-[1.2] font-medium">
@@ -106,13 +109,13 @@ export function MeasurementDetail({
                     <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
                     {/* rgba(0,0,0,0.6) over surface/default, as a solid. */}
                     <span className="text-[14px] leading-[1.2] text-[#666666]">
-                      {relativeWhen(latest.measuredAt)}
+                      {relativeWhen(latest.measuredAt, locale)}
                     </span>
                   </span>
                 </>
               ) : (
                 <p className="text-text-tertiary text-[18px] leading-[1.4] font-medium">
-                  No readings yet
+                  {t.health.noReadingsYet}
                 </p>
               )}
             </div>
@@ -173,9 +176,9 @@ export function MeasurementDetail({
 
         {months.map((month) => (
           <section key={month.label} className="flex shrink-0 flex-col gap-2.5">
-            <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
+            <SectionHeading>
               {month.label}
-            </h2>
+            </SectionHeading>
             <div className="bg-surface-default border-border-soft flex flex-col gap-5 rounded-xl border-[0.5px] px-3 py-5">
               {month.entries.map((e, i) => (
                 <div key={e.id} className="flex flex-col gap-5">
@@ -186,8 +189,16 @@ export function MeasurementDetail({
                     disabled={!canEdit}
                     aria-label={
                       canEdit
-                        ? `Edit reading, ${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`
-                        : `${format(e)} ${e.unit}, ${readingStamp(e.measuredAt)}`
+                        ? t.health.editReadingAria(
+                            format(e),
+                            e.unit,
+                            readingStamp(e.measuredAt, locale),
+                          )
+                        : t.health.readingAria(
+                            format(e),
+                            e.unit,
+                            readingStamp(e.measuredAt, locale),
+                          )
                     }
                     className="active:bg-surface-tinted -mx-2 flex items-end gap-2 rounded-md px-2 py-1 text-left transition-colors disabled:pointer-events-none"
                   >
@@ -199,7 +210,7 @@ export function MeasurementDetail({
                       <span className="text-[14px] leading-[1.2] text-[#999999]">{e.unit}</span>
                     </p>
                     <span className="shrink-0 text-[14px] leading-[1.2] text-[#999999]">
-                      {readingStamp(e.measuredAt)}
+                      {readingStamp(e.measuredAt, locale)}
                     </span>
                     {canEdit ? (
                       <ChevronRight
@@ -233,7 +244,7 @@ export function MeasurementDetail({
             onClick={openNew}
             className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center rounded-xl transition-colors"
           >
-            Record new reading
+            {t.health.recordNewReading}
           </button>
         </footer>
       </FixedBar>
@@ -266,22 +277,48 @@ function buildSummary(
   unit: string,
   entries: { value: number; valueSecondary: number | null; measuredAt: string }[],
   isBp: boolean,
+  t: Messages,
+  locale: Locale,
 ): string {
-  if (entries.length === 0) return `${title}: no readings yet.`;
+  if (entries.length === 0) return t.health.chartNone(title);
   if (entries.length === 1) {
     const only = entries[0];
-    return `${title}: one reading, ${isBp ? `${only.value} over ${only.valueSecondary}` : only.value} ${unit}.`;
+    const value = isBp
+      ? t.health.over(only.value, only.valueSecondary)
+      : String(only.value);
+    return t.health.chartOne(title, value, unit);
   }
   const first = entries[0];
   const last = entries[entries.length - 1];
   const primary = entries.map((e) => e.value);
   const lo = Math.min(...primary);
   const hi = Math.max(...primary);
-  const when = `${readingStamp(first.measuredAt)} to ${readingStamp(last.measuredAt)}`;
+  const from = readingStamp(first.measuredAt, locale);
+  const to = readingStamp(last.measuredAt, locale);
 
   if (isBp) {
     const dia = entries.map((e) => e.valueSecondary ?? 0);
-    return `${title}: ${entries.length} readings from ${when}. Systolic ${lo} to ${hi}, diastolic ${Math.min(...dia)} to ${Math.max(...dia)} ${unit}. Most recent ${last.value} over ${last.valueSecondary}.`;
+    return t.health.chartRangeBp(
+      title,
+      entries.length,
+      from,
+      to,
+      lo,
+      hi,
+      Math.min(...dia),
+      Math.max(...dia),
+      unit,
+      t.health.over(last.value, last.valueSecondary),
+    );
   }
-  return `${title}: ${entries.length} readings from ${when}, ranging ${lo} to ${hi} ${unit}. Most recent ${last.value} ${unit}.`;
+  return t.health.chartRange(
+    title,
+    entries.length,
+    from,
+    to,
+    lo,
+    hi,
+    unit,
+    String(last.value),
+  );
 }

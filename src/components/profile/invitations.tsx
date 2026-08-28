@@ -3,13 +3,15 @@
 import { useState, useTransition } from "react";
 import { Clock, Share2, Users } from "lucide-react";
 import { Sheet } from "@/components/home/sheet";
-import { Button, Chip, EmptyState, TextInput, Toast } from "@/components/ui";
+import { Button, Chip, EmptyState, SectionHeading, TextInput, Toast } from "@/components/ui";
 import {
   cancelInvitation,
   createInvitation,
   revokeAccess,
 } from "@/app/profile/actions";
 import type { FamilyMember, PendingInvitation } from "@/lib/profile-data";
+import { useT } from "@/lib/i18n/client";
+import { relationLabel } from "@/lib/i18n/labels";
 
 /**
  * Invitations — who can see this account, and who has been asked.
@@ -23,6 +25,7 @@ import type { FamilyMember, PendingInvitation } from "@/lib/profile-data";
  * family member's writes affect no rows — and said plainly on the screen so
  * she knows what she is handing over.
  */
+/** Stored English so the value is stable; only the chip label is translated. */
 const RELATIONS = ["Son", "Daughter", "Spouse", "Other"];
 
 export function Invitations({
@@ -32,6 +35,13 @@ export function Invitations({
   members: FamilyMember[];
   pending: PendingInvitation[];
 }) {
+  const t = useT();
+  const RELATION_LABEL: Record<string, string> = {
+    Son: t.invitations.relations.son,
+    Daughter: t.invitations.relations.daughter,
+    Spouse: t.invitations.relations.spouse,
+    Other: t.invitations.relations.other,
+  };
   const [inviting, setInviting] = useState(false);
   const [nonce, setNonce] = useState(0);
   const [name, setName] = useState("");
@@ -66,7 +76,7 @@ export function Invitations({
   }
 
   async function share(url: string, who: string) {
-    const text = `${who}, here is a link to see my health information on Sakha.`;
+    const text = t.invitations.shareMessage(who);
     if (navigator.share) {
       try {
         await navigator.share({ title: "Sakha", text, url });
@@ -78,24 +88,28 @@ export function Invitations({
     }
     try {
       await navigator.clipboard.writeText(url);
-      setToast("Link copied.");
+      setToast(t.invitations.linkCopied);
     } catch {
-      setToast("Copy the link from the box above.");
+      setToast(t.invitations.copyFromBox);
     }
   }
 
   function cancel(id: string) {
     startTransition(async () => {
       const err = await cancelInvitation(id);
-      setToast(err ?? "Invitation cancelled.");
+      setToast(err ?? t.invitations.cancelled);
     });
   }
+
+  /** Their real name when we have one, otherwise the neutral fallback. */
+  const nameOf = (member: FamilyMember) =>
+    member.name ?? t.invitations.familyMemberFallback;
 
   function revoke(member: FamilyMember) {
     startTransition(async () => {
       const err = await revokeAccess(member.userId);
       setConfirmingRevoke(null);
-      setToast(err ?? `${member.name} can no longer see your information.`);
+      setToast(err ?? t.invitations.revoked(nameOf(member)));
     });
   }
 
@@ -103,13 +117,11 @@ export function Invitations({
 
   return (
     <section className="flex shrink-0 flex-col gap-3">
-      <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-        Invitations
-      </h2>
+      <SectionHeading>{t.invitations.title}</SectionHeading>
 
       {nothingYet ? (
         <EmptyState
-          message="You have no invitations."
+          message={t.invitations.none}
           illustration={
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -132,10 +144,10 @@ export function Invitations({
               </span>
               <span className="flex w-full flex-col gap-1 text-center">
                 <span className="text-name-label text-text-primary truncate">
-                  {member.name}
+                  {nameOf(member)}
                 </span>
                 <span className="truncate text-[14px] leading-[1.2] text-[#999999]">
-                  {member.relation ?? "Family"}
+                  {relationLabel(member.relation, t)}
                 </span>
               </span>
               <button
@@ -143,7 +155,7 @@ export function Invitations({
                 onClick={() => setConfirmingRevoke(member)}
                 className="border-action-primary text-action-primary active:bg-surface-tinted w-full rounded-full border px-4 py-3 text-[16px] leading-[1.2] transition-colors"
               >
-                Manage
+                {t.invitations.manage}
               </button>
             </div>
           ))}
@@ -162,7 +174,7 @@ export function Invitations({
                 </span>
                 {/* Says what it is waiting for, not how long it has been. */}
                 <span className="truncate text-[14px] leading-[1.2] text-[#999999]">
-                  Pending · {invite.relation}
+                  {t.invitations.pendingRelation(relationLabel(invite.relation, t))}
                 </span>
               </span>
               <button
@@ -171,7 +183,7 @@ export function Invitations({
                 disabled={pendingAction}
                 className="border-border-default text-text-secondary active:bg-surface-subtle w-full rounded-full border px-4 py-3 text-[16px] leading-[1.2] transition-colors"
               >
-                Cancel
+                {t.invitations.cancelInvite}
               </button>
             </div>
           ))}
@@ -183,25 +195,24 @@ export function Invitations({
         onClick={openInvite}
         className="bg-surface-page border-action-primary text-action-primary active:bg-surface-tinted flex h-[60px] w-full items-center justify-center rounded-xl border text-[16px] leading-[1.2] font-medium transition-colors"
       >
-        + Invite Family Member
+        + {t.invitations.inviteFamilyMember}
       </button>
 
       <Sheet
         key={nonce}
         open={inviting}
         onClose={() => setInviting(false)}
-        title="Invite Family Member"
+        title={t.invitations.inviteSheetTitle}
       >
         <div className="flex flex-col gap-6">
           {link ? (
             <>
               <div className="bg-feedback-success-surface flex flex-col gap-2 rounded-md p-4">
                 <p className="text-body-medium text-text-primary">
-                  Your invitation is ready
+                  {t.invitations.ready}
                 </p>
                 <p className="text-body-secondary text-text-secondary">
-                  Send this link to {name}. It works once, and stops working after
-                  14 days.
+                  {t.invitations.readyBody(name)}
                 </p>
               </div>
               <p className="bg-surface-subtle text-text-secondary rounded-md p-3 text-[14px] break-all">
@@ -211,16 +222,16 @@ export function Invitations({
           ) : (
             <>
               <TextInput
-                label="Their Name"
+                label={t.invitations.theirNameLabel}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Rahul"
+                placeholder={t.invitations.theirNamePlaceholder}
                 autoComplete="off"
               />
 
               <div className="flex flex-col gap-2.5">
                 <span className="text-[14px] leading-[1.2] font-medium text-[#636366]">
-                  How are they related to you?
+                  {t.invitations.relationQuestion}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {RELATIONS.map((r) => (
@@ -229,16 +240,16 @@ export function Invitations({
                       selected={relation === r}
                       onClick={() => setRelation(relation === r ? "" : r)}
                     >
-                      {r}
+                      {RELATION_LABEL[r] ?? r}
                     </Chip>
                   ))}
                 </div>
                 {isOther ? (
                   <TextInput
-                    label="How are they related?"
+                    label={t.invitations.customRelationLabel}
                     value={customRelation}
                     onChange={(e) => setCustomRelation(e.target.value)}
-                    placeholder="Sister"
+                    placeholder={t.invitations.customRelationPlaceholder}
                   />
                 ) : null}
               </div>
@@ -246,11 +257,10 @@ export function Invitations({
               {/* She should know exactly what she is handing over. */}
               <div className="bg-surface-tinted border-action-primary flex flex-col gap-1 rounded-sm border p-3">
                 <p className="text-body-secondary text-action-primary">
-                  What they will be able to see
+                  {t.invitations.whatTheySee}
                 </p>
                 <p className="text-body-medium text-text-primary">
-                  Your medicines, your readings and your documents. They cannot
-                  change or delete anything.
+                  {t.invitations.whatTheySeeBody}
                 </p>
               </div>
             </>
@@ -267,20 +277,20 @@ export function Invitations({
           <div className="flex flex-col gap-3">
             <Button onClick={() => share(link, name)} className="w-full">
               <Share2 size={22} className="mr-2" aria-hidden />
-              Share link
+              {t.invitations.shareLink}
             </Button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
-                `${name}, here is a link to see my health information on Sakha. ${link}`,
+                `${t.invitations.shareMessage(name)} ${link}`,
               )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-surface-default border-action-primary text-action-primary text-button-label active:bg-surface-tinted flex h-[60px] w-full items-center justify-center rounded-xl border transition-colors"
             >
-              Send on WhatsApp
+              {t.invitations.sendOnWhatsapp}
             </a>
             <Button variant="ghost" onClick={() => setInviting(false)} className="w-full">
-              Done
+              {t.common.done}
             </Button>
           </div>
         ) : (
@@ -291,14 +301,14 @@ export function Invitations({
               disabled={pendingAction}
               className="flex-1"
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               onClick={create}
               disabled={pendingAction || !name.trim() || !resolvedRelation}
               className="flex-1"
             >
-              {pendingAction ? "Creating…" : "Create link"}
+              {pendingAction ? t.invitations.creating : t.invitations.createLink}
             </Button>
           </div>
         )}
@@ -307,13 +317,12 @@ export function Invitations({
       <Sheet
         open={confirmingRevoke !== null}
         onClose={() => setConfirmingRevoke(null)}
-        title={confirmingRevoke?.name ?? ""}
+        title={confirmingRevoke ? nameOf(confirmingRevoke) : ""}
       >
         <div className="bg-feedback-error-surface flex flex-col gap-1 rounded-md p-4">
-          <p className="text-body-medium text-text-primary">Remove their access?</p>
+          <p className="text-body-medium text-text-primary">{t.invitations.removeAccessTitle}</p>
           <p className="text-body-secondary text-text-secondary">
-            {confirmingRevoke?.name} will no longer be able to see your
-            information. You can invite them again later.
+            {t.invitations.removeAccessBody(confirmingRevoke ? nameOf(confirmingRevoke) : "")}
           </p>
         </div>
         <div className="flex items-start gap-3">
@@ -323,7 +332,7 @@ export function Invitations({
             disabled={pendingAction}
             className="flex-1"
           >
-            Keep access
+            {t.invitations.keepAccess}
           </Button>
           <button
             type="button"
@@ -331,7 +340,7 @@ export function Invitations({
             disabled={pendingAction}
             className="bg-feedback-error text-text-on-brand text-button-label flex h-[60px] flex-1 items-center justify-center rounded-xl transition-colors disabled:opacity-60"
           >
-            {pendingAction ? "Removing…" : "Revoke Access"}
+            {pendingAction ? t.common.removing : t.invitations.revokeAccess}
           </button>
         </div>
       </Sheet>

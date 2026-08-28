@@ -77,7 +77,8 @@ export type PendingInvitation = {
 
 export type FamilyMember = {
   userId: string;
-  name: string;
+  /** Null until they have a Google profile name — the fallback is UI copy. */
+  name: string | null;
   relation: string | null;
 };
 
@@ -114,9 +115,9 @@ export async function getInvitations(accountId: string): Promise<{
       const p = row.profiles as unknown as { full_name: string | null } | null;
       return {
         userId: row.user_id,
-        // A member who signed in with Google has a profile; fall back rather
-        // than showing a blank card.
-        name: p?.full_name ?? "Family member",
+        // Null when they have no Google profile name yet. The fallback is
+        // copy, so it is chosen at render time in whichever language she reads.
+        name: p?.full_name ?? null,
         relation: row.relation,
       };
     }),

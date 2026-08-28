@@ -1,5 +1,10 @@
+"use client";
+
 import { StatusTag } from "@/components/ui";
-import { SLOT_ORDER } from "@/lib/today";
+import { SLOT_ORDER, slotName } from "@/lib/today";
+import { useI18n } from "@/lib/i18n/client";
+import type { Messages } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 import type { Enums } from "@/lib/supabase/types";
 
 /**
@@ -17,18 +22,17 @@ import type { Enums } from "@/lib/supabase/types";
  * Colour and fill alone would say nothing to a screen reader, so the whole
  * group carries a written label instead.
  */
-const SLOT_WORD: Record<Enums<"time_of_day">, string> = {
-  morning: "morning",
-  afternoon: "afternoon",
-  evening: "evening",
-};
-
-function sentence(times: Enums<"time_of_day">[]): string {
-  const words = SLOT_ORDER.filter((s) => times.includes(s)).map((s) => SLOT_WORD[s]);
-  if (words.length === 0) return "No time of day set";
-  if (words.length === 1) return `Taken in the ${words[0]}`;
-  const last = words[words.length - 1];
-  return `Taken in the ${words.slice(0, -1).join(", ")} and ${last}`;
+function sentence(
+  times: Enums<"time_of_day">[],
+  t: Messages,
+  locale: Locale,
+): string {
+  const words = SLOT_ORDER.filter((s) => times.includes(s)).map((s) =>
+    // Lower-cased in English mid-sentence; Devanagari has no case to change.
+    locale === "hi" ? slotName(s, locale) : slotName(s, locale).toLowerCase(),
+  );
+  if (words.length === 0) return t.medicines.noTimeOfDaySet;
+  return t.medicines.takenAt(words);
 }
 
 export function DoseDots({
@@ -39,7 +43,8 @@ export function DoseDots({
   /** Prefixed to the label so a list of medicines stays distinguishable. */
   name?: string;
 }) {
-  const label = sentence(times);
+  const { t, locale } = useI18n();
+  const label = sentence(times, t, locale);
   return (
     <StatusTag
       slots={SLOT_ORDER.map((s) => times.includes(s))}

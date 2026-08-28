@@ -1,10 +1,25 @@
 import type { Enums } from "@/lib/supabase/types";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
 /**
  * Everything "today" is computed in her timezone, never UTC. At 1am in Delhi
  * a UTC date is still yesterday, which would show her the wrong day's medicines.
  */
 export const TZ = "Asia/Kolkata";
+
+/**
+ * Dates and times are localised; NUMBERS ARE NOT.
+ *
+ * Hindi renders month and weekday names properly through Intl (अगस्त,
+ * शुक्रवार) but the digits stay Western, because `hi-IN` uses 0-9 by default
+ * and that is the right answer here: her glucometer, her BP machine and every
+ * lab report she owns print 0-9. A sugar reading of १२४ would be the one
+ * number on the screen she could not read at a glance.
+ */
+const INTL_LOCALE: Record<Locale, string> = {
+  en: "en-GB",
+  hi: "hi-IN",
+};
 
 /** YYYY-MM-DD in her timezone — the shape `local_date` columns store. */
 export function localDate(at: Date = new Date()): string {
@@ -16,9 +31,9 @@ export function localDate(at: Date = new Date()): string {
   }).format(at);
 }
 
-/** "Friday, 28 August" */
-export function longDate(at: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-GB", {
+/** "Friday, 28 August" / "शुक्रवार, 28 अगस्त" */
+export function longDate(locale: Locale = "en", at: Date = new Date()): string {
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     timeZone: TZ,
     weekday: "long",
     day: "numeric",
@@ -32,11 +47,12 @@ function hourIST(at: Date = new Date()): number {
   );
 }
 
-export function greeting(at: Date = new Date()): string {
+export function greeting(locale: Locale = "en", at: Date = new Date()): string {
+  const t = messagesFor(locale);
   const h = hourIST(at);
-  if (h < 12) return "Good Morning";
-  if (h < 17) return "Good Afternoon";
-  return "Good Evening";
+  if (h < 12) return t.time.goodMorning;
+  if (h < 17) return t.time.goodAfternoon;
+  return t.time.goodEvening;
 }
 
 /**
@@ -47,17 +63,26 @@ export function greeting(at: Date = new Date()): string {
  * can say "9:00 AM" instead of "Morning". If per-medicine times are ever
  * collected, this table goes away.
  */
-export const SLOT_TIME: Record<Enums<"time_of_day">, string> = {
-  morning: "9:00 AM",
-  afternoon: "2:00 PM",
-  evening: "8:00 PM",
+const SLOT_HOUR: Record<Enums<"time_of_day">, number> = {
+  morning: 9,
+  afternoon: 14,
+  evening: 20,
 };
 
-export const SLOT_LABEL: Record<Enums<"time_of_day">, string> = {
-  morning: "Morning Medicine",
-  afternoon: "Afternoon Medicine",
-  evening: "Evening Medicine",
-};
+/** "9:00 AM" / "सुबह 9:00" */
+export function slotTime(slot: Enums<"time_of_day">, locale: Locale = "en"): string {
+  return formatHourMinute(SLOT_HOUR[slot], 0, locale);
+}
+
+/** "Morning Medicine" / "सुबह की दवा" */
+export function slotLabel(slot: Enums<"time_of_day">, locale: Locale = "en"): string {
+  return messagesFor(locale).time.slotMedicine[slot];
+}
+
+/** Just the part of the day: "Morning" / "सुबह" */
+export function slotName(slot: Enums<"time_of_day">, locale: Locale = "en"): string {
+  return messagesFor(locale).time.slot[slot];
+}
 
 export const SLOT_ORDER: Enums<"time_of_day">[] = ["morning", "afternoon", "evening"];
 
@@ -88,14 +113,48 @@ export function currentSlot(at: Date = new Date()): Enums<"time_of_day"> {
   return "evening";
 }
 
-/** "9:12 AM" in her timezone. */
-function clockTime(at: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
+/**
+ * A clock time, the way each language actually says one.
+ *
+ * English gets "9:12 AM". Hindi does not use AM/PM in speech — she would say
+ * "सुबह नौ बजे", never "नौ बजे ए एम" — so Hindi names the part of the day
+ * instead and keeps the digits: "सुबह 9:12". That is both more natural AND
+ * less ambiguous than am/pm for someone reading quickly.
+ */
+const HINDI_PART_OF_DAY = (hour: number): string => {
+  if (hour < 4) return "रात";
+  if (hour < 12) return "सुबह";
+  if (hour < 16) return "दोपहर";
+  if (hour < 19) return "शाम";
+  return "रात";
+};
+
+function formatHourMinute(hour: number, minute: number, locale: Locale): string {
+  const mm = String(minute).padStart(2, "0");
+  if (locale === "hi") {
+    const h12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${HINDI_PART_OF_DAY(hour)} ${h12}:${mm}`;
+  }
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  const suffix = hour < 12 ? "AM" : "PM";
+  return `${h12}:${mm} ${suffix}`;
+}
+
+/** "9:12 AM" / "सुबह 9:12" in her timezone. */
+export function clockLabel(at: Date, locale: Locale = "en"): string {
+  return clockTime(at, locale);
+}
+
+function clockTime(at: Date, locale: Locale): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ,
-    hour: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
-  }).format(at);
+    hour12: false,
+  }).formatToParts(at);
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+  return formatHourMinute(hour === 24 ? 0 : hour, minute, locale);
 }
 
 /**
@@ -110,26 +169,33 @@ function clockTime(at: Date): string {
  * gets one — it is parsed as local noon so that a timezone shift cannot roll
  * it onto the wrong day.
  */
-export function relativeWhen(value: string, now: Date = new Date()): string {
+export function relativeWhen(
+  value: string,
+  locale: Locale = "en",
+  now: Date = new Date(),
+): string {
+  const t = messagesFor(locale);
   const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
   const at = dateOnly ? new Date(`${value}T12:00:00`) : new Date(value);
   if (Number.isNaN(at.getTime())) return "";
 
   const today = localDate(now);
   const then = localDate(at);
-  if (then === today) return dateOnly ? "Today" : `Today, ${clockTime(at)}`;
+  if (then === today) {
+    return dateOnly ? t.time.today : t.time.todayAt(clockTime(at, locale));
+  }
 
   // Difference in calendar days in her timezone, not elapsed hours — 11pm to
   // 1am is "yesterday", not "2 hours ago".
   const days = Math.round(
     (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${then}T00:00:00Z`)) / 86_400_000,
   );
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 14) return "1 week ago";
-  if (days < 35) return `${Math.floor(days / 7)} weeks ago`;
+  if (days === 1) return t.time.yesterday;
+  if (days < 7) return t.time.daysAgo(days);
+  if (days < 14) return t.time.oneWeekAgo;
+  if (days < 35) return t.time.weeksAgo(Math.floor(days / 7));
 
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     timeZone: TZ,
     day: "numeric",
     month: "long",
@@ -138,21 +204,26 @@ export function relativeWhen(value: string, now: Date = new Date()): string {
 
 /**
  * How a single reading is stamped in the history list: "Today, 10:20 AM",
- * otherwise "Aug 22, 10:20 AM".
+ * otherwise "Aug 22, 10:20 AM" — and in Hindi "आज, सुबह 10:20" / "22 अगस्त,
+ * सुबह 10:20".
  *
  * Deliberately not relativeWhen — a list of readings is being compared
  * against itself, and "3 days ago" beside "5 days ago" is harder to place
  * than two real dates.
+ *
+ * Hindi uses the full month name rather than Intl's abbreviation, which
+ * renders as "अग॰" — a truncation mark she has no reason to recognise.
  */
-export function readingStamp(iso: string, now: Date = new Date()): string {
+export function readingStamp(iso: string, locale: Locale = "en", now: Date = new Date()): string {
+  const t = messagesFor(locale);
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return "";
-  const time = clockTime(at);
-  if (localDate(at) === localDate(now)) return `Today, ${time}`;
-  const day = new Intl.DateTimeFormat("en-US", {
+  const time = clockTime(at, locale);
+  if (localDate(at) === localDate(now)) return t.time.todayAt(time);
+  const day = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-US", {
     timeZone: TZ,
-    month: "short",
+    month: locale === "hi" ? "long" : "short",
     day: "2-digit",
   }).format(at);
-  return `${day}, ${time}`;
+  return t.time.dateAt(day, time);
 }

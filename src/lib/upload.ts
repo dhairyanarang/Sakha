@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import type { Messages } from "@/lib/i18n";
 
 /**
  * Puts a file in Storage straight from the browser.
@@ -20,11 +21,14 @@ export async function uploadToStorage({
   path,
   file,
   upsert = false,
+  t,
 }: {
   bucket: string;
   path: string;
   file: File;
   upsert?: boolean;
+  /** Passed in rather than hooked: this is a plain function, not a component. */
+  t: Messages;
 }): Promise<string | null> {
   const supabase = createClient();
   const { error } = await supabase.storage.from(bucket).upload(path, file, {
@@ -35,12 +39,12 @@ export async function uploadToStorage({
 
   // RLS refusals come back as a storage error, not an HTTP status we can read.
   if (/row-level security|not authorized|Unauthorized/i.test(error.message)) {
-    return "You don't have permission to add this.";
+    return t.errors.notAllowed;
   }
   if (/exceeded|too large|Payload/i.test(error.message)) {
-    return "That file is too large.";
+    return t.errors.fileTooLarge;
   }
-  return "We couldn't upload this. Please try again.";
+  return t.errors.uploadFailed;
 }
 
 /** Extension from the file's own name, defaulting sensibly. */

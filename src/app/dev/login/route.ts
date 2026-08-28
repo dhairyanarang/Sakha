@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getMemberships } from "@/lib/account";
+import { setLocaleCookie } from "@/lib/i18n/set-locale";
 
 /**
  * Signs in as the QA account so the screens behind auth can be driven in a
@@ -24,6 +26,10 @@ export async function GET(request: NextRequest) {
   if (error) {
     return new NextResponse(`Dev login failed: ${error.message}`, { status: 500 });
   }
+
+  // Same re-seed as the real sign-in, so QA sees the account's language.
+  const own = (await getMemberships()).find((m) => m.role === "owner");
+  if (own) await setLocaleCookie(own.language);
 
   const next = request.nextUrl.searchParams.get("next");
   const safe = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";

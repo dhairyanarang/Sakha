@@ -12,6 +12,8 @@ import {
 } from "@/app/actions/home";
 import type { MeasurementEntry } from "@/lib/health-data";
 import type { Enums } from "@/lib/supabase/types";
+import { useT } from "@/lib/i18n/client";
+import type { Messages } from "@/lib/i18n";
 
 /**
  * Records a reading, and edits or removes one already taken.
@@ -45,11 +47,31 @@ const RANGE = {
   weight: { min: 30, max: 150, step: 0.5 },
 };
 
-const COPY = {
-  blood_sugar: { title: "Record Sugar Reading", field: "Sugar Level (mg/dL)", unit: "mg/dL", saved: "Sugar level recorded." },
-  blood_pressure: { title: "Record BP Reading", field: "", unit: "mmHg", saved: "Blood pressure recorded." },
-  weight: { title: "Record Weight", field: "Weight (kg)", unit: "kg", saved: "Weight recorded." },
-} as const;
+/**
+ * The unit is NOT translated — mg/dL, mmHg and kg are printed in those exact
+ * letters on the devices she reads them off, and the unit is also stored on
+ * the row, so it must stay stable whatever language the screen is in.
+ */
+const copyFor = (t: Messages) => ({
+  blood_sugar: {
+    title: t.health.recordSugarReading,
+    field: t.health.sugarLevelLabel,
+    unit: "mg/dL",
+    saved: t.health.sugarRecorded,
+  },
+  blood_pressure: {
+    title: t.health.recordBpReading,
+    field: "",
+    unit: "mmHg",
+    saved: t.health.bpRecorded,
+  },
+  weight: {
+    title: t.health.recordWeight,
+    field: t.health.weightLabel,
+    unit: "kg",
+    saved: t.health.weightRecorded,
+  },
+});
 
 export function RecordMeasurementSheet({
   open,
@@ -65,8 +87,9 @@ export function RecordMeasurementSheet({
   /** Absent means a new reading. Present means correcting that one. */
   entry?: MeasurementEntry | null;
 }) {
+  const t = useT();
   const isBp = type === "blood_pressure";
-  const copy = COPY[type];
+  const copy = copyFor(t)[type];
   const unit = copy.unit;
   const editing = Boolean(entry);
   // Sugar and weight are both a single number on one scale; only the range,
@@ -98,7 +121,7 @@ export function RecordMeasurementSheet({
         : await recordMeasurement(input);
       if (err) setError(err);
       else {
-        onSaved(editing ? "Reading updated." : copy.saved);
+        onSaved(editing ? t.health.readingUpdated : copy.saved);
         onClose();
       }
     });
@@ -111,7 +134,7 @@ export function RecordMeasurementSheet({
       const err = await deleteMeasurement(entry.id);
       if (err) setError(err);
       else {
-        onSaved("Reading removed.");
+        onSaved(t.health.readingRemoved);
         onClose();
       }
     });
@@ -121,7 +144,7 @@ export function RecordMeasurementSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={editing ? "Edit reading" : copy.title}
+      title={editing ? t.health.editReading : copy.title}
       action={
         editing ? (
           <button
@@ -130,7 +153,7 @@ export function RecordMeasurementSheet({
             disabled={pending}
             className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
           >
-            Delete
+            {t.common.delete}
           </button>
         ) : undefined
       }
@@ -138,7 +161,7 @@ export function RecordMeasurementSheet({
       <div className="flex flex-col gap-6">
         {/* Date & Time first, then the scale(s) — as drawn. */}
         <div className="flex w-full flex-col gap-2">
-          <label className="text-subsection-heading text-text-secondary">Date &amp; Time</label>
+          <label className="text-subsection-heading text-text-secondary">{t.health.dateAndTime}</label>
           <div className="bg-surface-default border-border-default focus-within:border-action-primary relative flex h-[52px] items-center gap-3 rounded-md border p-4 transition-colors">
             <input
               type="datetime-local"
@@ -160,10 +183,10 @@ export function RecordMeasurementSheet({
           <>
             <div className="flex w-full flex-col gap-1">
               <span className="text-subsection-heading text-text-secondary">
-                Systolic (Top Number)
+                {t.health.systolicTop}
               </span>
               <RulerPicker
-                label="Systolic"
+                label={t.health.systolic}
                 unit={unit}
                 min={RANGE.systolic.min}
                 max={RANGE.systolic.max}
@@ -173,10 +196,10 @@ export function RecordMeasurementSheet({
             </div>
             <div className="flex w-full flex-col gap-1">
               <span className="text-subsection-heading text-text-secondary">
-                Diastolic (Bottom Number)
+                {t.health.diastolicBottom}
               </span>
               <RulerPicker
-                label="Diastolic"
+                label={t.health.diastolic}
                 unit={unit}
                 min={RANGE.diastolic.min}
                 max={RANGE.diastolic.max}
@@ -208,9 +231,9 @@ export function RecordMeasurementSheet({
       {confirmingDelete ? (
         <div className="bg-feedback-error-surface flex flex-col gap-4 rounded-md p-4">
           <div className="flex flex-col gap-1">
-            <p className="text-body-medium text-text-primary">Remove this reading?</p>
+            <p className="text-body-medium text-text-primary">{t.health.removeReadingTitle}</p>
             <p className="text-body-secondary text-text-secondary">
-              It comes off your history. Your other readings stay as they are.
+              {t.health.removeReadingBody}
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -221,7 +244,7 @@ export function RecordMeasurementSheet({
               disabled={pending}
               className="flex-1"
             >
-              Keep it
+              {t.common.keepIt}
             </Button>
             {/* Not a Button variant: the library has no destructive style, and
                 one local button that says what it does beats inventing a
@@ -232,17 +255,17 @@ export function RecordMeasurementSheet({
               disabled={pending}
               className="bg-feedback-error text-text-on-brand text-button-label flex h-[60px] flex-1 items-center justify-center rounded-xl transition-colors disabled:opacity-60"
             >
-              {pending ? "Removing…" : "Remove"}
+              {pending ? t.common.removing : t.common.remove}
             </button>
           </div>
         </div>
       ) : (
         <div className="flex items-start gap-3">
           <Button variant="tertiary" onClick={onClose} disabled={pending} className="flex-1">
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button onClick={save} disabled={pending} className="flex-1">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t.common.saving : t.common.save}
           </Button>
         </div>
       )}

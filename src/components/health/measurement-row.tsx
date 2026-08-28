@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Calendar, ChevronRight } from "lucide-react";
 import { IconCircle } from "@/components/ui";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * One measurement inside the Measurements card: tinted icon, label, the
@@ -21,7 +22,7 @@ import { IconCircle } from "@/components/ui";
  * Next still only prefetches links that are actually on screen, so this costs
  * three requests here rather than one per row in the whole app.
  */
-export function MeasurementRow({
+export async function MeasurementRow({
   href,
   icon,
   tone,
@@ -38,6 +39,7 @@ export function MeasurementRow({
   unit: string;
   when: string | null;
 }) {
+  const t = await getMessages();
   return (
     <Link href={href} prefetch className="flex w-full items-center gap-3">
       <IconCircle tone={tone}>{icon}</IconCircle>
@@ -58,7 +60,7 @@ export function MeasurementRow({
           <Calendar size={16} className="text-text-tertiary shrink-0" aria-hidden />
           {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
           <span className="text-[14px] leading-[1.2] text-[#999999]">
-            {when ?? "Not Recorded yet"}
+            {when ?? t.home.notRecordedYet}
           </span>
         </span>
       </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { User } from "lucide-react";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * The header at the top of Home and Health.
@@ -14,13 +15,14 @@ import { User } from "lucide-react";
  * header. It shows her own photo when she has one and falls back to the mark
  * until then.
  */
-export function AppHeader({
+export async function AppHeader({
   children,
   avatarUrl,
 }: {
   children: React.ReactNode;
   avatarUrl?: string | null;
 }) {
+  const t = await getMessages();
   return (
     <header className="shrink-0 px-4 pb-3" style={{ paddingTop: "var(--spacing-2)" }}>
       <div className="flex items-center gap-3">
@@ -36,7 +38,7 @@ export function AppHeader({
         <Link
           href="/profile"
           prefetch
-          aria-label="Your profile"
+          aria-label={t.nav.yourProfile}
           className="bg-action-primary text-text-on-brand flex size-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full"
         >
           {avatarUrl ? (

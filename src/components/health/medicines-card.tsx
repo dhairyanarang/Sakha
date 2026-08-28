@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { DoseDots } from "./dose-dots";
+import { getMessages } from "@/lib/i18n/server";
 import type { MedicineSummary } from "@/lib/health-data";
 
 /**
@@ -14,7 +15,8 @@ import type { MedicineSummary } from "@/lib/health-data";
  * The illustration is decorative and sits behind the list, so it is marked
  * aria-hidden and cannot swallow a tap.
  */
-export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
+export async function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
+  const t = await getMessages();
   const count = medicines.length;
 
   return (
@@ -32,7 +34,7 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
     >
       <div className="flex items-center gap-2.5">
         <p className="text-text-primary flex-1 text-[18px] leading-[1.2] font-medium">
-          Medicines
+          {t.medicines.title}
         </p>
         <ChevronRight size={20} className="text-text-primary shrink-0" aria-hidden />
       </div>
@@ -40,13 +42,13 @@ export function MedicinesCard({ medicines }: { medicines: MedicineSummary[] }) {
       <div className="relative z-10 flex flex-col gap-2">
         {count === 0 ? (
           <p className="text-[14px] leading-[1.4] text-[#666666]">
-            You have no medicines
+            {t.medicines.noMedicines}
           </p>
         ) : (
           <>
             {/* rgba(0,0,0,0.6) over surface/default, resolved to a solid. */}
             <p className="text-[14px] leading-[1.2] text-[#666666]">
-              {count} Active {count === 1 ? "Medicine" : "Medicines"}
+              {t.medicines.activeCount(count)}
             </p>
             {medicines.map((m) => (
               <div key={m.id} className="flex items-center gap-2.5">

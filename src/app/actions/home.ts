@@ -4,13 +4,15 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveAccountId } from "@/lib/account";
 import { localDate, slotHasStarted } from "@/lib/today";
+import { getMessages } from "@/lib/i18n/server";
 import type { Enums } from "@/lib/supabase/types";
 
-const SAVE_FAILED = "We couldn't save this. Please try again.";
+/** Errors are read by her, so they come out of the dictionary too. */
+const saveFailed = async () => (await getMessages()).errors.saveFailed;
 
 export async function setMood(mood: Enums<"mood_level">): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   // One check-in per day; changing her mind updates rather than stacking rows.
@@ -20,7 +22,7 @@ export async function setMood(mood: Enums<"mood_level">): Promise<string | null>
       { account_id: accountId, local_date: localDate(), mood },
       { onConflict: "account_id,local_date" },
     );
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/");
   return null;
@@ -39,13 +41,13 @@ export async function confirmDoses(
   status: Enums<"medication_status"> = "confirmed",
 ): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   // The UI hides Confirm on a slot that has not come round yet; this makes it
   // true rather than merely displayed, so a stale page cannot record a dose
   // for tonight at breakfast.
   if (status === "confirmed" && !slotHasStarted(slot)) {
-    return "You can confirm this later today.";
+    return (await getMessages()).home.confirmLater;
   }
 
   const supabase = await createClient();
@@ -62,7 +64,7 @@ export async function confirmDoses(
   const { error } = await supabase
     .from("medication_logs")
     .upsert(rows, { onConflict: "medication_id,local_date,slot" });
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/");
   return null;
@@ -76,13 +78,13 @@ export async function recordMeasurement(input: {
   measuredAt: string;
 }): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   if (!Number.isFinite(input.value) || input.value <= 0) {
-    return "Please enter a number.";
+    return (await getMessages()).errors.enterNumber;
   }
   if (input.type === "blood_pressure" && !Number.isFinite(input.valueSecondary ?? NaN)) {
-    return "Please enter both numbers.";
+    return (await getMessages()).errors.enterBothNumbers;
   }
 
   const supabase = await createClient();
@@ -94,7 +96,7 @@ export async function recordMeasurement(input: {
     unit: input.unit,
     measured_at: input.measuredAt,
   });
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/");
   return null;
@@ -105,7 +107,7 @@ export async function logWalk(
   minutes: number | null,
 ): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase.from("walk_checkins").upsert(
@@ -117,7 +119,7 @@ export async function logWalk(
     },
     { onConflict: "account_id,local_date" },
   );
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/");
   return null;
@@ -140,13 +142,13 @@ export async function updateMeasurement(
   },
 ): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   if (!Number.isFinite(input.value) || input.value <= 0) {
-    return "Please enter a number.";
+    return (await getMessages()).errors.enterNumber;
   }
   if (input.type === "blood_pressure" && !Number.isFinite(input.valueSecondary ?? NaN)) {
-    return "Please enter both numbers.";
+    return (await getMessages()).errors.enterBothNumbers;
   }
 
   const supabase = await createClient();
@@ -160,7 +162,7 @@ export async function updateMeasurement(
     })
     .eq("id", id)
     .eq("account_id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/health");
   revalidatePath("/");
@@ -176,7 +178,7 @@ export async function updateMeasurement(
  */
 export async function deleteMeasurement(id: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -184,7 +186,7 @@ export async function deleteMeasurement(id: string): Promise<string | null> {
     .delete()
     .eq("id", id)
     .eq("account_id", accountId);
-  if (error) return "We couldn't remove this. Please try again.";
+  if (error) return (await getMessages()).errors.removeFailed;
 
   revalidatePath("/health");
   revalidatePath("/");

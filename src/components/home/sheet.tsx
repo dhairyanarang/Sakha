@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useKeyboardInset } from "@/lib/use-keyboard-inset";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Bottom sheet.
@@ -42,6 +43,7 @@ export function Sheet({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const wrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<number | null>(null);
@@ -180,7 +182,7 @@ export function Sheet({
     <div ref={wrapRef} className="fixed inset-0 z-50 flex items-end justify-center">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t.common.close}
         onClick={requestClose}
         className={
           closing

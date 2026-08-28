@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { SLOT_ORDER, TZ } from "@/lib/today";
+import type { Locale } from "@/lib/i18n";
 import type { Enums } from "@/lib/supabase/types";
 
 export type MedicineSummary = {
@@ -209,7 +210,10 @@ export type MeasurementMonth = {
 export async function getMeasurementHistory(
   accountId: string,
   type: Enums<"measurement_type">,
+  /** Month names are shown to her, so they are formatted in her language. */
+  locale: Locale = "en",
 ): Promise<MeasurementMonth[]> {
+  const intlLocale = locale === "hi" ? "hi-IN" : "en-GB";
   const supabase = await createClient();
   const { data } = await supabase
     .from("health_measurements")
@@ -224,13 +228,15 @@ export async function getMeasurementHistory(
   const months = new Map<string, MeasurementMonth>();
   for (const row of data ?? []) {
     const at = new Date(row.measured_at);
-    const parts = new Intl.DateTimeFormat("en-GB", {
+    const parts = new Intl.DateTimeFormat(intlLocale, {
       timeZone: TZ,
       month: "long",
       year: "numeric",
     }).formatToParts(at);
     const month = parts.find((p) => p.type === "month")!.value;
-    const year = parts.find((p) => p.type === "year")!.value;
+    // Keyed and compared on the Gregorian year in Latin digits, never on the
+    // localised string — hi-IN could change the label without changing the year.
+    const year = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric" }).format(at);
     const key = `${year}-${month}`;
 
     if (!months.has(key)) {

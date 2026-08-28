@@ -9,6 +9,7 @@ export { FamilyMemberCard } from "./family-member-card";
 export { IconCircle } from "./icon-circle";
 export { InfoCallout } from "./info-callout";
 export { Radio } from "./radio";
+export { SectionHeading } from "./section-heading";
 export { SettingsRow } from "./settings-row";
 export { StatusTag } from "./status-tag";
 export { Toast } from "./toast";

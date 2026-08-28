@@ -6,9 +6,10 @@ import { CareRow } from "./care-row";
 import { RowAction } from "./row-action";
 import { RecordMeasurementSheet } from "./record-measurement-sheet";
 import { LogWalkSheet } from "./log-walk-sheet";
-import { EmptyState, Toast } from "@/components/ui";
+import { EmptyState, SectionHeading, Toast } from "@/components/ui";
 import { confirmDoses } from "@/app/actions/home";
-import { currentSlot, SLOT_LABEL, SLOT_TIME, slotHasStarted } from "@/lib/today";
+import { currentSlot, slotHasStarted, slotLabel, slotTime } from "@/lib/today";
+import { useI18n } from "@/lib/i18n/client";
 import type { HomeData } from "@/lib/home-data";
 
 export function TodaysCare({
@@ -19,6 +20,7 @@ export function TodaysCare({
   /** A family member sees the same rows with nothing to press. */
   canEdit?: boolean;
 }) {
+  const { t, locale } = useI18n();
   const [sheet, setSheet] = useState<null | "sugar" | "bp" | "walk">(null);
   // Every open remounts the sheet. Without this a second reading reused the
   // first one's date and time, which is a wrong reading, not just stale UI.
@@ -36,7 +38,7 @@ export function TodaysCare({
     startTransition(async () => {
       await confirmDoses(group.medicationIds, group.slot);
       setConfirming(null);
-      setToast(`${SLOT_LABEL[group.slot]} confirmed.`);
+      setToast(t.home.doseConfirmed(slotLabel(group.slot, locale)));
     });
   }
 
@@ -48,14 +50,14 @@ export function TodaysCare({
           care rows below do not have, and grouping them keeps the difference
           legible. */}
       <section className="flex shrink-0 flex-col gap-3">
-        <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-          today’s medicine
-        </h2>
+        <SectionHeading>
+          {t.medicines.title}
+        </SectionHeading>
 
         {data.doses.length === 0 ? (
           <EmptyState
             className="shrink-0"
-            message="You have no medicines."
+            message={t.home.noMedicines}
             illustration={
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -76,7 +78,8 @@ export function TodaysCare({
           const active = !done && started && group.slot === now;
           // "Gliptagrate M500 +1" rather than a list that truncates mid-name.
           const [first, ...rest] = group.medicineNames;
-          const names = rest.length > 0 ? `${first} +${rest.length}` : first;
+          const names =
+            rest.length > 0 ? t.home.andMore(first, rest.length) : first;
 
           return (
             <CareRow
@@ -84,26 +87,26 @@ export function TodaysCare({
               tone={active ? "brand-solid" : "brand"}
               highlight={active}
               icon={<Pill size={22} aria-hidden />}
-              title={SLOT_LABEL[group.slot]}
+              title={slotLabel(group.slot, locale)}
               action={
                 !canEdit ? null : done ? (
                   <span className="text-feedback-success-text flex w-[100px] shrink-0 items-center justify-center gap-1 text-[16px]">
                     <Check size={18} aria-hidden />
-                    Done
+                    {t.common.done}
                   </span>
                 ) : !started ? (
                   /* Not yet. Stated plainly, with the time already on the row —
                      it is information, not a refusal. */
                   <span className="bg-surface-subtle text-text-tertiary flex w-[100px] shrink-0 items-center justify-center rounded-sm px-4 py-2.5 text-[16px] leading-[1.2]">
-                    Upcoming
+                    {t.home.upcoming}
                   </span>
                 ) : (
                   <RowAction
                     onClick={() => confirm(group)}
                     disabled={confirming === group.slot}
-                    aria-label={`Confirm ${SLOT_LABEL[group.slot]}`}
+                    aria-label={t.home.confirmDose(slotLabel(group.slot, locale))}
                   >
-                    {confirming === group.slot ? "Saving…" : "Confirm"}
+                    {confirming === group.slot ? t.common.saving : t.common.confirm}
                   </RowAction>
                 )
               }
@@ -111,7 +114,7 @@ export function TodaysCare({
               <p className="text-body-primary text-text-tertiary truncate">{names}</p>
               <span className="text-metadata text-text-tertiary flex items-center gap-1">
                 <Clock size={16} aria-hidden />
-                {SLOT_TIME[group.slot]}
+                {slotTime(group.slot, locale)}
               </span>
             </CareRow>
           );
@@ -119,71 +122,73 @@ export function TodaysCare({
       </section>
 
       <section className="flex shrink-0 flex-col gap-3">
-        <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-          today’s care
-        </h2>
+        <SectionHeading>
+          {t.home.todaysCare}
+        </SectionHeading>
 
       <CareRow
         tone="error"
         icon={<Droplet size={22} aria-hidden />}
-        title="Record Sugar level"
+        title={t.home.recordSugar}
         action={
           canEdit ? (
             <RowAction tone="tinted" onClick={() => openSheet("sugar")}>
-              Record
+              {t.common.record}
             </RowAction>
           ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">
           {data.lastSugar
-            ? `Last: ${data.lastSugar.value} ${data.lastSugar.unit}`
-            : "Not Recorded yet"}
+            ? t.home.lastReading(`${data.lastSugar.value} ${data.lastSugar.unit}`)
+            : t.home.notRecordedYet}
         </p>
       </CareRow>
 
       <CareRow
         tone="brand"
         icon={<HeartPulse size={22} aria-hidden />}
-        title="Record BP"
+        title={t.home.recordBp}
         action={
           canEdit ? (
             <RowAction tone="tinted" onClick={() => openSheet("bp")}>
-              Record
+              {t.common.record}
             </RowAction>
           ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">
           {data.lastBp
-            ? `Last: ${data.lastBp.systolic}/${data.lastBp.diastolic} ${data.lastBp.unit}`
-            : "Not Recorded yet"}
+            ? t.home.lastReading(
+                `${data.lastBp.systolic}/${data.lastBp.diastolic} ${data.lastBp.unit}`,
+              )
+            : t.home.notRecordedYet}
         </p>
       </CareRow>
 
       <CareRow
         tone="success"
         icon={<Footprints size={22} aria-hidden />}
-        title="Walk"
+        title={t.home.walk}
         action={
           /* One walk entry per day, so once it exists the action edits it
              rather than adding another. Measurements are the opposite —
              several readings a day are normal — so those keep "Record". */
           canEdit ? (
             <RowAction tone="tinted" onClick={() => openSheet("walk")}>
-              {data.walk === null ? "Log Walk" : "Update"}
+              {data.walk === null ? t.home.logWalk : t.common.update}
             </RowAction>
           ) : null
         }
       >
         <p className="text-metadata text-text-tertiary">
           {data.walk === null
-            ? "Not Logged"
+            ? t.home.notLogged
             : data.walk.didWalk
               ? data.walk.minutes
-                ? `${data.walk.minutes} minutes`
-                : "Walked today"
-              : "Not today"}
+                ? t.home.minutesLogged(data.walk.minutes)
+                : t.home.walkedToday
+              : t.home.notToday}
         </p>
       </CareRow>
 

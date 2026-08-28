@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * The first page of a PDF, drawn to fit.
@@ -18,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
  * actually opened a PDF, rather than riding along with every other screen.
  */
 export function PdfPreview({ url, onPageCount }: { url: string; onPageCount: (n: number) => void }) {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
@@ -79,12 +81,12 @@ export function PdfPreview({ url, onPageCount }: { url: string; onPageCount: (n:
     <div ref={wrapRef} className="w-full">
       {state === "failed" ? (
         <p className="text-body-secondary text-text-secondary p-4">
-          We couldn&apos;t show a preview of this one. You can still open or download it.
+          {t.documents.previewUnavailable}
         </p>
       ) : null}
       <canvas
         ref={canvasRef}
-        aria-label="First page of the document"
+        aria-label={t.documents.firstPageAlt}
         className={state === "ready" ? "block w-full" : "sr-only"}
       />
       {state === "loading" ? (

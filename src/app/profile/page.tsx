@@ -5,6 +5,7 @@ import { getInvitations, getProfile } from "@/lib/profile-data";
 import { ScreenHeader } from "@/components/screen-header";
 import { Invitations } from "@/components/profile/invitations";
 import { Preferences } from "@/components/profile/preferences";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * Profile — her own details, who else can see the account, and preferences.
@@ -18,10 +19,11 @@ export default async function ProfilePage() {
   if (!profile) redirect("/welcome");
 
   const { members, pending } = await getInvitations(profile.accountId);
+  const t = await getMessages();
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <ScreenHeader backHref="/" title="Profile" subtitle="Manage your Profile" />
+      <ScreenHeader backHref="/" title={t.profile.title} subtitle={t.profile.subtitle} />
 
       <main className="flex flex-1 flex-col gap-[30px] px-4 py-2">
         <Link
@@ -39,7 +41,7 @@ export default async function ProfilePage() {
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-text-primary text-[16px] leading-[1.2] font-medium">
-              My Profile
+              {t.profile.myProfile}
             </span>
             {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
             <span className="truncate text-[16px] leading-[1.2] text-[#999999]">

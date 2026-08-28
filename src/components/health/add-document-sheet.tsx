@@ -7,6 +7,7 @@ import { Button, Chip, TextInput } from "@/components/ui";
 import { addDocument } from "@/app/health/actions";
 import { extensionFor, uploadToStorage } from "@/lib/upload";
 import { localDate } from "@/lib/today";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Add Document.
@@ -26,6 +27,7 @@ import { localDate } from "@/lib/today";
  * Accepts photos and PDFs. Note the known open issue: file upload inside an
  * installed iOS PWA has never been tested on a real device.
  */
+/** Stored English; only the chip label is translated. */
 const TYPES = ["Prescription", "Lab Report", "Scan", "Bill", "Other"];
 
 export function AddDocumentSheet({
@@ -40,6 +42,14 @@ export function AddDocumentSheet({
   /** Storage paths are keyed on this; the server re-checks it. */
   accountId: string;
 }) {
+  const t = useT();
+  const TYPE_LABEL: Record<string, string> = {
+    Prescription: t.documents.types.prescription,
+    "Lab Report": t.documents.types.labReport,
+    Scan: t.documents.types.scan,
+    Bill: t.documents.types.bill,
+    Other: t.documents.types.other,
+  };
   const fileRef = useRef<HTMLInputElement>(null);
   // Held in state rather than read back off the input, so the chosen file
   // survives anything that resets the element.
@@ -56,20 +66,20 @@ export function AddDocumentSheet({
     setError(null);
     const file = pickedFile;
     if (!file) {
-      setError("Please choose a file to add.");
+      setError(t.errors.chooseFile);
       return;
     }
     if (!title.trim()) {
-      setError("Please give this document a name.");
+      setError(t.errors.nameDocument);
       return;
     }
     const isAllowed = file.type.startsWith("image/") || file.type === "application/pdf";
     if (file.type && !isAllowed) {
-      setError("Please choose a photo or a PDF.");
+      setError(t.errors.choosePhotoOrPdf);
       return;
     }
     if (file.size > 25 * 1024 * 1024) {
-      setError("That file is too large. Please choose one under 25 MB.");
+      setError(t.errors.documentTooLarge);
       return;
     }
 
@@ -81,6 +91,7 @@ export function AddDocumentSheet({
         bucket: "health-documents",
         path,
         file,
+        t,
       });
       if (uploadError) {
         setError(uploadError);
@@ -95,17 +106,17 @@ export function AddDocumentSheet({
       });
       if (err) setError(err);
       else {
-        onSaved("Document added.");
+        onSaved(t.documents.added);
         onClose();
       }
     });
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Add Document">
+    <Sheet open={open} onClose={onClose} title={t.documents.addDocument}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <FieldLabel>Document</FieldLabel>
+          <FieldLabel>{t.documents.fileFieldLabel}</FieldLabel>
           <input
             ref={fileRef}
             type="file"
@@ -135,22 +146,22 @@ export function AddDocumentSheet({
             ) : (
               <>
                 <Upload size={22} className="shrink-0" aria-hidden />
-                Choose a photo or PDF
+                {t.documents.chooseFile}
               </>
             )}
           </button>
         </div>
 
         <TextInput
-          label="Document Name"
+          label={t.documents.nameLabel}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Blood Test Report"
+          placeholder={t.documents.namePlaceholder}
           autoComplete="off"
         />
 
         <div className="flex w-full flex-col gap-2">
-          <FieldLabel>Date on the document</FieldLabel>
+          <FieldLabel>{t.documents.dateLabel}</FieldLabel>
           <div className="bg-surface-default border-border-default focus-within:border-action-primary relative flex h-[54px] items-center gap-3 rounded-md border px-4 transition-colors">
             <input
               type="date"
@@ -167,25 +178,25 @@ export function AddDocumentSheet({
 
         <div className="flex flex-col gap-2.5">
           {/* Optional, like the medicine condition tag — never blocks saving. */}
-          <FieldLabel>What kind of document is it?</FieldLabel>
+          <FieldLabel>{t.documents.kindLabel}</FieldLabel>
           <div className="flex flex-wrap gap-2">
-            {TYPES.map((t) => (
+            {TYPES.map((type) => (
               <Chip
-                key={t}
-                selected={docType === t}
-                onClick={() => setDocType(docType === t ? "" : t)}
+                key={type}
+                selected={docType === type}
+                onClick={() => setDocType(docType === type ? "" : type)}
               >
-                {t}
+                {TYPE_LABEL[type] ?? type}
               </Chip>
             ))}
           </div>
         </div>
 
         <TextInput
-          label="Notes (optional)"
+          label={t.documents.notesLabel}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add Notes"
+          placeholder={t.documents.notesPlaceholder}
         />
 
         {error ? (
@@ -197,10 +208,10 @@ export function AddDocumentSheet({
 
       <div className="flex items-start gap-3">
         <Button variant="tertiary" onClick={onClose} disabled={pending} className="flex-1">
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button onClick={save} disabled={pending} className="flex-1">
-          {pending ? "Adding…" : "Save"}
+          {pending ? t.common.adding : t.common.save}
         </Button>
       </div>
     </Sheet>

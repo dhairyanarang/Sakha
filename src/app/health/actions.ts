@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveAccountId } from "@/lib/account";
+import { getMessages } from "@/lib/i18n/server";
 import type { Enums } from "@/lib/supabase/types";
 
-const SAVE_FAILED = "We couldn't save this. Please try again.";
+const saveFailed = async () => (await getMessages()).errors.saveFailed;
 
 export type MedicineInput = {
   name: string;
@@ -21,9 +22,10 @@ export type MedicineInput = {
  * it. Condition and remarks never block saving — that rule runs from the IA
  * through onboarding and holds here too.
  */
-function check(input: MedicineInput): string | null {
-  if (!input.name.trim()) return "Please enter the medicine name.";
-  if (input.timesOfDay.length === 0) return "Please choose when you take it.";
+async function check(input: MedicineInput): Promise<string | null> {
+  const t = await getMessages();
+  if (!input.name.trim()) return t.errors.enterMedicineName;
+  if (input.timesOfDay.length === 0) return t.errors.chooseWhen;
   return null;
 }
 
@@ -37,17 +39,17 @@ function clean(input: MedicineInput) {
 }
 
 export async function createMedicine(input: MedicineInput): Promise<string | null> {
-  const invalid = check(input);
+  const invalid = await check(input);
   if (invalid) return invalid;
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("medications")
     .insert({ account_id: accountId, ...clean(input) });
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/health/medicines");
   revalidatePath("/health");
@@ -59,11 +61,11 @@ export async function updateMedicine(
   id: string,
   input: MedicineInput,
 ): Promise<string | null> {
-  const invalid = check(input);
+  const invalid = await check(input);
   if (invalid) return invalid;
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   // Scoped to the account as well as the id. RLS would refuse a row on another
@@ -74,7 +76,7 @@ export async function updateMedicine(
     .update(clean(input))
     .eq("id", id)
     .eq("account_id", accountId);
-  if (error) return SAVE_FAILED;
+  if (error) return await saveFailed();
 
   revalidatePath("/health/medicines");
   revalidatePath("/health");
@@ -93,7 +95,7 @@ export async function updateMedicine(
  */
 export async function archiveMedicine(id: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -101,7 +103,7 @@ export async function archiveMedicine(id: string): Promise<string | null> {
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id)
     .eq("account_id", accountId);
-  if (error) return "We couldn't remove this. Please try again.";
+  if (error) return (await getMessages()).errors.removeFailed;
 
   revalidatePath("/health/medicines");
   revalidatePath("/health");
@@ -130,11 +132,11 @@ export async function addDocument(input: {
   notes: string | null;
 }): Promise<string | null> {
   const title = input.title.trim();
-  if (!title) return "Please give this document a name.";
+  if (!title) return (await getMessages()).errors.nameDocument;
 
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
-  if (!input.storagePath.startsWith(`${accountId}/`)) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
+  if (!input.storagePath.startsWith(`${accountId}/`)) return await saveFailed();
 
   const supabase = await createClient();
   const { error } = await supabase.from("health_documents").insert({
@@ -150,7 +152,7 @@ export async function addDocument(input: {
     // The row is what makes a document real, so an orphaned object is cleaned
     // up rather than left paying for storage nobody can see.
     await supabase.storage.from("health-documents").remove([input.storagePath]);
-    return SAVE_FAILED;
+    return await saveFailed();
   }
 
   revalidatePath("/health");
@@ -187,7 +189,7 @@ export async function getDocumentUrl(storagePath: string): Promise<string | null
  */
 export async function deleteDocument(id: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
-  if (!accountId) return SAVE_FAILED;
+  if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
   const { data: doc } = await supabase
@@ -196,14 +198,14 @@ export async function deleteDocument(id: string): Promise<string | null> {
     .eq("id", id)
     .eq("account_id", accountId)
     .maybeSingle();
-  if (!doc) return "We couldn't remove this. Please try again.";
+  if (!doc) return (await getMessages()).errors.removeFailed;
 
   const { error } = await supabase
     .from("health_documents")
     .delete()
     .eq("id", id)
     .eq("account_id", accountId);
-  if (error) return "We couldn't remove this. Please try again.";
+  if (error) return (await getMessages()).errors.removeFailed;
 
   await supabase.storage.from("health-documents").remove([doc.storage_path]);
 

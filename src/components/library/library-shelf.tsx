@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Apple, BookOpen, Footprints, Play, Sunrise, Wind } from "lucide-react";
-import { Chip, EmptyState } from "@/components/ui";
+import { Chip, EmptyState, SectionHeading } from "@/components/ui";
 import type { LibraryCategory, LibraryGroup } from "@/lib/library-data";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * The Library shelf: a language filter, then one section per category.
@@ -29,16 +30,21 @@ const CATEGORY_ICON: Record<LibraryCategory, typeof Sunrise> = {
   food: Apple,
 };
 
-const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "hi", label: "हिन्दी" },
-  { value: "en", label: "English" },
-];
-
+/**
+ * A language filters the SHELF, and is unrelated to the app's own language —
+ * she may well read the app in Hindi and still want an English video. So these
+ * names are always shown in the language they name, never translated.
+ */
 const LANGUAGE_NAME: Record<string, string> = { en: "English", hi: "हिन्दी" };
 
 export function LibraryShelf({ groups }: { groups: LibraryGroup[] }) {
+  const t = useT();
   const [language, setLanguage] = useState("all");
+  const FILTERS = [
+    { value: "all", label: t.library.all },
+    { value: "hi", label: LANGUAGE_NAME.hi },
+    { value: "en", label: LANGUAGE_NAME.en },
+  ];
 
   const visible = groups
     .map((group) => ({
@@ -55,7 +61,7 @@ export function LibraryShelf({ groups }: { groups: LibraryGroup[] }) {
       {/* One row of taps. Deliberately not a filter panel. */}
       <div
         role="group"
-        aria-label="Filter by language"
+        aria-label={t.library.filterByLanguage}
         className="flex shrink-0 flex-wrap gap-2"
       >
         {FILTERS.map((f) => (
@@ -73,20 +79,16 @@ export function LibraryShelf({ groups }: { groups: LibraryGroup[] }) {
       {visible.length === 0 ? (
         <EmptyState
           className="shrink-0"
-          message={
-            language === "hi"
-              ? "अभी हिन्दी में कुछ नहीं है।"
-              : "Nothing here in English yet."
-          }
+          message={t.library.nothingInLanguage(
+            LANGUAGE_NAME[language] ?? language,
+          )}
         />
       ) : (
         visible.map((group) => {
           const Icon = CATEGORY_ICON[group.category];
           return (
             <section key={group.category} className="flex shrink-0 flex-col gap-2.5">
-              <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
-                {group.label}
-              </h2>
+              <SectionHeading>{t.library.categories[group.category]}</SectionHeading>
 
               {group.items.map((item) => (
                 <a
@@ -126,7 +128,9 @@ export function LibraryShelf({ groups }: { groups: LibraryGroup[] }) {
                     ) : null}
                     <span className="text-text-secondary text-[14px] leading-[1.2]">
                       {[
-                        item.durationMinutes ? `${item.durationMinutes} min` : null,
+                        item.durationMinutes
+                          ? t.units.minutesShort(item.durationMinutes)
+                          : null,
                         LANGUAGE_NAME[item.language] ?? item.language,
                       ]
                         .filter(Boolean)

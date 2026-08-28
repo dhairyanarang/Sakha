@@ -7,6 +7,8 @@ import {
   type RangeNote,
 } from "@/components/health/measurement-detail";
 import type { Enums } from "@/lib/supabase/types";
+import { getT } from "@/lib/i18n/server";
+import type { Messages } from "@/lib/i18n";
 
 /**
  * The three measurements, one screen shape.
@@ -16,7 +18,9 @@ import type { Enums } from "@/lib/supabase/types";
  * invented. Weight has no range at all, because none was written for it and
  * one is not ours to make up.
  */
-const TYPES: Record<
+const typesFor = (
+  t: Messages,
+): Record<
   string,
   {
     type: Enums<"measurement_type">;
@@ -27,23 +31,28 @@ const TYPES: Record<
     unit: string;
     range: RangeNote;
   }
-> = {
+> => ({
   "blood-sugar": {
     type: "blood_sugar",
-    heading: "Blood Sugar",
-    title: "Blood Sugar",
+    heading: t.health.bloodSugar,
+    title: t.health.bloodSugar,
+    // The unit is stored on the row and printed on her meter — never translated.
     unit: "mg/dL",
-    range: { kind: "badge", label: "Normal Range", value: "70-140 mg/dL" },
+    range: {
+      kind: "badge",
+      label: t.health.normalRange,
+      value: t.health.sugarRangeValue,
+    },
   },
   "blood-pressure": {
     type: "blood_pressure",
-    heading: "Blood Pressure",
-    title: "Blood Pressure",
+    heading: t.health.bloodPressure,
+    title: t.health.bloodPressure,
     unit: "mmHg",
     range: {
       kind: "callout",
-      label: "Typical range for adults:",
-      value: "90–120 systolic, 60–80 diastolic",
+      label: t.health.typicalRangeAdults,
+      value: t.health.bpRangeValue,
     },
   },
   weight: {
@@ -51,14 +60,14 @@ const TYPES: Record<
     /* Frame 213:12807 titles this "Weight Progress" where the other two are
        just the measurement name. Followed per frame rather than reconciled —
        flagged as an inconsistency between the three. */
-    heading: "Weight Progress",
-    title: "Weight",
+    heading: t.health.weightProgress,
+    title: t.health.weight,
     unit: "kg",
     /* No range note: none was written for weight, and a healthy weight is not
        a fixed number to invent one from. */
     range: null,
   },
-};
+});
 
 export default async function MeasurementPage({
   params,
@@ -66,12 +75,13 @@ export default async function MeasurementPage({
   params: Promise<{ type: string }>;
 }) {
   const { type: slug } = await params;
-  const config = TYPES[slug];
+  const { t, locale } = await getT();
+  const config = typesFor(t)[slug];
   if (!config) notFound();
 
   const { account, canEdit } = await requireAccount();
 
-  const months = await getMeasurementHistory(account.accountId, config.type);
+  const months = await getMeasurementHistory(account.accountId, config.type, locale);
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">

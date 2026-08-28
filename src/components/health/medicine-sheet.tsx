@@ -6,6 +6,8 @@ import { Button, Chip, TextInput } from "@/components/ui";
 import { archiveMedicine, createMedicine, updateMedicine } from "@/app/health/actions";
 import type { MedicineDetail } from "@/lib/health-data";
 import type { Enums } from "@/lib/supabase/types";
+import { useI18n } from "@/lib/i18n/client";
+import { slotName } from "@/lib/today";
 
 /**
  * Add and Edit Medicine — one sheet, because Figma draws them as the same
@@ -23,12 +25,9 @@ import type { Enums } from "@/lib/supabase/types";
  * question, with the safe answer first and the destructive one named plainly
  * rather than shouted at her.
  */
-const TIMES: { value: Enums<"time_of_day">; label: string }[] = [
-  { value: "morning", label: "Morning" },
-  { value: "afternoon", label: "Afternoon" },
-  { value: "evening", label: "Evening" },
-];
+const TIMES: Enums<"time_of_day">[] = ["morning", "afternoon", "evening"];
 
+/** The stored tag stays English; only its label is translated. */
 const CONDITIONS = ["Sugar", "BP", "Acidity", "Thyroid", "Asthma"];
 
 export function MedicineSheet({
@@ -52,6 +51,14 @@ export function MedicineSheet({
   );
   // A saved condition that isn't one of the five suggestions is a custom one,
   // so the field opens already showing it rather than looking discarded.
+  const { t, locale } = useI18n();
+  const CONDITION_LABEL: Record<string, string> = {
+    Sugar: t.medicines.conditions.sugar,
+    BP: t.medicines.conditions.bp,
+    Acidity: t.medicines.conditions.acidity,
+    Thyroid: t.medicines.conditions.thyroid,
+    Asthma: t.medicines.conditions.asthma,
+  };
   const [custom, setCustom] = useState(Boolean(preset) && !CONDITIONS.includes(preset));
   const [condition, setCondition] = useState(preset);
   const [remarks, setRemarks] = useState(medicine?.remarks ?? "");
@@ -66,7 +73,7 @@ export function MedicineSheet({
       const err = await archiveMedicine(medicine.id);
       if (err) setError(err);
       else {
-        onSaved("Medicine removed.");
+        onSaved(t.medicines.medicineRemoved);
         onClose();
       }
     });
@@ -90,7 +97,7 @@ export function MedicineSheet({
         : await createMedicine(input);
       if (err) setError(err);
       else {
-        onSaved(editing ? "Medicine updated." : "Medicine added.");
+        onSaved(editing ? t.medicines.medicineUpdated : t.medicines.medicineAdded);
         onClose();
       }
     });
@@ -100,7 +107,7 @@ export function MedicineSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={editing ? "Edit Medicine" : "Add Medicine"}
+      title={editing ? t.medicines.editMedicine : t.medicines.addMedicine}
       action={
         editing ? (
           <button
@@ -109,40 +116,40 @@ export function MedicineSheet({
             disabled={pending}
             className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
           >
-            Delete
+            {t.common.delete}
           </button>
         ) : undefined
       }
     >
       <div className="flex flex-col gap-6">
         <TextInput
-          label="Medicine Name"
+          label={t.medicines.medicineNameLabel}
           value={name}
           onChange={(e) => setName(e.target.value)}
           /* Figma's placeholder here reads "e.g. Meeting Notes, Blog Post",
              which is copy from another product left in the frame. Using the
              onboarding step's placeholder instead — flagged. */
-          placeholder="Gliptagrate M500"
+          placeholder={t.medicines.medicineNamePlaceholder}
           autoComplete="off"
         />
 
         <div className="flex flex-col gap-2.5">
-          <FieldLabel>When do you take it?</FieldLabel>
+          <FieldLabel>{t.medicines.whenDoYouTakeIt}</FieldLabel>
           <div className="flex flex-wrap gap-2">
-            {TIMES.map((t) => (
+            {TIMES.map((slot) => (
               <Chip
-                key={t.value}
-                selected={times.includes(t.value)}
-                onClick={() => toggleTime(t.value)}
+                key={slot}
+                selected={times.includes(slot)}
+                onClick={() => toggleTime(slot)}
               >
-                {t.label}
+                {slotName(slot, locale)}
               </Chip>
             ))}
           </div>
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <FieldLabel>What is the medicine for?</FieldLabel>
+          <FieldLabel>{t.medicines.whatIsItFor}</FieldLabel>
           <div className="flex flex-wrap gap-2">
             {CONDITIONS.map((c) => (
               <Chip
@@ -153,7 +160,7 @@ export function MedicineSheet({
                   setCondition(condition === c ? "" : c);
                 }}
               >
-                {c}
+                {CONDITION_LABEL[c] ?? c}
               </Chip>
             ))}
             {/* Not on this frame, but the IA lists Custom and onboarding
@@ -166,24 +173,24 @@ export function MedicineSheet({
                 setCondition("");
               }}
             >
-              + Custom
+              {t.medicines.customChip}
             </Chip>
           </div>
           {custom ? (
             <TextInput
-              label="Condition"
+              label={t.medicines.conditionLabel}
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
-              placeholder="Type a condition"
+              placeholder={t.medicines.conditionPlaceholder}
             />
           ) : null}
         </div>
 
         <TextInput
-          label="Remarks (optional)"
+          label={t.medicines.remarksLabel}
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          placeholder="Add Remarks"
+          placeholder={t.medicines.remarksPlaceholder}
         />
 
         {error ? (
@@ -196,10 +203,9 @@ export function MedicineSheet({
       {confirmingDelete ? (
         <div className="bg-feedback-error-surface flex flex-col gap-4 rounded-md p-4">
           <div className="flex flex-col gap-1">
-            <p className="text-body-medium text-text-primary">Remove this medicine?</p>
+            <p className="text-body-medium text-text-primary">{t.medicines.removeMedicineTitle}</p>
             <p className="text-body-secondary text-text-secondary">
-              It comes off your list. Everything you have already confirmed stays
-              as it is.
+              {t.medicines.removeMedicineBody}
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -210,7 +216,7 @@ export function MedicineSheet({
               disabled={pending}
               className="flex-1"
             >
-              Keep it
+              {t.common.keepIt}
             </Button>
             {/* Not a Button variant: the library has no destructive style, and
                 inventing a fourth one for a single use is worse than one local
@@ -221,17 +227,17 @@ export function MedicineSheet({
               disabled={pending}
               className="bg-feedback-error text-text-on-brand text-button-label flex h-[60px] flex-1 items-center justify-center rounded-xl transition-colors disabled:opacity-60"
             >
-              {pending ? "Removing…" : "Remove"}
+              {pending ? t.common.removing : t.common.remove}
             </button>
           </div>
         </div>
       ) : (
         <div className="flex items-start gap-3">
           <Button variant="tertiary" onClick={onClose} disabled={pending} className="flex-1">
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button onClick={save} disabled={pending} className="flex-1">
-            {pending ? "Saving…" : "Save"}
+            {pending ? t.common.saving : t.common.save}
           </Button>
         </div>
       )}

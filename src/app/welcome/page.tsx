@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getMessages } from "@/lib/i18n/server";
 
 /**
  * Welcome. The illustration is full-bleed and bottom-anchored, with a gradient
@@ -14,6 +15,7 @@ export default async function WelcomePage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   if (data.user) redirect("/");
+  const t = await getMessages();
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
@@ -35,7 +37,7 @@ export default async function WelcomePage() {
         {/* rgba(10,10,10,0.8) over surface/page, resolved to a solid value —
             text must never be lightened with opacity. */}
         <p className="mt-[15px] max-w-[321px] text-center text-[24px] leading-[1.4] font-medium text-[#3A3A3B]">
-          A simple way to stay on top of your health
+          {t.welcome.tagline}
         </p>
       </header>
 
@@ -43,7 +45,7 @@ export default async function WelcomePage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/onboarding/welcome.webp"
-          alt="An older woman and her son looking at a phone together"
+          alt={t.welcome.illustrationAlt}
           /* Fills the box rather than being fitted inside it, so there are no
              slivers of page down the sides. Anchored to the top so a short
              screen crops the bottom of the frame and never their faces. */
@@ -60,7 +62,7 @@ export default async function WelcomePage() {
           href="/sign-in"
           className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center rounded-xl transition-colors"
         >
-          Get Started
+          {t.welcome.getStarted}
         </Link>
       </footer>
     </div>

@@ -1,6 +1,9 @@
+"use client";
+
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Family Member Card — 179px wide, same container styling as Card/List Row.
@@ -22,11 +25,12 @@ export function FamilyMemberCard({
   name,
   relation,
   photoUrl,
-  actionLabel = "Manage",
+  actionLabel,
   onAction,
   className,
   ...props
 }: FamilyMemberCardProps) {
+  const t = useT();
   return (
     <div
       className={cn(
@@ -43,7 +47,7 @@ export function FamilyMemberCard({
         <span className="text-body-secondary text-text-secondary">{relation}</span>
       </div>
       <Button variant="tertiary" size="compact" onClick={onAction} className="w-full">
-        {actionLabel}
+        {actionLabel ?? t.invitations.manage}
       </Button>
     </div>
   );

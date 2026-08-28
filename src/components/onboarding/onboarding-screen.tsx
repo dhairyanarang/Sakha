@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FixedBar } from "@/components/ui";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Shared shell for the onboarding sequence, matching the Figma frames.
@@ -37,6 +40,7 @@ export function OnboardingScreen({
   /** Medicine has no icon and a left-aligned header, unlike the rest. */
   align?: "center" | "start";
 }) {
+  const t = useT();
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
       {/* Back sits left at a 42px tap area; Skip sits top-right. */}
@@ -47,7 +51,7 @@ export function OnboardingScreen({
         {backHref ? (
           <Link
             href={backHref}
-            aria-label="Go back"
+            aria-label={t.common.goBack}
             className="text-text-primary -ml-2.5 flex size-[42px] items-center justify-center"
           >
             <ChevronLeft size={24} aria-hidden />
@@ -60,7 +64,7 @@ export function OnboardingScreen({
             href={skipHref}
             className="text-text-primary flex h-[42px] items-center px-2 text-[16px]"
           >
-            Skip
+            {t.common.skip}
           </Link>
         ) : null}
       </div>

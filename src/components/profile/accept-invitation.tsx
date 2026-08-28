@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { acceptInvitation } from "@/app/invite/actions";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Accept or decline.
@@ -20,6 +21,7 @@ export function AcceptInvitation({
   inviter: string;
 }) {
   const router = useRouter();
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -42,7 +44,7 @@ export function AcceptInvitation({
         </p>
       ) : null}
       <Button onClick={accept} disabled={pending} className="w-full">
-        {pending ? "Opening…" : `See ${inviter}'s information`}
+        {pending ? t.invitations.opening : t.invitations.seeTheirInformation(inviter)}
       </Button>
       <Button
         variant="ghost"
@@ -50,7 +52,7 @@ export function AcceptInvitation({
         disabled={pending}
         className="w-full"
       >
-        Not now
+        {t.onboarding.notNow}
       </Button>
     </footer>
   );

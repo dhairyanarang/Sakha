@@ -17,25 +17,16 @@ export type LibraryItem = {
 
 export type LibraryGroup = {
   category: LibraryCategory;
-  label: string;
   items: LibraryItem[];
 };
 
 /**
- * The order the shelf reads in, and what each section is called.
+ * The order the shelf reads in.
  *
- * Fixed here rather than in the database: it is editorial, it is two words per
- * line, and a table would only mean another thing to keep in step. Adding a
- * category means adding an enum value and a line here.
+ * Fixed here rather than in the database: it is editorial, and a table would
+ * only mean another thing to keep in step. What each section is CALLED lives
+ * in the dictionary, because it is copy and has to exist in both languages.
  */
-export const CATEGORY_LABELS: Record<LibraryCategory, string> = {
-  morning_routine: "Morning & Daily Routine",
-  movement: "Movement & Exercise",
-  mind: "Mind & Relaxation",
-  health_education: "Health Education",
-  food: "Food & Nutrition",
-};
-
 const CATEGORY_ORDER: LibraryCategory[] = [
   "morning_routine",
   "movement",
@@ -75,7 +66,6 @@ export async function getLibrary(): Promise<LibraryGroup[]> {
 
   return CATEGORY_ORDER.map((category) => ({
     category,
-    label: CATEGORY_LABELS[category],
     items: items.filter((i) => i.category === category),
   })).filter((group) => group.items.length > 0);
 }

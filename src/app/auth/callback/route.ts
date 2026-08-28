@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberships } from "@/lib/account";
+import { setLocaleCookie } from "@/lib/i18n/set-locale";
 
 /**
  * Google hands back a code here; we swap it for a session.
@@ -25,10 +26,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/sign-in?error=sign_in_failed`);
   }
 
-  if (next) return NextResponse.redirect(`${origin}${next}`);
-
   // Someone returning already has an account; a new user still needs a name.
   const memberships = await getMemberships();
+
+  // Sign-in is the one moment this device can be holding the wrong language —
+  // a new phone, or cleared site data. The account row is the durable answer,
+  // so re-seed the cookie from it before rendering anything.
+  const own = memberships.find((m) => m.role === "owner") ?? memberships[0];
+  if (own) await setLocaleCookie(own.language);
+
+  if (next) return NextResponse.redirect(`${origin}${next}`);
+
   return NextResponse.redirect(
     `${origin}${memberships.length > 0 ? "/" : "/onboarding/name"}`,
   );

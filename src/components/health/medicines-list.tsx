@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { EmptyState, FixedBar, Toast } from "@/components/ui";
+import { EmptyState, FixedBar, SectionHeading, Toast } from "@/components/ui";
 import { MedicineRow } from "./medicine-row";
 import { MedicineSheet } from "./medicine-sheet";
 import type { MedicineDetail, MedicineGroup } from "@/lib/health-data";
+import { useT } from "@/lib/i18n/client";
+import { conditionLabel } from "@/lib/i18n/labels";
 
 /**
  * The Medicines list and its Add/Edit sheet.
@@ -25,6 +27,7 @@ export function MedicinesList({
   groups: MedicineGroup[];
   canEdit?: boolean;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState<MedicineDetail | null>(null);
   const [open, setOpen] = useState(false);
   const [openCount, setOpenCount] = useState(0);
@@ -49,7 +52,7 @@ export function MedicinesList({
           <div className="flex flex-1 flex-col justify-center">
             <EmptyState
               tone="brand"
-              message="You have no medicines."
+              message={t.medicines.noMedicinesPeriod}
               illustration={
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -67,11 +70,11 @@ export function MedicinesList({
               key={group.conditionTag ?? "__untagged"}
               className="flex shrink-0 flex-col gap-2.5"
             >
-              <h2 className="text-subsection-heading text-action-primary uppercase tracking-[0.04em]">
+              <SectionHeading>
                 {/* She never chose a condition for these, so the heading must
                     not invent one for her. */}
-                {group.conditionTag ?? "Other"}
-              </h2>
+                {conditionLabel(group.conditionTag, t)}
+              </SectionHeading>
               {group.medicines.map((m) => (
                 <MedicineRow key={m.id} medicine={m} onEdit={canEdit ? () => edit(m) : null} />
               ))}
@@ -91,7 +94,7 @@ export function MedicinesList({
           onClick={add}
           className="bg-action-primary text-text-on-brand text-button-label active:bg-action-primary-pressed flex h-[60px] w-full items-center justify-center rounded-xl transition-colors"
         >
-          Add Medicine
+          {t.medicines.addMedicine}
         </button>
       </footer>
       </FixedBar>

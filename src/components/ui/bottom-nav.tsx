@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { HeartPulse, House, LibraryBig } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/i18n/client";
 import { FixedBar } from "./fixed-bar";
 
 /**
@@ -32,9 +33,9 @@ import { FixedBar } from "./fixed-bar";
 export type NavTab = "home" | "health" | "library";
 
 const TABS = [
-  { id: "home" as const, label: "Home", href: "/", Icon: House },
-  { id: "health" as const, label: "Health", href: "/health", Icon: HeartPulse },
-  { id: "library" as const, label: "Library", href: "/library", Icon: LibraryBig },
+  { id: "home" as const, href: "/", Icon: House },
+  { id: "health" as const, href: "/health", Icon: HeartPulse },
+  { id: "library" as const, href: "/library", Icon: LibraryBig },
 ];
 
 export interface BottomNavProps extends React.ComponentPropsWithoutRef<"nav"> {
@@ -42,17 +43,18 @@ export interface BottomNavProps extends React.ComponentPropsWithoutRef<"nav"> {
 }
 
 export function BottomNav({ active, className, ...props }: BottomNavProps) {
+  const t = useT();
   return (
     <FixedBar reserve={75}>
     <nav
-      aria-label="Main"
+      aria-label={t.nav.mainLabel}
       className={cn(
         "bg-surface-default border-border-faint flex w-full border-t px-3",
         className,
       )}
       {...props}
     >
-      {TABS.map(({ id, label, href, Icon }) => {
+      {TABS.map(({ id, href, Icon }) => {
         const isActive = id === active;
         return (
           <Link
@@ -76,7 +78,7 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
                   : "text-nav-label text-text-secondary"
               }
             >
-              {label}
+              {t.nav[id]}
             </span>
           </Link>
         );
