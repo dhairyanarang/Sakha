@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 
 /**
  * A bar that stays put while the document scrolls underneath it.
@@ -22,11 +21,12 @@ import { useKeyboardInset } from "@/lib/use-keyboard-inset";
  * is already correct. After mount the real height is measured and takes over,
  * which matters if she raises her system text size and the bar grows.
  *
- * The bar rides above the keyboard, and ONLY the keyboard. iOS shrinks the
- * visual viewport for ordinary reasons too — the URL bar collapsing as you
- * scroll, the rubber-band at either end — and an earlier version treated all of
- * that as keyboard, which made the bar slide up and down during plain
- * scrolling. useKeyboardInset is 0 unless a text field is genuinely focused.
+ * The bar does NOT move for the keyboard. It sits at the bottom of the layout
+ * viewport and the keyboard opens over it, so a field being typed into is never
+ * covered by the footer beneath it. An earlier version lifted the bar clear of
+ * the keyboard, which is right for a sheet — where Save would otherwise be
+ * unreachable — and wrong for a page footer, where it just crowds the field.
+ * The Sheet still lifts; see use-keyboard-inset.
  */
 export function FixedBar({
   reserve,
@@ -40,7 +40,6 @@ export function FixedBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(reserve);
-  const keyboardInset = useKeyboardInset();
 
   useEffect(() => {
     const el = barRef.current;
@@ -56,7 +55,7 @@ export function FixedBar({
     <>
       <div
         ref={barRef}
-        style={{ bottom: keyboardInset }}
+        style={{ bottom: 0 }}
         className={cn(
           "fixed left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2",
           className,

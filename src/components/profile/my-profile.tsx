@@ -4,7 +4,8 @@ import { useRef, useState, useTransition } from "react";
 import { ChevronRight, Mail, PenLine, User } from "lucide-react";
 import { Sheet } from "@/components/home/sheet";
 import { Button, TextInput, Toast } from "@/components/ui";
-import { removeAvatar, updateDisplayName, uploadAvatar } from "@/app/profile/actions";
+import { removeAvatar, setAvatarPath, updateDisplayName } from "@/app/profile/actions";
+import { extensionFor, uploadToStorage } from "@/lib/upload";
 import type { ProfileView } from "@/lib/profile-data";
 
 /**
@@ -32,11 +33,35 @@ export function MyProfile({ profile }: { profile: ProfileView }) {
 
   function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    // Clear the input straight away: a file input fires no change event when
+    // the same file is chosen again, so after an error she could re-pick the
+    // very same photo and nothing at all would happen.
+    e.target.value = "";
     if (!file) return;
-    const data = new FormData();
-    data.set("file", file);
+    if (!file.type.startsWith("image/")) {
+      setToast("Please choose a photo.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setToast("That photo is too large. Please choose one under 10 MB.");
+      return;
+    }
+
+    // A fixed filename, so a new photo replaces the old rather than leaving
+    // every previous one behind — which is why the bucket needs UPDATE too.
+    const path = `${profile.accountId}/avatar.${extensionFor(file, "jpg")}`;
     startTransition(async () => {
-      const err = await uploadAvatar(data);
+      const uploadError = await uploadToStorage({
+        bucket: "avatars",
+        path,
+        file,
+        upsert: true,
+      });
+      if (uploadError) {
+        setToast(uploadError);
+        return;
+      }
+      const err = await setAvatarPath(path);
       setToast(err ?? "Photo updated.");
     });
   }

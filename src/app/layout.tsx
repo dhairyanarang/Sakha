@@ -42,6 +42,19 @@ export const viewport: Viewport = {
   // Deliberately NOT locking maximumScale or userScalable. Our reader is
   // presbyopic — pinch-zoom must keep working.
   viewportFit: "cover",
+  /**
+   * The keyboard covers the page; it does not shrink it.
+   *
+   * Android's default is resizes-content: opening the keyboard shrinks the
+   * LAYOUT viewport, so anything anchored to the bottom is dragged up with it.
+   * On an onboarding step that put the whole footer — 112px, and 164px on the
+   * step with two buttons — on top of the field she was typing into.
+   *
+   * overlays-content leaves the layout viewport alone and lets the keyboard sit
+   * over it, which is what iOS already does. So both platforms now behave the
+   * same way: the Next button stays where it was and the keyboard covers it.
+   */
+  interactiveWidget: "overlays-content",
   themeColor: "#F8F8FF", // surface/page — matches the canvas
 };
 

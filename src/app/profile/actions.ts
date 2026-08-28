@@ -8,9 +8,6 @@ import { getActiveAccountId } from "@/lib/account";
 
 const SAVE_FAILED = "We couldn't save this. Please try again.";
 
-const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
-const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-
 export async function updateDisplayName(name: string): Promise<string | null> {
   const trimmed = name.trim();
   if (!trimmed) return "Please enter your name.";
@@ -49,33 +46,21 @@ export async function updateLanguage(language: string): Promise<string | null> {
 }
 
 /**
- * Replaces her profile photo.
+ * Records a photo the browser has already uploaded.
  *
- * The path starts with the account id because that is what the storage policy
- * checks, and the filename is fixed so a new photo overwrites the old one
- * rather than leaving every previous picture behind — hence upsert, which is
- * why the bucket needs UPDATE as well as INSERT.
+ * The bytes never come through here. A Server Action request is capped at 1MB,
+ * so sending a phone photo this way threw before any of our own checks ran —
+ * see lib/upload.ts. What arrives now is just the path.
  *
- * Google's picture is only ever a fallback; once this succeeds, hers wins.
+ * The path is re-derived from the session rather than trusted: a caller cannot
+ * point this at another account's folder by sending a different string.
  */
-export async function uploadAvatar(formData: FormData): Promise<string | null> {
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return "Please choose a photo.";
-  if (file.size > MAX_AVATAR_BYTES) return "That photo is too large. Please choose one under 5 MB.";
-  if (file.type && !ALLOWED.includes(file.type)) return "Please choose a photo.";
-
+export async function setAvatarPath(path: string): Promise<string | null> {
   const accountId = await getActiveAccountId();
   if (!accountId) return SAVE_FAILED;
+  if (!path.startsWith(`${accountId}/`)) return SAVE_FAILED;
 
   const supabase = await createClient();
-  const extension = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-  const path = `${accountId}/avatar.${extension}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { contentType: file.type || undefined, upsert: true });
-  if (uploadError) return "We couldn't save this photo. Please try again.";
-
   const { error } = await supabase
     .from("accounts")
     .update({ avatar_path: path })

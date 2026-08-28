@@ -5,6 +5,7 @@ import { Calendar, FileCheck2, Upload } from "lucide-react";
 import { Sheet } from "@/components/home/sheet";
 import { Button, Chip, TextInput } from "@/components/ui";
 import { addDocument } from "@/app/health/actions";
+import { extensionFor, uploadToStorage } from "@/lib/upload";
 import { localDate } from "@/lib/today";
 
 /**
@@ -31,12 +32,18 @@ export function AddDocumentSheet({
   open,
   onClose,
   onSaved,
+  accountId,
 }: {
   open: boolean;
   onClose: () => void;
   onSaved: (message: string) => void;
+  /** Storage paths are keyed on this; the server re-checks it. */
+  accountId: string;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  // Held in state rather than read back off the input, so the chosen file
+  // survives anything that resets the element.
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(localDate());
@@ -47,21 +54,45 @@ export function AddDocumentSheet({
 
   function save() {
     setError(null);
-    const file = fileRef.current?.files?.[0];
+    const file = pickedFile;
     if (!file) {
       setError("Please choose a file to add.");
       return;
     }
+    if (!title.trim()) {
+      setError("Please give this document a name.");
+      return;
+    }
+    const isAllowed = file.type.startsWith("image/") || file.type === "application/pdf";
+    if (file.type && !isAllowed) {
+      setError("Please choose a photo or a PDF.");
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setError("That file is too large. Please choose one under 25 MB.");
+      return;
+    }
 
-    const data = new FormData();
-    data.set("file", file);
-    data.set("title", title);
-    data.set("doc_date", date);
-    data.set("doc_type", docType);
-    data.set("notes", notes);
+    // Uploaded straight to Storage; only the path goes to the server.
+    const path = `${accountId}/${crypto.randomUUID()}.${extensionFor(file, "jpg")}`;
 
     startTransition(async () => {
-      const err = await addDocument(data);
+      const uploadError = await uploadToStorage({
+        bucket: "health-documents",
+        path,
+        file,
+      });
+      if (uploadError) {
+        setError(uploadError);
+        return;
+      }
+      const err = await addDocument({
+        storagePath: path,
+        title,
+        docDate: date,
+        docType,
+        notes,
+      });
       if (err) setError(err);
       else {
         onSaved("Document added.");
@@ -82,6 +113,7 @@ export function AddDocumentSheet({
             className="sr-only"
             onChange={(e) => {
               const picked = e.target.files?.[0] ?? null;
+              setPickedFile(picked);
               setFileName(picked?.name ?? null);
               // Offer the file's own name as a starting title rather than
               // making her type one from scratch. She can still change it.

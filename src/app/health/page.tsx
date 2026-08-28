@@ -78,7 +78,7 @@ export default async function HealthPage() {
           </div>
         </section>
 
-        <DocumentsSection documents={documents} canEdit={canEdit} />
+        <DocumentsSection documents={documents} accountId={account.accountId} canEdit={canEdit} />
       </main>
 
       <BottomNav active="health" className="shrink-0" />

@@ -21,9 +21,11 @@ import type { DocumentSummary } from "@/lib/health-data";
  */
 export function DocumentsSection({
   documents,
+  accountId,
   canEdit = true,
 }: {
   documents: DocumentSummary[];
+  accountId: string;
   canEdit?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
@@ -70,6 +72,7 @@ export function DocumentsSection({
 
       <AddDocumentSheet
         key={openCount}
+        accountId={accountId}
         open={adding}
         onClose={() => setAdding(false)}
         onSaved={setToast}

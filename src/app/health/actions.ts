@@ -109,69 +109,47 @@ export async function archiveMedicine(id: string): Promise<string | null> {
   return null;
 }
 
-/** Anything larger than this is almost certainly a photo that wants resizing. */
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-
-const ALLOWED = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "application/pdf",
-];
-
 /**
- * Stores a document and records it.
+ * Records a document the browser has already uploaded.
  *
- * The object path starts with the account id because that is what the storage
- * policy checks — private.is_account_member() reads the first folder segment.
- * Change the shape of this path and every document becomes unreadable.
+ * The file itself never passes through here: a Server Action request is capped
+ * at 1MB, so any real scan or photo threw before our own size check ran, which
+ * is what surfaced as a bare server error with a digest. lib/upload.ts puts the
+ * bytes in Storage directly, where the same RLS still gates who may write.
  *
- * The row is only written once the upload has succeeded, so a failed upload
- * cannot leave a document listed that does not exist. The reverse — an object
- * with no row — is recoverable and invisible to her.
+ * The path is checked against the session rather than trusted, so a caller
+ * cannot attach a file sitting in someone else's folder to their own document.
+ * The row is written last, and a failure removes the object it would have
+ * pointed at.
  */
-export async function addDocument(formData: FormData): Promise<string | null> {
-  const file = formData.get("file");
-  const title = String(formData.get("title") ?? "").trim();
-  const docDate = String(formData.get("doc_date") ?? "").trim() || null;
-  const docType = String(formData.get("doc_type") ?? "").trim() || null;
-  const notes = String(formData.get("notes") ?? "").trim() || null;
-
-  if (!(file instanceof File) || file.size === 0) return "Please choose a file to add.";
+export async function addDocument(input: {
+  storagePath: string;
+  title: string;
+  docDate: string | null;
+  docType: string | null;
+  notes: string | null;
+}): Promise<string | null> {
+  const title = input.title.trim();
   if (!title) return "Please give this document a name.";
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return "That file is too large. Please choose one under 10 MB.";
-  }
-  if (file.type && !ALLOWED.includes(file.type)) {
-    return "Please choose a photo or a PDF.";
-  }
 
   const accountId = await getActiveAccountId();
   if (!accountId) return SAVE_FAILED;
+  if (!input.storagePath.startsWith(`${accountId}/`)) return SAVE_FAILED;
 
   const supabase = await createClient();
-  const extension = file.name.includes(".") ? file.name.split(".").pop() : null;
-  const path = `${accountId}/${crypto.randomUUID()}${extension ? `.${extension}` : ""}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("health-documents")
-    .upload(path, file, { contentType: file.type || undefined, upsert: false });
-  if (uploadError) return "We couldn't add this document. Please try again.";
-
   const { error } = await supabase.from("health_documents").insert({
     account_id: accountId,
     title,
-    doc_date: docDate,
-    doc_type: docType,
-    storage_path: path,
-    notes,
+    doc_date: input.docDate || null,
+    doc_type: input.docType || null,
+    storage_path: input.storagePath,
+    notes: input.notes || null,
     source: "upload",
   });
   if (error) {
     // The row is what makes a document real, so an orphaned object is cleaned
     // up rather than left paying for storage nobody can see.
-    await supabase.storage.from("health-documents").remove([path]);
+    await supabase.storage.from("health-documents").remove([input.storagePath]);
     return SAVE_FAILED;
   }
 
