@@ -5,7 +5,9 @@ import { useState } from "react";
 import { Bell, BellRing } from "lucide-react";
 import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { Button } from "@/components/ui";
-import { useT } from "@/lib/i18n/client";
+import { useI18n } from "@/lib/i18n/client";
+import { savePushSubscription } from "@/app/actions/push";
+import { enablePush } from "@/lib/push";
 
 /**
  * Permission is requested, never assumed. Push is best-effort by the nature of
@@ -14,19 +16,16 @@ import { useT } from "@/lib/i18n/client";
  */
 export function RemindersPrompt() {
   const router = useRouter();
-  const t = useT();
+  const { t, locale } = useI18n();
   const [busy, setBusy] = useState(false);
 
   async function allow() {
     setBusy(true);
-    try {
-      if (typeof Notification !== "undefined") {
-        await Notification.requestPermission();
-      }
-    } catch {
-      // Declining, or a browser that won't ask, is a normal outcome — not an
-      // error worth showing her. Subscription happens later regardless.
-    }
+    // Whatever happens, she continues to Home. Declining, an old phone, or a
+    // browser that will not ask are all normal outcomes at this point in
+    // onboarding — none of them is worth stopping her with, and the toggle in
+    // Profile is there for later.
+    await enablePush(locale, savePushSubscription).catch(() => null);
     router.push("/");
   }
 

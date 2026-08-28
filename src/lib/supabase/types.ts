@@ -403,6 +403,68 @@ export type Database = {
           },
         ]
       }
+      notification_outbox: {
+        Row: {
+          account_id: string
+          actor_id: string | null
+          attempts: number
+          body_value: string | null
+          created_at: string
+          dedupe_key: string
+          id: string
+          kind: string
+          last_error: string | null
+          measurement_type:
+            | Database["public"]["Enums"]["measurement_type"]
+            | null
+          medicine_names: string | null
+          sent_at: string | null
+          slot: Database["public"]["Enums"]["time_of_day"] | null
+        }
+        Insert: {
+          account_id: string
+          actor_id?: string | null
+          attempts?: number
+          body_value?: string | null
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          kind: string
+          last_error?: string | null
+          measurement_type?:
+            | Database["public"]["Enums"]["measurement_type"]
+            | null
+          medicine_names?: string | null
+          sent_at?: string | null
+          slot?: Database["public"]["Enums"]["time_of_day"] | null
+        }
+        Update: {
+          account_id?: string
+          actor_id?: string | null
+          attempts?: number
+          body_value?: string | null
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          measurement_type?:
+            | Database["public"]["Enums"]["measurement_type"]
+            | null
+          medicine_names?: string | null
+          sent_at?: string | null
+          slot?: Database["public"]["Enums"]["time_of_day"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -428,7 +490,9 @@ export type Database = {
           created_at: string
           endpoint: string
           id: string
+          language: string
           p256dh: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -437,7 +501,9 @@ export type Database = {
           created_at?: string
           endpoint: string
           id?: string
+          language?: string
           p256dh: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -446,7 +512,9 @@ export type Database = {
           created_at?: string
           endpoint?: string
           id?: string
+          language?: string
           p256dh?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -521,6 +589,17 @@ export type Database = {
           state: string
         }[]
       }
+      register_push_subscription: {
+        Args: {
+          p_account_id: string
+          p_auth: string
+          p_endpoint: string
+          p_language: string
+          p_p256dh: string
+        }
+        Returns: undefined
+      }
+      run_medicine_reminders: { Args: never; Returns: number }
     }
     Enums: {
       account_role: "owner" | "family"

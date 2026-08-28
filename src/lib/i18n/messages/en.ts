@@ -432,6 +432,11 @@ export const en = {
     on: "On",
     off: "Off",
     remindersOffHint: "You can turn reminders off in your phone's settings.",
+    /** Push needs an installed web app on iOS; Safari alone cannot receive it. */
+    remindersNeedInstall: "Add Sakha to your Home Screen first, then turn reminders on.",
+    remindersUnsupported: "This phone cannot show reminders.",
+    remindersDenied: "Reminders are blocked. You can allow them in your phone's settings.",
+    remindersOn2: "Reminders are on.",
     language: "Language",
     languageUpdated: "Language updated.",
     /**

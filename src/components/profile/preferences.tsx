@@ -4,6 +4,8 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 import { Bell, Languages } from "lucide-react";
 import { Chip, SectionHeading, Toast, Toggle } from "@/components/ui";
 import { updateLanguage } from "@/app/profile/actions";
+import { savePushSubscription } from "@/app/actions/push";
+import { enablePush } from "@/lib/push";
 import { useT } from "@/lib/i18n/client";
 import { LANGUAGE_NAMES, LOCALES } from "@/lib/i18n";
 
@@ -70,16 +72,45 @@ export function Preferences({
     });
   }
 
+  /**
+   * The only place notifications are ever requested — from her tap, never on
+   * load. Turning them ON also registers this device for push; turning them
+   * off is something only the phone's settings can do, so the row says that.
+   */
   async function toggleReminders() {
-    if (typeof Notification === "undefined") return;
-    if (Notification.permission === "granted") {
-      setToast(t.profile.remindersOffHint);
+    if (typeof Notification === "undefined") {
+      setToast(t.profile.remindersUnsupported);
       return;
     }
-    try {
-      setAsked(await Notification.requestPermission());
-    } catch {
-      // A browser that will not ask is a normal outcome, not an error.
+
+    /**
+     * Permission granted is NOT the same as registered.
+     *
+     * This used to return early whenever permission was already granted, on
+     * the assumption that granted meant set up. It does not: a device that
+     * allowed notifications before this device ever stored a PushSubscription
+     * — which is every device that granted permission under an older build —
+     * has permission and no way to be reached. It would tap the toggle, be
+     * told reminders were already on, and go on receiving nothing.
+     *
+     * So always make sure a subscription exists. enablePush reuses the
+     * browser's existing one when there is one, so this costs a repeat tap
+     * nothing and repairs a device that was stranded.
+     */
+    const wasGranted = Notification.permission === "granted";
+    const result = await enablePush(selected, savePushSubscription);
+    if (result.status === "subscribed") {
+      setAsked("granted");
+      // Nothing changed for her if it was already allowed — and only her
+      // phone's settings can turn it back off, so the row says that.
+      setToast(wasGranted ? t.profile.remindersOffHint : t.profile.remindersOn2);
+    } else if (result.status === "needs-install") {
+      setToast(t.profile.remindersNeedInstall);
+    } else if (result.status === "denied") {
+      setAsked("denied");
+      setToast(t.profile.remindersDenied);
+    } else {
+      setToast(t.profile.remindersUnsupported);
     }
   }
 
