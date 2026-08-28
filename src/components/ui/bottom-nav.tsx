@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { HeartPulse, House, LibraryBig } from "lucide-react";
+import { HeartPulse, House, LibraryBig, User } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n/client";
 import { FixedBar } from "./fixed-bar";
@@ -30,19 +30,41 @@ import { FixedBar } from "./fixed-bar";
  * data included, and the bar is always on screen so all three warm up as soon
  * as a tab renders. (Prefetching only runs in production builds.)
  */
-export type NavTab = "home" | "health" | "library";
+export type NavTab = "home" | "health" | "library" | "profile";
 
-const TABS = [
-  { id: "home" as const, href: "/", Icon: House },
-  { id: "health" as const, href: "/health", Icon: HeartPulse },
-  { id: "library" as const, href: "/library", Icon: LibraryBig },
-];
+/**
+ * Three tabs either way, and never a fourth.
+ *
+ * A family member gets Profile where she gets Library. The Library is a shelf
+ * curated for HER — gentle exercises, things to try in her own day — and it
+ * belongs to the person living that day, not to someone checking in on her. In
+ * its place they get the one screen she reaches through the header avatar
+ * instead, because their Home has no avatar of hers to tap.
+ */
+const TABS: Record<"owner" | "family", { id: NavTab; href: string; Icon: typeof House }[]> = {
+  owner: [
+    { id: "home", href: "/", Icon: House },
+    { id: "health", href: "/health", Icon: HeartPulse },
+    { id: "library", href: "/library", Icon: LibraryBig },
+  ],
+  family: [
+    { id: "home", href: "/", Icon: House },
+    { id: "health", href: "/health", Icon: HeartPulse },
+    { id: "profile", href: "/profile", Icon: User },
+  ],
+};
 
 export interface BottomNavProps extends React.ComponentPropsWithoutRef<"nav"> {
   active: NavTab;
+  variant?: "owner" | "family";
 }
 
-export function BottomNav({ active, className, ...props }: BottomNavProps) {
+export function BottomNav({
+  active,
+  variant = "owner",
+  className,
+  ...props
+}: BottomNavProps) {
   const t = useT();
   return (
     <FixedBar reserve={75}>
@@ -54,7 +76,7 @@ export function BottomNav({ active, className, ...props }: BottomNavProps) {
       )}
       {...props}
     >
-      {TABS.map(({ id, href, Icon }) => {
+      {TABS[variant].map(({ id, href, Icon }) => {
         const isActive = id === active;
         return (
           <Link

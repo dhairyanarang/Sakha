@@ -13,13 +13,7 @@ import { useT } from "@/lib/i18n/client";
  * leaves. Someone who taps it by mistake can open the link again, and someone
  * who genuinely does not want access should not have to explain themselves.
  */
-export function AcceptInvitation({
-  token,
-  inviter,
-}: {
-  token: string;
-  inviter: string;
-}) {
+export function AcceptInvitation({ token }: { token: string }) {
   const router = useRouter();
   const t = useT();
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +38,7 @@ export function AcceptInvitation({
         </p>
       ) : null}
       <Button onClick={accept} disabled={pending} className="w-full">
-        {pending ? t.invitations.opening : t.invitations.seeTheirInformation(inviter)}
+        {pending ? t.invitations.opening : t.invitations.acceptAndContinue}
       </Button>
       <Button
         variant="ghost"
@@ -52,7 +46,7 @@ export function AcceptInvitation({
         disabled={pending}
         className="w-full"
       >
-        {t.onboarding.notNow}
+        {t.invitations.decline}
       </Button>
     </footer>
   );

@@ -1,6 +1,3 @@
-// GENERATED from the Supabase schema. Do not hand-edit.
-// Regenerate with: pnpm db:types  (needs SUPABASE_ACCESS_TOKEN in the env)
-
 export type Json =
   | string
   | number
@@ -13,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -21,6 +18,7 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          invited_name: string | null
           relation: string | null
           role: Database["public"]["Enums"]["account_role"]
           user_id: string
@@ -28,6 +26,7 @@ export type Database = {
         Insert: {
           account_id: string
           created_at?: string
+          invited_name?: string | null
           relation?: string | null
           role: Database["public"]["Enums"]["account_role"]
           user_id: string
@@ -35,6 +34,7 @@ export type Database = {
         Update: {
           account_id?: string
           created_at?: string
+          invited_name?: string | null
           relation?: string | null
           role?: Database["public"]["Enums"]["account_role"]
           user_id?: string
@@ -169,6 +169,7 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          created_by: string | null
           doc_date: string | null
           doc_type: string | null
           id: string
@@ -180,6 +181,7 @@ export type Database = {
         Insert: {
           account_id: string
           created_at?: string
+          created_by?: string | null
           doc_date?: string | null
           doc_type?: string | null
           id?: string
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           account_id?: string
           created_at?: string
+          created_by?: string | null
           doc_date?: string | null
           doc_type?: string | null
           id?: string
@@ -213,6 +216,7 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          created_by: string | null
           id: string
           measured_at: string
           note: string | null
@@ -224,6 +228,7 @@ export type Database = {
         Insert: {
           account_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           measured_at?: string
           note?: string | null
@@ -235,6 +240,7 @@ export type Database = {
         Update: {
           account_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           measured_at?: string
           note?: string | null
@@ -508,6 +514,7 @@ export type Database = {
       invitation_preview: {
         Args: { p_token_hash: string }
         Returns: {
+          account_id: string
           invitee_name: string
           inviter_name: string
           relation: string

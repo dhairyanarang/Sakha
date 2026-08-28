@@ -25,7 +25,21 @@ import { documentTypeLabel } from "@/lib/i18n/labels";
  * Download so it cannot be hit while reaching for them, and confirmed in place
  * rather than behind a dialog stacked on the screen.
  */
-export function DocumentView({ doc }: { doc: StoredDocument }) {
+export function DocumentView({
+  doc,
+  canDelete = true,
+  viewerId = null,
+}: {
+  doc: StoredDocument;
+  /**
+   * Owner only. A family member may add a document and open any of them, and
+   * may remove none — including one he added himself. Absent rather than
+   * disabled: a greyed-out Delete invites a tap that will never work.
+   */
+  canDelete?: boolean;
+  /** Family only — see MeasurementDetail for why the owner never sees this. */
+  viewerId?: string | null;
+}) {
   const router = useRouter();
   const { t, locale } = useI18n();
   const [pageCount, setPageCount] = useState<number | null>(null);
@@ -53,14 +67,16 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
         backHref="/health"
         title={doc.title}
         action={
-          <button
-            type="button"
-            onClick={() => setConfirmingDelete(true)}
-            disabled={pending}
-            className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
-          >
-            {t.common.delete}
-          </button>
+          canDelete ? (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={pending}
+              className="text-feedback-error -mr-2 flex h-[42px] items-center px-2 text-[16px] leading-[1.2] font-medium"
+            >
+              {t.common.delete}
+            </button>
+          ) : undefined
         }
       />
 
@@ -142,6 +158,13 @@ export function DocumentView({ doc }: { doc: StoredDocument }) {
             {doc.docType ? (
               <span className="bg-surface-tinted text-action-primary rounded-full px-4 py-2 text-[14px] leading-[1.2]">
                 {documentTypeLabel(doc.docType, t)}
+              </span>
+            ) : null}
+            {/* Sits with the date and the type, in the same quiet grey — a
+                fact about the document, not a banner about him. */}
+            {viewerId && doc.createdBy === viewerId ? (
+              <span className="text-[14px] leading-[1.2] text-[#999999]">
+                {t.family.uploadedByYou}
               </span>
             ) : null}
           </div>

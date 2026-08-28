@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveAccountId } from "@/lib/account";
+import { getActiveAccountId, getOwnedActiveAccountId } from "@/lib/account";
 import { getMessages } from "@/lib/i18n/server";
 import type { Enums } from "@/lib/supabase/types";
 
@@ -42,7 +42,7 @@ export async function createMedicine(input: MedicineInput): Promise<string | nul
   const invalid = await check(input);
   if (invalid) return invalid;
 
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -64,7 +64,7 @@ export async function updateMedicine(
   const invalid = await check(input);
   if (invalid) return invalid;
 
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -94,7 +94,7 @@ export async function updateMedicine(
  * leaving the past intact, which is what the column exists for.
  */
 export async function archiveMedicine(id: string): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -155,29 +155,12 @@ export async function addDocument(input: {
     return await saveFailed();
   }
 
+  // Home lists recent documents on the family view.
   revalidatePath("/health");
+  revalidatePath("/");
   return null;
 }
 
-/**
- * A short-lived link to a stored document.
- *
- * The bucket is private, so there is no public URL — a signed one is minted
- * per view and expires. Never make this bucket public to avoid the round trip.
- */
-export async function getDocumentUrl(storagePath: string): Promise<string | null> {
-  const accountId = await getActiveAccountId();
-  if (!accountId) return null;
-  // Refuse to sign anything outside the active account's own folder, so a
-  // tampered path cannot be laundered through this action.
-  if (!storagePath.startsWith(`${accountId}/`)) return null;
-
-  const supabase = await createClient();
-  const { data } = await supabase.storage
-    .from("health-documents")
-    .createSignedUrl(storagePath, 60 * 10);
-  return data?.signedUrl ?? null;
-}
 
 /**
  * Removes a document, file and all.
@@ -188,7 +171,7 @@ export async function getDocumentUrl(storagePath: string): Promise<string | null
  * a stranded row is a broken screen.
  */
 export async function deleteDocument(id: string): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -209,6 +192,8 @@ export async function deleteDocument(id: string): Promise<string | null> {
 
   await supabase.storage.from("health-documents").remove([doc.storage_path]);
 
+  // Home lists recent documents on the family view.
   revalidatePath("/health");
+  revalidatePath("/");
   return null;
 }

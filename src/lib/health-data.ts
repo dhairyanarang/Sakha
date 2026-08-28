@@ -160,29 +160,6 @@ export async function getMedicines(accountId: string): Promise<MedicineGroup[]> 
   );
 }
 
-/** One medicine, for the Edit screen. */
-export async function getMedicine(
-  accountId: string,
-  id: string,
-): Promise<MedicineDetail | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("medications")
-    .select("id, name, times_of_day, condition_tag, remarks")
-    .eq("account_id", accountId)
-    .eq("id", id)
-    .is("archived_at", null)
-    .maybeSingle();
-  if (!data) return null;
-
-  return {
-    id: data.id,
-    name: data.name,
-    conditionTag: data.condition_tag,
-    remarks: data.remarks,
-    times: SLOT_ORDER.filter((s) => data.times_of_day.includes(s)),
-  };
-}
 
 export type MeasurementEntry = {
   id: string;
@@ -191,6 +168,8 @@ export type MeasurementEntry = {
   unit: string;
   measuredAt: string;
   note: string | null;
+  /** Who wrote it down. Null on readings that predate the column. */
+  createdBy: string | null;
 };
 
 /** Readings grouped under the month they were taken in, newest first. */
@@ -217,7 +196,7 @@ export async function getMeasurementHistory(
   const supabase = await createClient();
   const { data } = await supabase
     .from("health_measurements")
-    .select("id, value, value_secondary, unit, measured_at, note")
+    .select("id, value, value_secondary, unit, measured_at, note, created_by")
     .eq("account_id", accountId)
     .eq("type", type)
     .order("measured_at", { ascending: false });
@@ -249,6 +228,7 @@ export async function getMeasurementHistory(
       unit: row.unit,
       measuredAt: row.measured_at,
       note: row.note,
+      createdBy: row.created_by,
     });
   }
 
@@ -271,6 +251,8 @@ export type StoredDocument = {
   fileName: string;
   isImage: boolean;
   isPdf: boolean;
+  /** Who added it. Null on documents that predate the column. */
+  createdBy: string | null;
 };
 
 /** One document, with a link that can actually be opened. */
@@ -281,7 +263,7 @@ export async function getDocument(
   const supabase = await createClient();
   const { data } = await supabase
     .from("health_documents")
-    .select("id, title, doc_date, doc_type, storage_path, notes, created_at")
+    .select("id, title, doc_date, doc_type, storage_path, notes, created_at, created_by")
     .eq("account_id", accountId)
     .eq("id", id)
     .maybeSingle();
@@ -308,6 +290,7 @@ export async function getDocument(
     docDate: data.doc_date,
     docType: data.doc_type,
     storagePath: data.storage_path,
+    createdBy: data.created_by,
     notes: data.notes,
     createdAt: data.created_at,
     signedUrl: signed?.signedUrl ?? null,

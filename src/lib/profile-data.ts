@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getViewer, type Membership } from "@/lib/account";
+import { getActiveAccount, getViewer, type Membership } from "@/lib/account";
 
 export type ProfileView = {
   accountId: string;
@@ -15,20 +15,29 @@ export type ProfileView = {
   members: Membership[];
 };
 
+/** Google's picture for the signed-in person, when it has one. */
+function googlePicture(user: { user_metadata: unknown } | null): string | null {
+  const meta = user?.user_metadata as Record<string, unknown> | null;
+  // Google puts it under one of these two depending on the provider payload.
+  return ((meta?.avatar_url ?? meta?.picture) as string | undefined) ?? null;
+}
+
 /**
- * Everything the Profile screens show.
+ * Her Profile — the OWNER's, and only the owner's.
  *
- * The photo has two sources and a clear precedence: if she has uploaded one it
- * wins, and until then the picture already attached to her Google account is
- * used, so a brand new profile is not faceless. Google's URL is public and
- * needs no signing; hers lives in a private bucket and gets a short-lived link
- * like every other file in this app.
+ * This used to fall back to `memberships[0]` when the signed-in person owned
+ * nothing, which meant a family member opening /profile was handed HER
+ * profile: her name in the edit field, her invitation list, her language
+ * chips. Every write behind it failed at RLS, so nothing could actually be
+ * changed — but the screen was still a lie, and a confusing one. A family
+ * member has their own Profile now (getFamilyProfile) and this returns null
+ * for them.
  */
 export async function getProfile(): Promise<ProfileView | null> {
   const { user, memberships } = await getViewer();
   if (!user) return null;
 
-  const owned = memberships.find((m) => m.role === "owner") ?? memberships[0];
+  const owned = memberships.find((m) => m.role === "owner");
   if (!owned) return null;
 
   let avatarUrl: string | null = null;
@@ -45,12 +54,7 @@ export async function getProfile(): Promise<ProfileView | null> {
     hasOwnPhoto = Boolean(avatarUrl);
   }
 
-  if (!avatarUrl) {
-    // Google puts it under one of these two depending on the provider payload.
-    const meta = user.user_metadata as Record<string, unknown> | null;
-    const fromGoogle = (meta?.avatar_url ?? meta?.picture) as string | undefined;
-    avatarUrl = fromGoogle ?? null;
-  }
+  if (!avatarUrl) avatarUrl = googlePicture(user);
 
   return {
     accountId: owned.accountId,
@@ -63,9 +67,80 @@ export async function getProfile(): Promise<ProfileView | null> {
   };
 }
 
-/** Just the picture, for the header avatar on Home and Health. */
+export type FamilyProfile = {
+  /** Their own name from Google, which is the only one we ever have for them. */
+  name: string | null;
+  email: string | null;
+  /** Their own Google picture. Never hers. */
+  avatarUrl: string | null;
+  /** Whose account they can see. */
+  accountName: string;
+  accountId: string;
+  /** How the owner described them when inviting: "Son". */
+  relation: string | null;
+};
+
+/**
+ * A family member's own Profile.
+ *
+ * Deliberately not a subset of hers. It holds who THEY are signed in as and
+ * what access they have — nothing about her beyond whose account it is, which
+ * they need in order to understand what they are looking at.
+ */
+export async function getFamilyProfile(): Promise<FamilyProfile | null> {
+  const { user } = await getViewer();
+  if (!user) return null;
+
+  const account = await getActiveAccount();
+  if (!account || account.role === "owner") return null;
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const { data: membership } = await supabase
+    .from("account_members")
+    .select("relation, invited_name")
+    .eq("account_id", account.accountId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return {
+    // Google's name wins over the one she typed, because it is theirs. Hers is
+    // the fallback for the gap before they have ever signed in.
+    name: profile?.full_name ?? membership?.invited_name ?? null,
+    email: user.email ?? null,
+    avatarUrl: googlePicture(user),
+    accountName: account.displayName,
+    accountId: account.accountId,
+    relation: membership?.relation ?? null,
+  };
+}
+
+/**
+ * The picture in the header, for whoever is signed in.
+ *
+ * For her that is her own upload or her Google photo. For a family member it
+ * is THEIR Google photo — the header avatar is the way to their own Profile,
+ * so showing her face on it would be wrong twice over.
+ */
 export async function getHeaderAvatar(): Promise<string | null> {
-  return (await getProfile())?.avatarUrl ?? null;
+  const { user, memberships } = await getViewer();
+  if (!user) return null;
+
+  const owned = memberships.find((m) => m.role === "owner");
+  if (owned?.avatarPath) {
+    const supabase = await createClient();
+    const { data: signed } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(owned.avatarPath, 60 * 10);
+    if (signed?.signedUrl) return signed.signedUrl;
+  }
+
+  return googlePicture(user);
 }
 
 export type PendingInvitation = {
@@ -73,11 +148,20 @@ export type PendingInvitation = {
   name: string;
   relation: string;
   expiresAt: string;
+  /**
+   * True once the 14 days have run out.
+   *
+   * These used to be filtered out of the query entirely, which meant a link
+   * nobody opened simply disappeared from her screen after two weeks with no
+   * explanation — she would have had to remember she ever sent it. The card
+   * stays, says so, and Send again puts it back in date.
+   */
+  expired: boolean;
 };
 
 export type FamilyMember = {
   userId: string;
-  /** Null until they have a Google profile name — the fallback is UI copy. */
+  /** Null until we have either name — the fallback is UI copy. */
   name: string | null;
   relation: string | null;
 };
@@ -88,6 +172,9 @@ export type FamilyMember = {
  * Accepted members and still-pending invitations are separate lists because
  * they mean different things to her: one is someone who can see her data now,
  * the other is a link she sent that nobody has opened yet.
+ *
+ * Each is independent. There is no group here — revoking one person touches
+ * exactly one row and leaves everyone else's access untouched.
  */
 export async function getInvitations(accountId: string): Promise<{
   members: FamilyMember[];
@@ -98,7 +185,7 @@ export async function getInvitations(accountId: string): Promise<{
   const [membersResult, pendingResult] = await Promise.all([
     supabase
       .from("account_members")
-      .select("user_id, relation, profiles(full_name)")
+      .select("user_id, relation, invited_name, profiles(full_name)")
       .eq("account_id", accountId)
       .eq("role", "family"),
     supabase
@@ -106,18 +193,21 @@ export async function getInvitations(accountId: string): Promise<{
       .select("id, name, relation, expires_at")
       .eq("account_id", accountId)
       .eq("status", "pending")
-      .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false }),
   ]);
+
+  const now = Date.now();
 
   return {
     members: (membersResult.data ?? []).map((row) => {
       const p = row.profiles as unknown as { full_name: string | null } | null;
       return {
         userId: row.user_id,
-        // Null when they have no Google profile name yet. The fallback is
-        // copy, so it is chosen at render time in whichever language she reads.
-        name: p?.full_name ?? null,
+        // The name she typed when inviting comes first: she wrote "Rahul" and
+        // that is who this is to her, even if Google calls him Rahul Sharma.
+        // Null only when we have neither, and then the fallback is copy — so
+        // it is chosen at render time in whichever language she reads.
+        name: row.invited_name ?? p?.full_name ?? null,
         relation: row.relation,
       };
     }),
@@ -126,6 +216,7 @@ export async function getInvitations(accountId: string): Promise<{
       name: i.name,
       relation: i.relation,
       expiresAt: i.expires_at,
+      expired: Date.parse(i.expires_at) <= now,
     })),
   };
 }

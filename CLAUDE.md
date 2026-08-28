@@ -122,9 +122,21 @@ Decided by the user on 2026-08-26:
   Do not reintroduce a second notion of "someone close to her".
 - **Family access is view-only.** A member can read everything on the account
   and change nothing. Reads gate on `private.is_account_member`, writes on
-  `private.is_account_owner`. The avatars bucket is the first policy set
-  written this way; the rest still gate writes on membership and need
-  tightening when invitations ship.
+  `private.is_account_owner`. Every health table and both storage buckets are
+  written this way as of `20260828010000`; `family_invitations` reads were
+  tightened to owner-only in `20260828040000`, so the guest list is hers alone.
+  There is deliberately **no UPDATE policy on `account_members`** — RLS denies
+  by default, so nobody can rewrite a role at all. Adding a policy to say so
+  would only weaken it.
+- **A family member gets a different screen, not a disabled one.** She asks
+  "what do I need to do today"; they ask "how is she doing". `/`, `/health`
+  and `/profile` branch on `requireAccount().isFamily` into
+  `src/components/family/*`. Their nav is Home | Health | Profile — no
+  Library, which is a shelf curated for the person living the day.
+- **Her mood is not shared.** The daily check-in never appears on a family
+  screen. The access screen they consent to promises medicines, readings,
+  documents and today's care; nothing beyond that list may be added to their
+  view without changing that copy first.
 - **Daily check-in is on the Home screen**, already designed: a "how do you feel
   today" question, medicine confirmation for today, and log actions for sugar,
   BP and walking. *Verify the exact mood options against the Home frame in
@@ -162,8 +174,13 @@ only — never production, so none of this exists in a real build.
 - The Medicines screen's info icon has no designed destination. It currently
   toggles a legend for the dots — a guess at intent, not a decision.
 - No Accessibility or general app-settings screen has been designed.
-- The family invite *acceptance* flow has never been designed.
 - PWA file upload on installed iOS has not been tested on a real device.
+- Neither role can sign out from inside the product — the only sign-out lives
+  behind `NEXT_PUBLIC_DEV_TOOLS`. Not a family-access gap; it was always
+  missing, and it has to be solved before launch.
+- The family screens and the invite acceptance flow were **built in code from
+  the existing component library**, like the walk check-in — Figma has no
+  frames for any of them. Third authorised exception (2026-08-28).
 
 ### Resolved 2026-08-26
 

@@ -1,5 +1,4 @@
 import { requireAccount } from "@/lib/account";
-import { Eye } from "lucide-react";
 import { getHomeData } from "@/lib/home-data";
 import { greeting } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
@@ -8,13 +7,31 @@ import { AppHeader } from "@/components/app-header";
 import { getHeaderAvatar } from "@/lib/profile-data";
 import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
+import { FamilyHome } from "@/components/family/family-home";
 
+/**
+ * Home — two entirely different screens behind one URL.
+ *
+ * She is asking "what do I need to do today". A family member is asking "how
+ * is she doing". Those are different questions, so they get different screens
+ * rather than one screen with pieces hidden — see components/family/home.
+ *
+ * The URL stays shared on purpose: the bottom nav, every prefetch and the
+ * redirect after accepting an invitation all point at "/", and a link she
+ * sends her son should open for both of them.
+ */
 export default async function HomePage() {
-  const { account, canEdit } = await requireAccount();
-  const { t, locale } = await getT();
+  const { account, isFamily } = await requireAccount();
 
-  const home = await getHomeData(account.accountId);
-  const avatarUrl = await getHeaderAvatar();
+  if (isFamily) {
+    return <FamilyHome accountId={account.accountId} ownerName={account.displayName} />;
+  }
+
+  const { locale } = await getT();
+  const [home, avatarUrl] = await Promise.all([
+    getHomeData(account.accountId),
+    getHeaderAvatar(),
+  ]);
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
@@ -27,19 +44,8 @@ export default async function HomePage() {
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
-        {/* Viewing someone else's account is stated plainly and at the top,
-            not implied by missing buttons. */}
-        {!canEdit ? (
-          <div className="bg-surface-tinted border-action-primary flex shrink-0 items-center gap-3 rounded-sm border px-3 py-2.5">
-            <Eye size={22} className="text-action-primary shrink-0" aria-hidden />
-            <p className="text-action-primary text-[16px] leading-[1.4]">
-              {t.home.viewingOthers(account.displayName)}
-            </p>
-          </div>
-        ) : null}
-
-        {canEdit ? <MoodCard mood={home.mood} /> : null}
-        <TodaysCare data={home} canEdit={canEdit} />
+        <MoodCard mood={home.mood} />
+        <TodaysCare data={home} canEdit />
       </main>
 
       <BottomNav active="home" className="shrink-0" />

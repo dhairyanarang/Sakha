@@ -1,25 +1,53 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight, User } from "lucide-react";
-import { getInvitations, getProfile } from "@/lib/profile-data";
+import { getMemberships, getActiveAccount, requireAccount } from "@/lib/account";
+import { getFamilyProfile, getInvitations, getProfile } from "@/lib/profile-data";
 import { ScreenHeader } from "@/components/screen-header";
 import { Invitations } from "@/components/profile/invitations";
 import { Preferences } from "@/components/profile/preferences";
-import { getMessages } from "@/lib/i18n/server";
+import { Accounts } from "@/components/profile/accounts";
+import { FamilyProfile } from "@/components/family/family-profile";
+import { getMessages, getLocale } from "@/lib/i18n/server";
 
 /**
- * Profile — her own details, who else can see the account, and preferences.
+ * Profile — hers, or a family member's own.
  *
- * Invitations are view-only by construction: a family member reads everything
- * on the account and writes nothing, enforced in the database rather than by
- * hiding buttons.
+ * These are two different screens and always were; until now a family member
+ * opening this route was handed HER profile — her name in the edit field, her
+ * invitation list, her language chips — because the profile lookup fell back
+ * to whatever account it could find. Every write behind it failed at RLS, so
+ * nothing could actually be changed, but the screen was still a lie.
+ *
+ * Her Profile shows her details, who else can see the account, and her
+ * preferences. Invitations are view-only by construction: a family member
+ * reads everything on the account and writes nothing, enforced in the database
+ * rather than by hiding buttons.
  */
 export default async function ProfilePage() {
+  const { isFamily } = await requireAccount();
+
+  if (isFamily) {
+    const [family, memberships] = await Promise.all([getFamilyProfile(), getMemberships()]);
+    if (!family) redirect("/");
+    return (
+      <FamilyProfile
+        profile={family}
+        language={await getLocale()}
+        memberships={memberships}
+      />
+    );
+  }
+
   const profile = await getProfile();
   if (!profile) redirect("/welcome");
 
-  const { members, pending } = await getInvitations(profile.accountId);
-  const t = await getMessages();
+  const [{ members, pending }, t, memberships, active] = await Promise.all([
+    getInvitations(profile.accountId),
+    getMessages(),
+    getMemberships(),
+    getActiveAccount(),
+  ]);
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
@@ -50,6 +78,8 @@ export default async function ProfilePage() {
           </span>
           <ChevronRight size={20} className="text-text-tertiary shrink-0" aria-hidden />
         </Link>
+
+        <Accounts accounts={memberships} activeId={active?.accountId ?? profile.accountId} />
 
         <Invitations members={members} pending={pending} />
 

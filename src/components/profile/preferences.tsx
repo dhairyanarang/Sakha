@@ -30,7 +30,19 @@ const LANGUAGES = LOCALES.map((value) => ({
   native: value !== "en",
 }));
 
-export function Preferences({ language }: { language: string }) {
+export function Preferences({
+  language,
+  /**
+   * False on a family member's Profile. The row asks the browser for
+   * permission to push HER medicine reminders; nothing yet notifies a family
+   * member about anything, and a switch that promises otherwise is worse than
+   * no switch.
+   */
+  showReminders = true,
+}: {
+  language: string;
+  showReminders?: boolean;
+}) {
   const t = useT();
   const [selected, setSelected] = useState(language);
   /**
@@ -78,25 +90,29 @@ export function Preferences({ language }: { language: string }) {
       <SectionHeading>{t.profile.preferences}</SectionHeading>
 
       <div className="bg-surface-default border-border-soft flex flex-col gap-[18px] rounded-xl border-[0.5px] px-4 py-[18px]">
-        <div className="flex items-center gap-4">
-          <Bell size={22} className="text-text-primary shrink-0" aria-hidden />
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <p className="text-text-primary text-[18px] leading-[1.2] font-medium">
-              {t.profile.notification}
-            </p>
-            {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
-            <p className="text-[16px] leading-[1.2] text-[#999999]">
-              {t.profile.remindersOn(remindersOn ? t.profile.on : t.profile.off)}
-            </p>
-          </div>
-          <Toggle
-            checked={remindersOn}
-            onCheckedChange={toggleReminders}
-            aria-label={t.profile.remindersLabel}
-          />
-        </div>
+        {showReminders ? (
+          <>
+            <div className="flex items-center gap-4">
+              <Bell size={22} className="text-text-primary shrink-0" aria-hidden />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <p className="text-text-primary text-[18px] leading-[1.2] font-medium">
+                  {t.profile.notification}
+                </p>
+                {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
+                <p className="text-[16px] leading-[1.2] text-[#999999]">
+                  {t.profile.remindersOn(remindersOn ? t.profile.on : t.profile.off)}
+                </p>
+              </div>
+              <Toggle
+                checked={remindersOn}
+                onCheckedChange={toggleReminders}
+                aria-label={t.profile.remindersLabel}
+              />
+            </div>
 
-        <div className="border-border-default mx-auto w-[299px] border-t" />
+            <div className="border-border-default mx-auto w-full max-w-[299px] border-t" />
+          </>
+        ) : null}
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">

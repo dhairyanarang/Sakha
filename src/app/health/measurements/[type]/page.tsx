@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAccount } from "@/lib/account";
+import { getViewer, requireAccount } from "@/lib/account";
 import { getMeasurementHistory } from "@/lib/health-data";
 import { ScreenHeader } from "@/components/screen-header";
 import {
@@ -79,7 +79,8 @@ export default async function MeasurementPage({
   const config = typesFor(t)[slug];
   if (!config) notFound();
 
-  const { account, canEdit } = await requireAccount();
+  const { account, canEdit, isFamily } = await requireAccount();
+  const { user } = await getViewer();
 
   const months = await getMeasurementHistory(account.accountId, config.type, locale);
 
@@ -93,6 +94,11 @@ export default async function MeasurementPage({
         rangeNote={config.range}
         months={months}
         canEdit={canEdit}
+        /* Everyone on the account may add a reading — a son taking his
+           mother's sugar for her is the whole point of family access. Only
+           she may change one that is already there. */
+        canRecord
+        viewerId={isFamily ? (user?.id ?? null) : null}
       />
     </div>
   );

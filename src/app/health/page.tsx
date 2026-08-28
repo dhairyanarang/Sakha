@@ -9,6 +9,7 @@ import { getHeaderAvatar } from "@/lib/profile-data";
 import { MedicinesCard } from "@/components/health/medicines-card";
 import { MeasurementRow } from "@/components/health/measurement-row";
 import { DocumentsSection } from "@/components/health/documents-section";
+import { FamilyHealth } from "@/components/family/family-health";
 
 /**
  * Health — Medicines, Measurements and Documents, in that order.
@@ -19,11 +20,20 @@ import { DocumentsSection } from "@/components/health/documents-section";
  * frame behind it, so both are invisible and neither is reproduced here.
  */
 export default async function HealthPage() {
-  const { account, canEdit } = await requireAccount();
+  const { account, canEdit, isFamily } = await requireAccount();
+
+  // A family member gets a screen built for looking things up rather than
+  // hers with the controls stripped out. See components/family/health.
+  if (isFamily) {
+    return <FamilyHealth accountId={account.accountId} ownerName={account.displayName} />;
+  }
+
   const { t, locale } = await getT();
 
-  const { medicines, latest, documents } = await getHealthOverview(account.accountId);
-  const avatarUrl = await getHeaderAvatar();
+  const [{ medicines, latest, documents }, avatarUrl] = await Promise.all([
+    getHealthOverview(account.accountId),
+    getHeaderAvatar(),
+  ]);
   const sugar = latest.blood_sugar;
   const bp = latest.blood_pressure;
   const weight = latest.weight;
@@ -82,7 +92,7 @@ export default async function HealthPage() {
           </div>
         </section>
 
-        <DocumentsSection documents={documents} accountId={account.accountId} canEdit={canEdit} />
+        <DocumentsSection documents={documents} accountId={account.accountId} canAdd={canEdit} />
       </main>
 
       <BottomNav active="health" className="shrink-0" />

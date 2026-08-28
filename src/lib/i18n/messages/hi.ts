@@ -48,6 +48,7 @@ export const hi: Messages = {
     home: "होम",
     health: "सेहत",
     library: "लाइब्रेरी",
+    profile: "प्रोफ़ाइल",
     mainLabel: "मुख्य",
     yourProfile: "आपकी प्रोफ़ाइल",
   },
@@ -120,9 +121,69 @@ export const hi: Messages = {
     remindersFootnote: "आप इसे बाद में अपने फ़ोन से कभी भी बदल सकते हैं।",
   },
 
+  family: {
+    theirSakha: (name) => `${name} का सखा`,
+    theirHealth: (name) => `${name} की सेहत`,
+    headerSubtitle: "हाल कैसा चल रहा है",
+    healthSubtitle: "दवाएं, रीडिंग और डॉक्यूमेंट",
+    viewingTheirInformation: (name) => `आप ${name} की सेहत की जानकारी देख रहे हैं।`,
+
+    recentUpdates: "हाल की जानकारी",
+    nothingRecent: "अभी कुछ नया नहीं है",
+    nothingRecentBody: "इस अकाउंट पर जो भी दर्ज होगा, वह यहां दिखेगा।",
+
+    healthOverview: "सेहत का हाल",
+    recentDocuments: "हाल के डॉक्यूमेंट",
+    noDocumentsYet: "अभी कोई डॉक्यूमेंट सेव नहीं है।",
+    healthSubtitleContribute: "उनकी दवाएं, रीडिंग और डॉक्यूमेंट देखें",
+    noMedicinesAdded: "अभी कोई दवा नहीं जोड़ी गई।",
+    youCanRecord: "आप उनके लिए नई रीडिंग दर्ज कर सकते हैं।",
+    recordedByYou: "आपने दर्ज की",
+    uploadedByYou: "आपने अपलोड किया",
+
+    /* Hindi counts "3 में से 2" — the total comes first, unlike English. */
+    confirmedOfDue: (confirmed, due) => `आज ${due} में से ${confirmed} कन्फर्म`,
+    nothingDueYet: "आज अभी कोई दवा बाक़ी नहीं",
+    noMedicines: "कोई दवा नहीं जोड़ी गई",
+
+    profileSubtitle: "आपका अकाउंट और एक्सेस",
+
+    yourAccess: "आपका एक्सेस",
+    connected: "जुड़े हुए",
+    /**
+     * Oblique again: "बेटा के तौर पर" is wrong, it has to be "बेटे के तौर पर".
+     * A relation she typed herself cannot be inflected safely, so that case
+     * falls back to the plain form rather than printing broken Hindi.
+     */
+    connectedAs: (relation) => {
+      const oblique: Record<string, string> = {
+        son: "बेटे",
+        daughter: "बेटी",
+        spouse: "जीवनसाथी",
+      };
+      const word = relation ? oblique[relation.trim().toLowerCase()] : undefined;
+      return word ? `${word} के तौर पर जुड़े हैं` : "जुड़े हुए";
+    },
+    viewOnlyExplainer: (name) =>
+      `आप ${name} की सेहत की जानकारी देख सकते हैं, और नई रीडिंग व डॉक्यूमेंट जोड़ सकते हैं। आप कुछ बदल या हटा नहीं सकते।`,
+
+    updates: {
+      /* The noun leads and the number follows in Hindi, which is why these
+         are functions rather than one template reused across both languages. */
+      bloodPressure: (value, unit) => `ब्लड प्रेशर ${value} ${unit}`,
+      bloodSugar: (value, unit) => `ब्लड शुगर ${value} ${unit}`,
+      weight: (value, unit) => `वज़न ${value} ${unit}`,
+      /* "सुबह की दवा कन्फर्म" — the slot takes की before दवा. */
+      medicineConfirmed: (slot) => `${slot} की दवा कन्फर्म की`,
+      medicineSkipped: (slot) => `${slot} की दवा छोड़ी`,
+      walked: (minutes) => `${minutes} मिनट टहले`,
+      wentForAWalk: "टहलने गए",
+      noWalk: "टहलना दर्ज नहीं",
+      documentAdded: (title) => `${title} जोड़ा`,
+    },
+  },
+
   home: {
-    viewingOthers: (name) =>
-      `आप ${name} की जानकारी देख रहे हैं। आप इसमें कुछ बदल नहीं सकते।`,
     moodQuestion: "आज आप कैसा महसूस कर रहे हैं?",
     moodNotGood: "ठीक नहीं",
     moodGood: "अच्छा",
@@ -252,11 +313,15 @@ export const hi: Messages = {
     dotsBody:
       "तीन गोले सुबह, दोपहर और शाम के हैं, इसी क्रम में। भरा हुआ गोला मतलब आप उस समय दवा लेते हैं। खाली गोला मतलब आप नहीं लेते।",
     unconfirmed: "कन्फर्म नहीं किया",
+    taken: "ले ली",
+    skipped: "छोड़ी",
+    notYet: "अभी नहीं",
   },
 
   documents: {
     title: "डॉक्यूमेंट",
     addDocument: "डॉक्यूमेंट जोड़ें",
+    uploadDocument: "डॉक्यूमेंट अपलोड करें",
     none: "आपने अभी कोई डॉक्यूमेंट नहीं जोड़ा है।",
     chooseFile: "फ़ोटो या PDF चुनें",
     fileFieldLabel: "डॉक्यूमेंट",
@@ -327,6 +392,13 @@ export const hi: Messages = {
     remindersOffHint: "रिमाइंडर बंद करने के लिए अपने फ़ोन की सेटिंग में जाएं।",
     language: "भाषा",
     languageUpdated: "भाषा बदल दी।",
+    accounts: "अकाउंट",
+    yourOwnAccount: "आपका अपना अकाउंट",
+    viewOnly: "परिवार का एक्सेस",
+    // A middot rather than a sentence, so the relation needs no inflection.
+    viewOnlyRelation: (relation) => `परिवार का एक्सेस · ${relation}`,
+    currentlyOpen: "अभी खुला है",
+    switchTo: (name) => `${name} के अकाउंट पर जाएं`,
   },
 
   invitations: {
@@ -349,9 +421,10 @@ export const hi: Messages = {
     familyMemberFallback: "परिवार का सदस्य",
     whatTheySee: "वे क्या देख पाएंगे",
     whatTheySeeBody:
-      "आपकी दवाएं, आपकी रीडिंग और आपके डॉक्यूमेंट। वे इनमें कुछ बदल या हटा नहीं सकते।",
+      "आपकी दवाएं, आपकी रीडिंग और आपके डॉक्यूमेंट। वे आपके लिए नई रीडिंग या डॉक्यूमेंट जोड़ सकते हैं, पर कुछ बदल या हटा नहीं सकते।",
     createLink: "लिंक बनाएं",
     creating: "लिंक बन रहा है…",
+    shareSheetTitle: "लिंक भेजें",
     ready: "आपका न्योता तैयार है",
     readyBody: (name) =>
       `यह लिंक ${name} को भेजें। यह एक ही बार चलेगा और 14 दिन बाद बंद हो जाएगा।`,
@@ -361,9 +434,11 @@ export const hi: Messages = {
       `${name}, यह लिंक है जिससे आप सखा पर मेरी सेहत की जानकारी देख सकते हैं।`,
     linkCopied: "लिंक कॉपी हो गया।",
     copyFromBox: "ऊपर बने बॉक्स से लिंक कॉपी करें।",
-    pending: "इंतज़ार में",
+    pending: "खुलने का इंतज़ार",
+    expiredLink: "लिंक की समय-सीमा ख़त्म",
+    connected: "जुड़े हुए",
     cancelInvite: "रद्द करें",
-    pendingRelation: (relation) => `इंतज़ार में · ${relation}`,
+    reshare: "फिर से भेजें",
     cancelled: "न्योता रद्द कर दिया।",
     manage: "मैनेज करें",
     removeAccessTitle: "इनका एक्सेस हटा दें?",
@@ -373,9 +448,14 @@ export const hi: Messages = {
     revokeAccess: "एक्सेस हटाएं",
     revoked: (name) => `${name} अब आपकी जानकारी नहीं देख सकते।`,
 
-    acceptTitle: "आपको न्योता मिला है",
-    acceptSignIn: "किसने बुलाया है और आप क्या देख पाएंगे, यह जानने के लिए साइन इन करें।",
-    invitedBy: (name) => `${name} ने आपको जोड़ा है`,
+    invitedToSakha: (name) => `${name} ने आपको सखा पर जोड़ा है`,
+    stayUpdated: "उनकी सेहत की जानकारी देखें और हाल जानते रहें।",
+    viewTheirSakha: (name) => `${name} का सखा देखें`,
+    acceptAndContinue: "स्वीकार करें और आगे बढ़ें",
+    decline: "अभी नहीं",
+    openTheirSakha: (name) => `${name} का सखा खोलें`,
+    alreadyConnected: (name) => `${name} का सखा आप पहले से देख सकते हैं`,
+    alreadyConnectedBody: "अब कुछ और स्वीकार करने की ज़रूरत नहीं है।",
     /**
      * Hindi puts the relation in the oblique case before a postposition —
      * बेटा becomes बेटे in "उनके बेटे होने के नाते". A relation she typed
@@ -394,14 +474,12 @@ export const hi: Messages = {
         : "आप उनका हाल देख सकते हैं।";
     },
     cannotChange: (name) =>
-      `आप इसमें कुछ जोड़, बदल या हटा नहीं सकते। यह सिर्फ़ ${name} ही कर सकते हैं।`,
-    seeTheirInformation: (name) => `${name} की जानकारी देखें`,
+      `आप नई रीडिंग और डॉक्यूमेंट जोड़ भी सकते हैं। आप कुछ बदल या हटा नहीं सकते — यह सिर्फ़ ${name} ही कर सकते हैं।`,
     youWillSee: "आप यह देख पाएंगे",
-    seeMedicines: "उनकी दवाएं और आज उन्होंने क्या लिया",
+    seeTodaysCare: "उनका दिन कैसा जा रहा है और उन्होंने क्या लिया",
+    seeMedicines: "उनकी दवाएं",
     seeReadings: "उनका ब्लड शुगर, ब्लड प्रेशर और वज़न",
     seeDocuments: "उनके सेव किए हुए डॉक्यूमेंट",
-    viewOnlyNote: "आप इनमें कुछ बदल या हटा नहीं सकेंगे।",
-    accept: "न्योता स्वीकार करें",
     opening: "खुल रहा है…",
     askForNew: "उनसे नया लिंक भेजने के लिए कहें।",
     goToSakha: "सखा पर जाएं",

@@ -32,7 +32,12 @@ export async function GET(request: NextRequest) {
   // Sign-in is the one moment this device can be holding the wrong language —
   // a new phone, or cleared site data. The account row is the durable answer,
   // so re-seed the cookie from it before rendering anything.
-  const own = memberships.find((m) => m.role === "owner") ?? memberships[0];
+  //
+  // Only from an account they OWN. A family member has no language row of
+  // their own; falling back to the account they can view would have re-seeded
+  // them into HER language on every sign-in, quietly undoing the choice they
+  // made on their own Profile. Theirs lives in the cookie, so it is left alone.
+  const own = memberships.find((m) => m.role === "owner");
   if (own) await setLocaleCookie(own.language);
 
   if (next) return NextResponse.redirect(`${origin}${next}`);

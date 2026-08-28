@@ -7,6 +7,7 @@ import { Button, Chip, EmptyState, SectionHeading, TextInput, Toast } from "@/co
 import {
   cancelInvitation,
   createInvitation,
+  reshareInvitation,
   revokeAccess,
 } from "@/app/profile/actions";
 import type { FamilyMember, PendingInvitation } from "@/lib/profile-data";
@@ -14,12 +15,20 @@ import { useT } from "@/lib/i18n/client";
 import { relationLabel } from "@/lib/i18n/labels";
 
 /**
- * Invitations — who can see this account, and who has been asked.
+ * Family — who can see this account, and who has been asked.
+ *
+ * Each person is INDEPENDENT. There is no family group here and no group
+ * permission: inviting her daughter does nothing to her son's access, and
+ * revoking one leaves everyone else exactly as they were. That is the whole
+ * model, and the screen is built to make it obvious — one card per person, one
+ * set of actions on each.
  *
  * An invitation is a link, not a message: no phone number is collected, and
  * sharing goes through the phone's own share sheet so it lands wherever she
  * already talks to her family. WhatsApp is offered directly beside it because
- * that is the one she actually uses.
+ * that is the one she actually uses. Sending is not the same as delivered —
+ * nothing here claims the message arrived, only that the link was made, which
+ * is why Reshare exists.
  *
  * Everyone here gets VIEW-ONLY access. That is enforced in the database — a
  * family member's writes affect no rows — and said plainly on the screen so
@@ -27,6 +36,9 @@ import { relationLabel } from "@/lib/i18n/labels";
  */
 /** Stored English so the value is stable; only the chip label is translated. */
 const RELATIONS = ["Son", "Daughter", "Spouse", "Other"];
+
+/** A link that has been made and now needs to get to somebody. */
+type ShareTarget = { name: string; url: string };
 
 export function Invitations({
   members,
@@ -47,7 +59,7 @@ export function Invitations({
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("");
   const [customRelation, setCustomRelation] = useState("");
-  const [link, setLink] = useState<string | null>(null);
+  const [share, setShare] = useState<ShareTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmingRevoke, setConfirmingRevoke] = useState<FamilyMember | null>(null);
@@ -60,7 +72,7 @@ export function Invitations({
     setName("");
     setRelation("");
     setCustomRelation("");
-    setLink(null);
+    setShare(null);
     setError(null);
     setNonce((n) => n + 1);
     setInviting(true);
@@ -71,15 +83,37 @@ export function Invitations({
     startTransition(async () => {
       const result = await createInvitation({ name, relation: resolvedRelation });
       if ("error" in result) setError(result.error);
-      else setLink(result.url);
+      else setShare({ name, url: result.url });
     });
   }
 
-  async function share(url: string, who: string) {
-    const text = t.invitations.shareMessage(who);
+  /**
+   * Send a pending invitation again.
+   *
+   * The old link cannot be recovered — only its hash was stored — so this
+   * mints a fresh one, which also means the previous link stops working. That
+   * is the safer default: a link sent to the wrong chat dies the moment she
+   * sends the right one.
+   */
+  function reshare(invite: PendingInvitation) {
+    setError(null);
+    startTransition(async () => {
+      const result = await reshareInvitation(invite.id);
+      if ("error" in result) {
+        setToast(result.error);
+        return;
+      }
+      setNonce((n) => n + 1);
+      setShare({ name: invite.name, url: result.url });
+      setInviting(true);
+    });
+  }
+
+  async function sendLink(target: ShareTarget) {
+    const text = t.invitations.shareMessage(target.name);
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Sakha", text, url });
+        await navigator.share({ title: "Sakha", text, url: target.url });
         return;
       } catch {
         // Dismissing the share sheet is a normal outcome, not a failure.
@@ -87,7 +121,7 @@ export function Invitations({
       }
     }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(target.url);
       setToast(t.invitations.linkCopied);
     } catch {
       setToast(t.invitations.copyFromBox);
@@ -149,6 +183,10 @@ export function Invitations({
                 <span className="truncate text-[14px] leading-[1.2] text-[#999999]">
                   {relationLabel(member.relation, t)}
                 </span>
+                {/* Status in words, never colour alone. */}
+                <span className="text-feedback-success-text truncate text-[14px] leading-[1.2]">
+                  {t.invitations.connected}
+                </span>
               </span>
               <button
                 type="button"
@@ -172,16 +210,35 @@ export function Invitations({
                 <span className="text-name-label text-text-primary truncate">
                   {invite.name}
                 </span>
-                {/* Says what it is waiting for, not how long it has been. */}
                 <span className="truncate text-[14px] leading-[1.2] text-[#999999]">
-                  {t.invitations.pendingRelation(relationLabel(invite.relation, t))}
+                  {relationLabel(invite.relation, t)}
+                </span>
+                {/* Says what it is waiting for, not how long it has been —
+                    and once it has run out, says that plainly rather than
+                    letting the card quietly disappear. Never colour alone. */}
+                <span
+                  className={
+                    invite.expired
+                      ? "text-feedback-error truncate text-[14px] leading-[1.2]"
+                      : "text-text-secondary truncate text-[14px] leading-[1.2]"
+                  }
+                >
+                  {invite.expired ? t.invitations.expiredLink : t.invitations.pending}
                 </span>
               </span>
               <button
                 type="button"
+                onClick={() => reshare(invite)}
+                disabled={pendingAction}
+                className="border-action-primary text-action-primary active:bg-surface-tinted w-full rounded-full border px-4 py-3 text-[16px] leading-[1.2] transition-colors disabled:opacity-60"
+              >
+                {t.invitations.reshare}
+              </button>
+              <button
+                type="button"
                 onClick={() => cancel(invite.id)}
                 disabled={pendingAction}
-                className="border-border-default text-text-secondary active:bg-surface-subtle w-full rounded-full border px-4 py-3 text-[16px] leading-[1.2] transition-colors"
+                className="text-text-secondary active:bg-surface-subtle w-full rounded-full px-4 py-2 text-[16px] leading-[1.2] transition-colors disabled:opacity-60"
               >
                 {t.invitations.cancelInvite}
               </button>
@@ -202,21 +259,19 @@ export function Invitations({
         key={nonce}
         open={inviting}
         onClose={() => setInviting(false)}
-        title={t.invitations.inviteSheetTitle}
+        title={share ? t.invitations.shareSheetTitle : t.invitations.inviteSheetTitle}
       >
         <div className="flex flex-col gap-6">
-          {link ? (
+          {share ? (
             <>
               <div className="bg-feedback-success-surface flex flex-col gap-2 rounded-md p-4">
-                <p className="text-body-medium text-text-primary">
-                  {t.invitations.ready}
-                </p>
+                <p className="text-body-medium text-text-primary">{t.invitations.ready}</p>
                 <p className="text-body-secondary text-text-secondary">
-                  {t.invitations.readyBody(name)}
+                  {t.invitations.readyBody(share.name)}
                 </p>
               </div>
               <p className="bg-surface-subtle text-text-secondary rounded-md p-3 text-[14px] break-all">
-                {link}
+                {share.url}
               </p>
             </>
           ) : (
@@ -273,15 +328,15 @@ export function Invitations({
           ) : null}
         </div>
 
-        {link ? (
+        {share ? (
           <div className="flex flex-col gap-3">
-            <Button onClick={() => share(link, name)} className="w-full">
+            <Button onClick={() => sendLink(share)} className="w-full">
               <Share2 size={22} className="mr-2" aria-hidden />
               {t.invitations.shareLink}
             </Button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
-                `${t.invitations.shareMessage(name)} ${link}`,
+                `${t.invitations.shareMessage(share.name)} ${share.url}`,
               )}`}
               target="_blank"
               rel="noopener noreferrer"

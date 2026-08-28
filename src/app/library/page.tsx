@@ -1,4 +1,4 @@
-import { requireAccount } from "@/lib/account";
+import { requireOwner } from "@/lib/account";
 import { getLibrary } from "@/lib/library-data";
 import { getHeaderAvatar } from "@/lib/profile-data";
 import { BottomNav, EmptyState } from "@/components/ui";
@@ -17,7 +17,11 @@ import { getMessages } from "@/lib/i18n/server";
  * what she wants.
  */
 export default async function LibraryPage() {
-  await requireAccount();
+  // Owner only. The shelf is curated for the person living the day it is meant
+  // to improve, not for someone checking in on her — and there is no Library
+  // tab in a family member's nav, so this only catches a stale link or a typed
+  // URL. requireOwner sends them home rather than showing an error.
+  await requireOwner();
 
   const [groups, avatarUrl] = await Promise.all([getLibrary(), getHeaderAvatar()]);
   const t = await getMessages();

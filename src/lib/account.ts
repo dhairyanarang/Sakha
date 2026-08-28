@@ -46,6 +46,11 @@ export type Membership = {
   /** Her own photo in the avatars bucket. Null means fall back to Google's. */
   avatarPath: string | null;
   role: "owner" | "family";
+  /**
+   * How the owner described them when inviting: "Son". Null on an account they
+   * own themselves — nobody is a relation to their own account.
+   */
+  relation: string | null;
 };
 
 /**
@@ -66,11 +71,32 @@ export const getViewer = cache(async () => {
     supabase.auth.getUser(),
     supabase
       .from("account_members")
-      .select("role, accounts(id, display_name, language, avatar_path)")
+      // user_id is selected so the rows can be narrowed to THIS person below.
+      // It cannot be filtered in the query itself without first awaiting
+      // getUser(), and these two deliberately run together.
+      .select("user_id, role, relation, accounts(id, display_name, language, avatar_path)")
       .order("created_at", { ascending: true }),
   ]);
 
+  const user = userResult.data.user;
+
+  /**
+   * Only this person's own rows.
+   *
+   * members_select is is_account_member(account_id), which is correct — the
+   * Family list on Profile needs to read everyone on the account. But it means
+   * this query also returns OTHER people's membership rows, and mapping those
+   * into "your memberships" gets their role attributed to you.
+   *
+   * That was not theoretical. An account has its owner's row first (created
+   * with the account) and the family member's second (created on acceptance),
+   * so for every real family member the first row matching their active
+   * account was the OWNER's — they were handed her Home, with Confirm and
+   * Record on it. The writes still failed at RLS, so nothing could be changed,
+   * but every control on the screen was a dead end.
+   */
   const memberships: Membership[] = (membershipResult.data ?? []).flatMap((row) => {
+    if (!user || row.user_id !== user.id) return [];
     const a = row.accounts as unknown as
       | { id: string; display_name: string; language: string; avatar_path: string | null }
       | null;
@@ -82,11 +108,12 @@ export const getViewer = cache(async () => {
         language: a.language,
         avatarPath: a.avatar_path,
         role: row.role,
+        relation: row.relation,
       },
     ];
   });
 
-  return { user: userResult.data.user, memberships };
+  return { user, memberships };
 });
 
 export async function getMemberships(): Promise<Membership[]> {
@@ -131,6 +158,16 @@ export async function requireAccount(): Promise<{
   account: Membership;
   /** False for a family member: they read everything and change nothing. */
   canEdit: boolean;
+  /**
+   * True when this is somebody else's account being viewed.
+   *
+   * The inverse of canEdit today, and named separately on purpose: canEdit
+   * answers "may this control exist", isFamily answers "which screen is this".
+   * They are the same boolean and different questions — Home branches on the
+   * second to render an entirely different screen, not the owner's with things
+   * taken away.
+   */
+  isFamily: boolean;
 }> {
   const { user } = await getViewer();
   if (!user) redirect("/welcome");
@@ -139,5 +176,35 @@ export async function requireAccount(): Promise<{
   const account = await getActiveAccount();
   if (!account) redirect("/onboarding/name");
 
-  return { account, canEdit: account.role === "owner" };
+  return {
+    account,
+    canEdit: account.role === "owner",
+    isFamily: account.role !== "owner",
+  };
+}
+
+/**
+ * The gate on a screen only the owner may see.
+ *
+ * A family member sent here is not shown an error — there is nothing wrong
+ * with them being curious, and a dead end helps nobody. They go to their own
+ * Home instead.
+ */
+/**
+ * The active account id, but only if this person OWNS it.
+ *
+ * For a server action that edits or deletes. RLS already refuses these — an
+ * owner-only policy makes a family member's UPDATE match zero rows — but zero
+ * rows is not an error, so the action would report success having done
+ * nothing. Failing here turns that into something we can actually say.
+ */
+export async function getOwnedActiveAccountId(): Promise<string | null> {
+  const account = await getActiveAccount();
+  return account && account.role === "owner" ? account.accountId : null;
+}
+
+export async function requireOwner(): Promise<Membership> {
+  const { account, canEdit } = await requireAccount();
+  if (!canEdit) redirect("/");
+  return account;
 }

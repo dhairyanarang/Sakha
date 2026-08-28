@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAccount } from "@/lib/account";
+import { getViewer, requireAccount } from "@/lib/account";
 import { getDocument } from "@/lib/health-data";
 import { DocumentView } from "@/components/health/document-view";
 
@@ -16,10 +16,17 @@ export default async function DocumentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { account } = await requireAccount();
+  const { account, canEdit, isFamily } = await requireAccount();
+  const { user } = await getViewer();
 
   const doc = await getDocument(account.accountId, id);
   if (!doc) notFound();
 
-  return <DocumentView doc={doc} />;
+  return (
+    <DocumentView
+      doc={doc}
+      canDelete={canEdit}
+      viewerId={isFamily ? (user?.id ?? null) : null}
+    />
+  );
 }

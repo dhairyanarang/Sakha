@@ -37,13 +37,29 @@ export function MeasurementDetail({
   rangeNote,
   months,
   canEdit = true,
+  canRecord = true,
+  viewerId = null,
 }: {
   type: Enums<"measurement_type">;
   title: string;
   unit: string;
   rangeNote: RangeNote;
   months: MeasurementMonth[];
+  /** Owner only: tap a past reading to correct or remove it. */
   canEdit?: boolean;
+  /**
+   * Owner AND family: add a new reading. Split from canEdit because a son can
+   * take his mother's sugar for her and write it down, but correcting what is
+   * already in her history is hers to do.
+   */
+  canRecord?: boolean;
+  /**
+   * Set only on the family experience. A row this person recorded themselves
+   * says so; everything else says nothing. Left null on the owner's own
+   * screens, where nearly every row would carry the label and none of them
+   * would be telling her anything she does not know.
+   */
+  viewerId?: string | null;
 }) {
   const [recording, setRecording] = useState(false);
   const [editingEntry, setEditingEntry] = useState<MeasurementEntry | null>(null);
@@ -209,8 +225,15 @@ export function MeasurementDetail({
                       {/* rgba(0,0,0,0.4) over surface/default, as a solid. */}
                       <span className="text-[14px] leading-[1.2] text-[#999999]">{e.unit}</span>
                     </p>
-                    <span className="shrink-0 text-[14px] leading-[1.2] text-[#999999]">
-                      {readingStamp(e.measuredAt, locale)}
+                    <span className="flex shrink-0 flex-col items-end gap-0.5">
+                      <span className="text-[14px] leading-[1.2] text-[#999999]">
+                        {readingStamp(e.measuredAt, locale)}
+                      </span>
+                      {viewerId && e.createdBy === viewerId ? (
+                        <span className="text-text-tertiary text-[12px] leading-[1.2]">
+                          {t.family.recordedByYou}
+                        </span>
+                      ) : null}
                     </span>
                     {canEdit ? (
                       <ChevronRight
@@ -229,7 +252,7 @@ export function MeasurementDetail({
 
       {/* The list fades under the pinned button rather than stopping dead
           against it, as drawn. */}
-      {canEdit ? (
+      {canRecord ? (
       <FixedBar reserve={112}>
         <div
           aria-hidden

@@ -31,15 +31,6 @@ export function localDate(at: Date = new Date()): string {
   }).format(at);
 }
 
-/** "Friday, 28 August" / "शुक्रवार, 28 अगस्त" */
-export function longDate(locale: Locale = "en", at: Date = new Date()): string {
-  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
-    timeZone: TZ,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(at);
-}
 
 function hourIST(at: Date = new Date()): number {
   return Number(

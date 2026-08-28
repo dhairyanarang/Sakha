@@ -39,6 +39,7 @@ export const en = {
     home: "Home",
     health: "Health",
     library: "Library",
+    profile: "Profile",
     mainLabel: "Main",
     yourProfile: "Your profile",
   },
@@ -116,10 +117,87 @@ export const en = {
     remindersFootnote: "You can change this anytime from your phone later.",
   },
 
+  /**
+   * The family member's side of the app.
+   *
+   * A different reader asking a different question. She asks "what do I need
+   * to do today"; her son asks "how is she doing". Nothing in here is phrased
+   * as an instruction to him, and nothing is phrased as a judgement of her —
+   * a reading is a number and a time, never a verdict.
+   */
+  family: {
+    /** "Asha's Sakha" — the header on their Home. */
+    theirSakha: (name: string) => `${name}'s Sakha`,
+    theirHealth: (name: string) => `${name}'s Health`,
+    headerSubtitle: "How things are going",
+    healthSubtitle: "Medicines, readings and documents",
+    viewingTheirInformation: (name: string) =>
+      `You are viewing ${name}'s health information.`,
+
+    recentUpdates: "Recent Updates",
+    nothingRecent: "Nothing new just yet",
+    nothingRecentBody: "Anything recorded on this account will show up here.",
+
+    healthOverview: "Health Overview",
+    recentDocuments: "Recent Documents",
+    noDocumentsYet: "No documents saved yet.",
+    /** Header on the one consolidated family Health page. */
+    healthSubtitleContribute: "See her medicines, readings and documents",
+    noMedicinesAdded: "No medicines added yet.",
+    /** Said once, above the readings, so the one control here is explained. */
+    youCanRecord: "You can record a new reading for her.",
+    /**
+     * Shown only on the family experience, and only on rows this person added
+     * themselves. Her own screens never carry it — on her account almost every
+     * row would say it, which is noise rather than information.
+     */
+    recordedByYou: "Recorded by you",
+    uploadedByYou: "Uploaded by you",
+
+    /** "2 of 3 confirmed today" — only doses that have already come around. */
+    confirmedOfDue: (confirmed: number, due: number) =>
+      `${confirmed} of ${due} confirmed today`,
+    nothingDueYet: "Nothing due yet today",
+    noMedicines: "No medicines added",
+
+    profileSubtitle: "Your account and access",
+
+    yourAccess: "Your Access",
+    connected: "Connected",
+    /** Takes the RAW relation: Hindi has to inflect it, English does not. */
+    connectedAs: (relation: string | null) => {
+      const known: Record<string, string> = {
+        son: "son",
+        daughter: "daughter",
+        spouse: "husband or wife",
+      };
+      const word = relation ? (known[relation.trim().toLowerCase()] ?? relation.trim()) : "";
+      return word ? `Connected as ${word}` : "Connected";
+    },
+    viewOnlyExplainer: (name: string) =>
+      `You can see ${name}'s health information, and add new readings and documents. You cannot change or delete anything.`,
+
+    /**
+     * One line per thing that happened. Each takes its pieces as arguments
+     * rather than being assembled at the call site — Hindi puts the number and
+     * the noun in a different order, and "Blood pressure 128/82" does not
+     * translate by swapping words in place.
+     */
+    updates: {
+      bloodPressure: (value: string, unit: string) => `Blood pressure ${value} ${unit}`,
+      bloodSugar: (value: string, unit: string) => `Blood sugar ${value} ${unit}`,
+      weight: (value: string, unit: string) => `Weight ${value} ${unit}`,
+      /** Never "missed" or "late" — confirmation is allowed at any time. */
+      medicineConfirmed: (slot: string) => `${slot} medicine confirmed`,
+      medicineSkipped: (slot: string) => `${slot} medicine skipped`,
+      walked: (minutes: number) => `Walked ${minutes} minutes`,
+      wentForAWalk: "Went for a walk",
+      noWalk: "No walk logged",
+      documentAdded: (title: string) => `Added ${title}`,
+    },
+  },
+
   home: {
-    /** Family member banner. Her name is data, so it is passed in. */
-    viewingOthers: (name: string) =>
-      `You are viewing ${name}'s information. You cannot change anything.`,
     moodQuestion: "How do you feel today?",
     moodNotGood: "Not Good",
     moodGood: "Good",
@@ -275,11 +353,17 @@ export const en = {
     dotsBody:
       "The three dots are morning, afternoon and evening, in that order. A filled dot means you take that medicine at that time. An empty dot means you do not.",
     unconfirmed: "Unconfirmed",
+    /** Today, at one slot. Never "missed" — confirmation is allowed any time. */
+    taken: "Taken",
+    skipped: "Skipped",
+    notYet: "Not yet",
   },
 
   documents: {
     title: "Documents",
     addDocument: "Add Document",
+    /** The family wording: he is putting HER report where she can find it. */
+    uploadDocument: "Upload Document",
     none: "You have no uploaded documents.",
     chooseFile: "Choose a photo or PDF",
     fileFieldLabel: "Document",
@@ -350,6 +434,19 @@ export const en = {
     remindersOffHint: "You can turn reminders off in your phone's settings.",
     language: "Language",
     languageUpdated: "Language updated.",
+    /**
+     * The account switcher. Shown only to someone who belongs to more than
+     * one account, which is most often a person tracking their own health who
+     * has also been given a view of a parent's.
+     */
+    accounts: "Accounts",
+    yourOwnAccount: "Your own account",
+    /** Not "View only" — a family member can add readings and documents. */
+    viewOnly: "Family access",
+    /** "Family access · Son" — a middot, never a sentence, so no grammar to get wrong. */
+    viewOnlyRelation: (relation: string) => `Family access · ${relation}`,
+    currentlyOpen: "Currently open",
+    switchTo: (name: string) => `Switch to ${name}`,
   },
 
   invitations: {
@@ -372,9 +469,10 @@ export const en = {
     familyMemberFallback: "Family member",
     whatTheySee: "What they will be able to see",
     whatTheySeeBody:
-      "Your medicines, your readings and your documents. They cannot change or delete anything.",
+      "Your medicines, your readings and your documents. They can add a new reading or document for you, but cannot change or delete anything.",
     createLink: "Create link",
     creating: "Creating…",
+    shareSheetTitle: "Send the link",
     ready: "Your invitation is ready",
     readyBody: (name: string) =>
       `Send this link to ${name}. It works once, and stops working after 14 days.`,
@@ -384,11 +482,16 @@ export const en = {
       `${name}, here is a link to see my health information on Sakha.`,
     linkCopied: "Link copied.",
     copyFromBox: "Copy the link from the box above.",
-    pending: "Pending",
+    pending: "Waiting to be opened",
+    expiredLink: "Link expired",
+    connected: "Connected",
     /** The button on a pending card — cancels the invitation, not a dialog. */
     cancelInvite: "Cancel",
-    /** "Pending · Son" */
-    pendingRelation: (relation: string) => `Pending · ${relation}`,
+    /**
+     * Sends a fresh link. It cannot resend the old one — only the hash was
+     * ever stored — so the previous link stops working at the same moment.
+     */
+    reshare: "Send again",
     cancelled: "Invitation cancelled.",
     manage: "Manage",
     removeAccessTitle: "Remove their access?",
@@ -398,9 +501,23 @@ export const en = {
     revokeAccess: "Revoke Access",
     revoked: (name: string) => `${name} can no longer see your information.`,
 
-    acceptTitle: "You have been invited",
-    acceptSignIn: "Sign in to see who invited you and what you would be able to see.",
-    invitedBy: (name: string) => `${name} has invited you`,
+    /**
+     * The intro, before Google.
+     *
+     * The inviter's NAME, never a guessed relationship. The relation we store
+     * is the invitee's side of it — "Son" — which says nothing about whether
+     * the person who invited them is a mother or a father, and this screen is
+     * not the place to guess at somebody's family.
+     */
+    invitedToSakha: (name: string) => `${name} has invited you to Sakha`,
+    stayUpdated: "View their health information and stay updated.",
+    /** The access confirmation, after Google. */
+    viewTheirSakha: (name: string) => `View ${name}'s Sakha`,
+    acceptAndContinue: "Accept & Continue",
+    decline: "Decline",
+    openTheirSakha: (name: string) => `Open ${name}'s Sakha`,
+    alreadyConnected: (name: string) => `You already have access to ${name}'s Sakha`,
+    alreadyConnectedBody: "There is nothing more to accept.",
     /**
      * Takes the RAW stored relation, not a translated label, because Hindi has
      * to inflect it and English does not. "Son" becomes "as their son"; Hindi
@@ -419,14 +536,12 @@ export const en = {
         : "You can keep an eye on how they are doing.";
     },
     cannotChange: (name: string) =>
-      `You cannot add, change or delete anything. Only ${name} can do that.`,
-    seeTheirInformation: (name: string) => `See ${name}'s information`,
+      `You can also add new readings and documents. You cannot change or delete anything — only ${name} can do that.`,
     youWillSee: "You will be able to see",
-    seeMedicines: "Their medicines and what they have taken today",
+    seeTodaysCare: "How their day is going, and what they have taken",
+    seeMedicines: "Their medicines",
     seeReadings: "Their blood sugar, blood pressure and weight",
     seeDocuments: "Documents they have saved",
-    viewOnlyNote: "You will not be able to change or delete anything.",
-    accept: "Accept invitation",
     opening: "Opening…",
     askForNew: "Ask them to send you a new one.",
     goToSakha: "Go to Sakha",

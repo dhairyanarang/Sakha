@@ -23,11 +23,22 @@ import { useI18n } from "@/lib/i18n/client";
 export function DocumentsSection({
   documents,
   accountId,
-  canEdit = true,
+  canAdd = true,
+  addLabel,
+  emptyMessage,
 }: {
   documents: DocumentSummary[];
   accountId: string;
-  canEdit?: boolean;
+  /** Owner AND family: both may add a document. Neither rename nor delete. */
+  canAdd?: boolean;
+  /** Family says "Upload Document" where she says "Add Document". */
+  addLabel?: string;
+  /**
+   * Her own empty state says "You have no uploaded documents", which is the
+   * wrong voice on a family member's screen — the documents are hers, not his,
+   * and reading it as "you" suggests he has mislaid something of his own.
+   */
+  emptyMessage?: string;
 }) {
   const { t, locale } = useI18n();
   const [adding, setAdding] = useState(false);
@@ -42,7 +53,7 @@ export function DocumentsSection({
 
       {documents.length === 0 ? (
         <EmptyState
-          message={t.documents.none}
+          message={emptyMessage ?? t.documents.none}
           illustration={
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -64,9 +75,9 @@ export function DocumentsSection({
         ))
       )}
 
-      {canEdit ? (
+      {canAdd ? (
         <AddTile onClick={() => { setOpenCount((n) => n + 1); setAdding(true); }}>
-          + {t.documents.addDocument}
+          + {addLabel ?? t.documents.addDocument}
         </AddTile>
       ) : null}
 

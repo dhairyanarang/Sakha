@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveAccountId } from "@/lib/account";
+import { getActiveAccountId, getOwnedActiveAccountId } from "@/lib/account";
 import { localDate, slotHasStarted } from "@/lib/today";
 import { getMessages } from "@/lib/i18n/server";
 import type { Enums } from "@/lib/supabase/types";
@@ -10,8 +10,22 @@ import type { Enums } from "@/lib/supabase/types";
 /** Errors are read by her, so they come out of the dictionary too. */
 const saveFailed = async () => (await getMessages()).errors.saveFailed;
 
+/**
+ * Everywhere a reading is shown.
+ *
+ * Home and Health both display the latest, and the detail screen it was
+ * entered from shows the whole history — that last one was missing, so a hard
+ * reload of the page you had just saved on could serve the render from before
+ * the save.
+ */
+function revalidateMeasurements() {
+  revalidatePath("/");
+  revalidatePath("/health");
+  revalidatePath("/health/measurements/[type]", "page");
+}
+
 export async function setMood(mood: Enums<"mood_level">): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -40,7 +54,7 @@ export async function confirmDoses(
   slot: Enums<"time_of_day">,
   status: Enums<"medication_status"> = "confirmed",
 ): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   // The UI hides Confirm on a slot that has not come round yet; this makes it
@@ -66,7 +80,9 @@ export async function confirmDoses(
     .upsert(rows, { onConflict: "medication_id,local_date,slot" });
   if (error) return await saveFailed();
 
+  // Health shows today's status per slot on the family view, not just Home.
   revalidatePath("/");
+  revalidatePath("/health");
   return null;
 }
 
@@ -98,7 +114,7 @@ export async function recordMeasurement(input: {
   });
   if (error) return await saveFailed();
 
-  revalidatePath("/");
+  revalidateMeasurements();
   return null;
 }
 
@@ -106,7 +122,7 @@ export async function logWalk(
   didWalk: boolean,
   minutes: number | null,
 ): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -141,7 +157,7 @@ export async function updateMeasurement(
     measuredAt: string;
   },
 ): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   if (!Number.isFinite(input.value) || input.value <= 0) {
@@ -164,8 +180,7 @@ export async function updateMeasurement(
     .eq("account_id", accountId);
   if (error) return await saveFailed();
 
-  revalidatePath("/health");
-  revalidatePath("/");
+  revalidateMeasurements();
   return null;
 }
 
@@ -177,7 +192,7 @@ export async function updateMeasurement(
  * she never took is worth being able to get rid of properly.
  */
 export async function deleteMeasurement(id: string): Promise<string | null> {
-  const accountId = await getActiveAccountId();
+  const accountId = await getOwnedActiveAccountId();
   if (!accountId) return await saveFailed();
 
   const supabase = await createClient();
@@ -188,7 +203,6 @@ export async function deleteMeasurement(id: string): Promise<string | null> {
     .eq("account_id", accountId);
   if (error) return (await getMessages()).errors.removeFailed;
 
-  revalidatePath("/health");
-  revalidatePath("/");
+  revalidateMeasurements();
   return null;
 }
