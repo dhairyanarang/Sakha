@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveAccountId, getOwnedActiveAccountId } from "@/lib/account";
+import { getActiveAccountId, getOwnedActiveAccountId, getViewer } from "@/lib/account";
 import { localDate, slotHasStarted } from "@/lib/today";
 import { getMessages } from "@/lib/i18n/server";
 import type { Enums } from "@/lib/supabase/types";
@@ -65,6 +65,7 @@ export async function confirmDoses(
   }
 
   const supabase = await createClient();
+  const { user } = await getViewer();
   const now = new Date().toISOString();
   const rows = medicationIds.map((id) => ({
     account_id: accountId,
@@ -73,6 +74,9 @@ export async function confirmDoses(
     slot,
     status,
     confirmed_at: status === "confirmed" ? now : null,
+    // Who confirmed it. The notification for this dose excludes whoever did
+    // it, so leaving this out meant she was told about her own tablets.
+    created_by: user?.id ?? null,
   }));
 
   const { error } = await supabase

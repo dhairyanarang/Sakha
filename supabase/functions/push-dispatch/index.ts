@@ -89,11 +89,27 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    const { data: subs } = await db
+    /**
+     * Every device belonging to a recipient — and none belonging to the actor.
+     *
+     * NOT filtered by account_id. A subscription records which account
+     * happened to be open when the device registered, which says nothing about
+     * who the device belongs to: a son who turned notifications on while
+     * looking at his own Sakha would never have been reached about his
+     * mother's, because his row carries his account id and hers is the one
+     * being notified about.
+     *
+     * The actor exclusion is stated again here rather than left implicit in
+     * `recipients`. It is the guarantee that matters most on this screen — she
+     * must never be told about her own tablets — and it should not depend on
+     * how the list above happened to be built.
+     */
+    let subQuery = db
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth, language")
-      .eq("account_id", row.account_id)
       .in("user_id", recipients);
+    if (row.actor_id) subQuery = subQuery.neq("user_id", row.actor_id);
+    const { data: subs } = await subQuery;
 
     if (!subs?.length) {
       skipped++;
