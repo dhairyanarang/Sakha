@@ -7,6 +7,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Invitations } from "@/components/profile/invitations";
 import { Preferences } from "@/components/profile/preferences";
 import { Accounts } from "@/components/profile/accounts";
+import { SignOut } from "@/components/profile/sign-out";
 import { FamilyProfile } from "@/components/family/family-profile";
 import { getMessages, getLocale } from "@/lib/i18n/server";
 
@@ -84,6 +85,8 @@ export default async function ProfilePage() {
         <Invitations members={members} pending={pending} />
 
         <Preferences language={profile.language} />
+
+        <SignOut />
       </main>
     </div>
   );

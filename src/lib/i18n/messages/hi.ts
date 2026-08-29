@@ -403,6 +403,12 @@ export const hi: Messages = {
     viewOnlyRelation: (relation) => `परिवार का एक्सेस · ${relation}`,
     currentlyOpen: "अभी खुला है",
     switchTo: (name) => `${name} के अकाउंट पर जाएं`,
+    switchAccount: "अकाउंट बदलें",
+    switchAccountHint: "कोई दूसरा Google अकाउंट इस्तेमाल करें",
+    signOut: "साइन आउट करें",
+    signOutTitle: "सखा से साइन आउट करें?",
+    signOutBody: "कुछ भी नहीं हटेगा। आप जब चाहें Google से दोबारा साइन इन कर सकते हैं।",
+    staySignedIn: "साइन इन ही रहने दें",
   },
 
   invitations: {

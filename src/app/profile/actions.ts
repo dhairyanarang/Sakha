@@ -8,8 +8,38 @@ import { getMemberships, getOwnedAccount, setActiveAccount } from "@/lib/account
 import { setLocaleCookie } from "@/lib/i18n/set-locale";
 import { getMessages } from "@/lib/i18n/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 const saveFailed = async () => (await getMessages()).errors.saveFailed;
+
+/**
+ * About to change WHICH GOOGLE ACCOUNT is signed in.
+ *
+ * Two cookies to settle before handing over to Google:
+ *
+ *   - The active account is forgotten. It names an account the person about
+ *     to arrive may have nothing to do with. getActiveAccount would ignore a
+ *     stale one anyway — it only honours a cookie naming an account you are
+ *     genuinely a member of — but leaving it is untidy and depends on that
+ *     guard rather than stating the intent.
+ *
+ *   - A marker says this is a switch, not a fresh sign-in. The callback
+ *     re-seeds the language from the account row when somebody signs in on a
+ *     new device; on a switch that would quietly rewrite the language this
+ *     person had chosen, which is theirs and nothing to do with whose account
+ *     they just opened.
+ */
+export async function beginAccountSwitch(): Promise<void> {
+  const store = await cookies();
+  store.delete("sakha_account");
+  store.set("sakha_switching", "1", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 600,
+  });
+}
 
 /**
  * Open a different account.

@@ -12,6 +12,8 @@ import { setLocaleCookie } from "@/lib/i18n/set-locale";
  * phishing link people fall for.
  */
 const AFTER_SIGNIN_COOKIE = "sakha_after_signin";
+/** Set by Switch account, so this is a change of identity, not a sign-in. */
+const SWITCHING_COOKIE = "sakha_switching";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -53,8 +55,15 @@ export async function GET(request: NextRequest) {
   // their own; falling back to the account they can view would have re-seeded
   // them into HER language on every sign-in, quietly undoing the choice they
   // made on their own Profile. Theirs lives in the cookie, so it is left alone.
+  //
+  // Except when they are switching account. Then the language on screen is a
+  // choice this person already made, and the account they happen to be opening
+  // has no business overwriting it.
+  const switching = store.get(SWITCHING_COOKIE)?.value === "1";
+  if (switching) store.delete(SWITCHING_COOKIE);
+
   const own = memberships.find((m) => m.role === "owner");
-  if (own) await setLocaleCookie(own.language);
+  if (own && !switching) await setLocaleCookie(own.language);
 
   if (fromCookie) store.delete(AFTER_SIGNIN_COOKIE);
 

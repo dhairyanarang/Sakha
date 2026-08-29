@@ -452,6 +452,18 @@ export const en = {
     viewOnlyRelation: (relation: string) => `Family access · ${relation}`,
     currentlyOpen: "Currently open",
     switchTo: (name: string) => `Switch to ${name}`,
+    /**
+     * Changing which GOOGLE account is signed in — always offered, never
+     * hidden on a count of what Sakha happens to know about. Google owns the
+     * chooser; Sakha never reads the accounts on the device.
+     */
+    switchAccount: "Switch account",
+    switchAccountHint: "Use a different Google account",
+    signOut: "Sign out",
+    signOutTitle: "Sign out of Sakha?",
+    signOutBody:
+      "Nothing is deleted. You can sign back in with Google whenever you like.",
+    staySignedIn: "Stay signed in",
   },
 
   invitations: {

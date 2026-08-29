@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/server";
 import type { FamilyProfile as FamilyProfileData } from "@/lib/profile-data";
 import type { Membership } from "@/lib/account";
 import { Accounts } from "@/components/profile/accounts";
+import { SignOut } from "@/components/profile/sign-out";
 
 /**
  * Profile, for a family member.
@@ -107,6 +108,8 @@ export async function FamilyProfile({
             family member about anything — offering the switch would promise a
             feature that does not exist. */}
         <Preferences language={language} showReminders={false} />
+
+        <SignOut />
       </main>
 
       <BottomNav active="profile" variant="family" className="shrink-0" />

@@ -1,9 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
-import { Check, ChevronRight, Eye, User } from "lucide-react";
+import { Check, ChevronRight, Eye, LogIn, User } from "lucide-react";
 import { SectionHeading } from "@/components/ui";
-import { switchAccount } from "@/app/profile/actions";
+import { beginAccountSwitch, switchAccount } from "@/app/profile/actions";
+import { startGoogleOAuth } from "@/lib/google-oauth";
 import { useT } from "@/lib/i18n/client";
 import { relationLabel } from "@/lib/i18n/labels";
 
@@ -41,12 +42,23 @@ export function Accounts({
   const t = useT();
   const [pending, startTransition] = useTransition();
 
-  // One account is not a choice.
-  if (accounts.length < 2) return null;
-
   function open(accountId: string) {
     startTransition(async () => {
       await switchAccount(accountId);
+    });
+  }
+
+  /**
+   * Change which Google account is signed in.
+   *
+   * Always offered, never hidden on a count of the accounts Sakha happens to
+   * know about — the whole point is reaching an account it does NOT know
+   * about yet, so hiding it when it looks unnecessary is exactly backwards.
+   */
+  function switchGoogleAccount() {
+    startTransition(async () => {
+      await beginAccountSwitch();
+      await startGoogleOAuth();
     });
   }
 
@@ -54,6 +66,7 @@ export function Accounts({
     <section className="flex shrink-0 flex-col gap-3">
       <SectionHeading>{t.profile.accounts}</SectionHeading>
 
+      {accounts.length > 1 ? (
       <div className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] px-3 py-4">
         {accounts.map((account, i) => {
           const isActive = account.accountId === activeId;
@@ -129,6 +142,31 @@ export function Accounts({
           );
         })}
       </div>
+      ) : null}
+
+      {/* Google's own chooser, not ours. Sakha never lists the accounts on the
+          device — it hands over and lets Google decide what to show, which is
+          also how "Use another account" keeps working. */}
+      <button
+        type="button"
+        onClick={switchGoogleAccount}
+        disabled={pending}
+        className="bg-surface-default border-border-soft active:bg-surface-tinted flex w-full items-center gap-3 rounded-xl border-[0.5px] px-3 py-4 transition-colors disabled:opacity-60"
+      >
+        <span className="bg-surface-tinted flex size-[44px] shrink-0 items-center justify-center rounded-full">
+          <LogIn size={22} className="text-action-primary" aria-hidden />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-1.5 text-left">
+          <span className="text-text-primary text-[16px] leading-[1.2] font-medium">
+            {t.profile.switchAccount}
+          </span>
+          {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
+          <span className="truncate text-[14px] leading-[1.2] text-[#999999]">
+            {t.profile.switchAccountHint}
+          </span>
+        </span>
+        <ChevronRight size={20} className="text-text-tertiary shrink-0" aria-hidden />
+      </button>
     </section>
   );
 }
