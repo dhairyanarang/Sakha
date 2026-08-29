@@ -122,34 +122,49 @@ body {
   to   { opacity: 0; visibility: hidden; }
 }
 
-/* The lockup moves as one piece. Positioned from the centre line so the shift
-   is a single transform: it starts offset right by half the mark's width —
-   which puts the MARK on the centre line, with the text waiting invisibly off
-   to the side — and ends centred on the group as a whole. */
+/* Centring, and nothing else. This element is never animated, so the lockup
+   is exactly centred at any device width no matter what the animation does —
+   including not running at all. The earlier version animated TO the centred
+   position, which meant anything that stopped the animation short left the
+   lockup sitting off to one side. */
 .splash-group {
   position: absolute;
   left: 50%;
   /* Optically centred, not measured-centred: a lockup sitting on the exact
      half-line reads as low. The reference places it here too. */
   top: 42%;
+  transform: translate(-50%, -50%);
+}
+
+/* The moving part, in pixels only.
+
+   Never percentages: interpolating a transform from a px value to a percentage
+   is where Safari gives up, and when it does the element stays at the start
+   value — which is precisely the lockup-pushed-right symptom. Both keyframes
+   are the same unit, and the one that matters is translateX(0), so the resting
+   state is the centred one and a failed animation is invisible rather than
+   wrong.
+
+   The start offset is roughly half the text block, so the mark begins near the
+   middle of the screen. Approximate on purpose: being a pixel or two out for
+   the first 450ms costs nothing, and it buys a final position that is exact at
+   every width and in every font. */
+.splash-shift {
   display: flex;
   align-items: center;
   gap: 12px;
   animation: splash-shift 550ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
 }
 
-/* The Y half of the translate never changes — it is what pulls the group back
-   onto its own centre — so it rides along in both keyframes rather than
-   fighting the animation from a separate declaration. */
 @keyframes splash-shift {
-  from { transform: translate(-36px, -50%); }
-  to   { transform: translate(-50%, -50%); }
+  from { transform: translateX(96px); }
+  to   { transform: translateX(0); }
 }
 
 .splash-mark {
   flex: none;
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   animation: splash-mark-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
 }
 
@@ -158,46 +173,45 @@ body {
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* Name and tagline arrive as one thing, because that is what they are — a
+   lockup, not two announcements. */
 .splash-text {
   display: flex;
   flex-direction: column;
   color: var(--color-text-on-brand);
-}
-
-/* nowrap because the group is absolutely positioned and would otherwise shrink
-   to fit and break the tagline onto a second line on a narrow phone. */
-.splash-name,
-.splash-tagline {
-  white-space: nowrap;
-  animation: splash-text-in 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.splash-name {
-  font-size: 40px;
-  line-height: 1.15;
-  font-weight: 700;
-  animation-delay: 700ms;
-}
-
-.splash-tagline {
-  font-size: 18px;
-  line-height: 1.35;
-  animation-delay: 850ms;
+  animation: splash-text-in 450ms cubic-bezier(0.22, 1, 0.36, 1) 700ms both;
 }
 
 @keyframes splash-text-in {
-  from { opacity: 0; transform: translateX(16px); }
+  from { opacity: 0; transform: translateX(14px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+/* nowrap because the lockup is absolutely positioned and would otherwise
+   shrink to fit and break the tagline onto a second line on a narrow phone. */
+.splash-name,
+.splash-tagline {
+  white-space: nowrap;
+}
+
+.splash-name {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.splash-tagline {
+  font-size: 16px;
+  line-height: 1.35;
 }
 
 /* Reduced motion: nothing travels, but the splash still exists. The global
    rule above already collapses the durations; zeroing the delays too means the
    final state is simply there from the first frame, held, and then gone. */
 @media (prefers-reduced-motion: reduce) {
-  .splash-group,
+  .splash-shift,
   .splash-mark,
-  .splash-name,
-  .splash-tagline {
+  .splash-text {
     animation-delay: 0ms !important;
   }
 }

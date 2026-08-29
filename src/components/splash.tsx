@@ -34,18 +34,24 @@ export function Splash() {
       {/* aria-hidden: it is decorative, it is gone in under two seconds, and
           the real screen is already behind it for anyone reading the page. */}
       <div className="splash" aria-hidden="true">
+        {/* Two elements, two jobs: the outer one centres and is never
+            animated, the inner one moves. Keeping them apart is what lets the
+            lockup be exactly centred at any width even if the animation never
+            finishes. */}
         <div className="splash-group">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/onboarding/sakha-mark-white.svg"
-            alt=""
-            width={72}
-            height={72}
-            className="splash-mark"
-          />
-          <div className="splash-text">
-            <p className="splash-name">Sakha</p>
-            <p className="splash-tagline">Elder care, made simple</p>
+          <div className="splash-shift">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/onboarding/sakha-mark-white.svg"
+              alt=""
+              width={60}
+              height={60}
+              className="splash-mark"
+            />
+            <div className="splash-text">
+              <p className="splash-name">Sakha</p>
+              <p className="splash-tagline">Elder care, made simple</p>
+            </div>
           </div>
         </div>
       </div>
