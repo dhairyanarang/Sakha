@@ -85,6 +85,25 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   perform private.dispatch_notifications();
   return null;
+exception
+  /**
+   * A notification must never cost her the record it was about.
+   *
+   * This runs inside the transaction that just wrote her medicine
+   * confirmation or her blood pressure. Before this trigger existed, sending
+   * was a separate process an hour away from her save, so nothing about push
+   * could reach back and undo it. Poking the dispatcher from inside her
+   * transaction quietly changes that: an error reading the vault secret or
+   * queueing the request would propagate, roll back, and take the reading with
+   * it. The whole system is built on the app being the source of truth and a
+   * notification never being required for correctness, so the poke swallows
+   * its own failures.
+   *
+   * Nothing is lost when it does. The row is already in the outbox, committed,
+   * and the cron job comes round every minute for exactly this reason.
+   */
+  when others then
+    return null;
 end;
 $$;
 
