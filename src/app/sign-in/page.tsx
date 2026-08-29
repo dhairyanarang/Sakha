@@ -8,13 +8,17 @@ import { getMessages } from "@/lib/i18n/server";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   if (data.user) redirect("/");
 
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+  // Only ever a path on this site. Reflecting an arbitrary ?next= would make
+  // the sign-in screen an open redirect, and it is the one screen people
+  // arrive at from a link somebody sent them.
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
   const t = await getMessages();
 
   return (
@@ -73,7 +77,7 @@ export default async function SignInPage({
           </p>
         </div>
 
-        <GoogleSignInButton />
+        <GoogleSignInButton next={safeNext} />
 
         {/* Testing only. Gated on NEXT_PUBLIC_DEV_TOOLS, which is set on
             preview and development and never on production — so this button
