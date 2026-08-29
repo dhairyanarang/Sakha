@@ -12,10 +12,48 @@ const inter = Inter({
   display: "swap",
 });
 
+/**
+ * Sakha's identity on the web.
+ *
+ * metadataBase is what makes every relative asset below resolve to an absolute
+ * URL — Open Graph and Twitter both require absolute, and without it a shared
+ * link previews with a broken image. It follows the deployment: the real
+ * domain in production, and whatever host a preview happens to be on, so a
+ * preview never advertises the production URL as its own.
+ */
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_ENV === "production"
+    ? "https://sakha.dhairya.work"
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
+const TITLE = "Sakha — Elderly Care, Made Simple";
+const DESCRIPTION =
+  "Sakha helps older adults stay on top of medicines, health readings and everyday care, while keeping family members connected.";
+
 export const metadata: Metadata = {
-  title: "Sakha",
-  description: "A calm daily companion for your health and routine.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
   applicationName: "Sakha",
+  // Every screen sits behind auth and none of them is a landing page, so the
+  // canonical is the site itself rather than a per-route URL.
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "Sakha",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
   appleWebApp: {
     capable: true,
     title: "Sakha",

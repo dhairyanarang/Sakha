@@ -225,7 +225,6 @@ Project `yfuihfgvheavodrzxiwh`, region `ap-south-1` (Mumbai — she is in Delhi)
 pnpm dev      # local dev server
 pnpm build    # production build — must pass before any push
 pnpm lint
-node scripts/generate-icons.mjs   # regenerate PWA icons from placeholder mark
 pnpm db:types                     # regenerate DB types (needs `supabase login` once)
 vercel env pull .env.local --yes  # refresh local env from Vercel
 ```

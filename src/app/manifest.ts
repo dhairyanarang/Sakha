@@ -2,9 +2,12 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Sakha",
+    // The installed app is only ever called Sakha on a home screen; the
+    // longer name is for install prompts and app listings.
+    name: "Sakha — Elderly Care, Made Simple",
     short_name: "Sakha",
-    description: "A calm daily companion for your health and routine.",
+    description:
+      "Sakha helps older adults stay on top of medicines, health readings and everyday care, while keeping family members connected.",
     start_url: "/",
     scope: "/",
     display: "standalone",
