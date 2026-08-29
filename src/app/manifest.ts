@@ -12,7 +12,11 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#F8F8FF", // surface/page
+    // The colour Android paints behind the icon while the app starts. The
+    // brand blue, matching the splash that takes over from it, so the
+    // handover is invisible rather than a flash of a different shade.
+    // (Android caches the manifest — this only takes effect on reinstall.)
+    background_color: "#5551FF", // brand/500 — action/primary
     // iOS reads this at install time for the status bar. Light, to match the
     // onboarding screens — there is no per-screen control for an installed
     // app, so this is the value every screen gets unless iOS happens to

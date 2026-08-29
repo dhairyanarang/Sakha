@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
 import { DevTools } from "@/components/dev-tools";
+import { Splash } from "@/components/splash";
 import { LocaleProvider } from "@/lib/i18n/client";
 import { getLocale } from "@/lib/i18n/server";
 
@@ -111,6 +112,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           centred, with plain white either side on anything larger. Below that
           cap it is fully fluid, so real phones from 320px up are unaffected. */}
       <body className="flex flex-col">
+        {/* First child of the body so its inline script settles whether the
+            splash plays before the overlay itself is parsed. */}
+        <Splash />
         <div className="mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col">
           <LocaleProvider locale={locale}>{children}</LocaleProvider>
         </div>

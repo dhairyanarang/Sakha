@@ -91,3 +91,119 @@ body {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+
+/* ---------------------------------------------------------------------------
+   Launch splash.
+
+   Server-rendered and animated entirely in CSS, so the first frame the phone
+   paints is already the blue lockup — there is no window in which JavaScript
+   has to boot before something appears, which is exactly where the black gap
+   used to be. Nothing here needs React, and if scripting fails the splash
+   still plays and still leaves.
+
+   The only JavaScript involved is the one-line check in Splash that marks the
+   session as launched, so a full page load mid-session (the auth callback
+   redirect, most often) doesn't replay the whole thing.
+   --------------------------------------------------------------------------- */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The one brand identity colour, same as every primary button. */
+  background-color: var(--color-action-primary);
+  animation: splash-out 300ms ease-out 1500ms both;
+}
+
+@keyframes splash-out {
+  from { opacity: 1; visibility: visible; }
+  to   { opacity: 0; visibility: hidden; }
+}
+
+/* The lockup moves as one piece. Positioned from the centre line so the shift
+   is a single transform: it starts offset right by half the mark's width —
+   which puts the MARK on the centre line, with the text waiting invisibly off
+   to the side — and ends centred on the group as a whole. */
+.splash-group {
+  position: absolute;
+  left: 50%;
+  /* Optically centred, not measured-centred: a lockup sitting on the exact
+     half-line reads as low. The reference places it here too. */
+  top: 42%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: splash-shift 550ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
+}
+
+/* The Y half of the translate never changes — it is what pulls the group back
+   onto its own centre — so it rides along in both keyframes rather than
+   fighting the animation from a separate declaration. */
+@keyframes splash-shift {
+  from { transform: translate(-36px, -50%); }
+  to   { transform: translate(-50%, -50%); }
+}
+
+.splash-mark {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  animation: splash-mark-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+@keyframes splash-mark-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.splash-text {
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text-on-brand);
+}
+
+/* nowrap because the group is absolutely positioned and would otherwise shrink
+   to fit and break the tagline onto a second line on a narrow phone. */
+.splash-name,
+.splash-tagline {
+  white-space: nowrap;
+  animation: splash-text-in 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.splash-name {
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 700;
+  animation-delay: 700ms;
+}
+
+.splash-tagline {
+  font-size: 18px;
+  line-height: 1.35;
+  animation-delay: 850ms;
+}
+
+@keyframes splash-text-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Reduced motion: nothing travels, but the splash still exists. The global
+   rule above already collapses the durations; zeroing the delays too means the
+   final state is simply there from the first frame, held, and then gone. */
+@media (prefers-reduced-motion: reduce) {
+  .splash-group,
+  .splash-mark,
+  .splash-name,
+  .splash-tagline {
+    animation-delay: 0ms !important;
+  }
+}
+
+/* Already launched this session — no splash at all. Set by the inline script
+   before this element is parsed, so it never paints and never flashes. */
+html[data-splash="done"] .splash {
+  display: none;
+}
