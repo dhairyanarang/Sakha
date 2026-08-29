@@ -96,7 +96,6 @@ export const hi: Messages = {
     continueWithGoogle: "Google से आगे बढ़ें",
     openingGoogle: "Google खुल रहा है…",
     failed: "हम आपको साइन इन नहीं कर पाए। कृपया फिर कोशिश करें।",
-    guestTesting: "मेहमान के तौर पर आगे बढ़ें (सिर्फ़ टेस्टिंग)",
   },
 
   onboarding: {

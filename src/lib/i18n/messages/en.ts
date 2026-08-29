@@ -92,7 +92,6 @@ export const en = {
     continueWithGoogle: "Continue with Google",
     openingGoogle: "Opening Google…",
     failed: "We couldn't sign you in. Please try again.",
-    guestTesting: "Continue as guest (testing only)",
   },
 
   onboarding: {

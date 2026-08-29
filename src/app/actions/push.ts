@@ -51,22 +51,3 @@ export async function savePushSubscription(input: {
 
   return null;
 }
-
-/**
- * Forgets this device.
- *
- * Only ever removes a row belonging to the signed-in user, so a known endpoint
- * cannot be used to unsubscribe somebody else's phone.
- */
-export async function removePushSubscription(endpoint: string): Promise<string | null> {
-  const { user } = await getViewer();
-  if (!user) return null;
-
-  const supabase = await createClient();
-  await supabase
-    .from("push_subscriptions")
-    .delete()
-    .eq("endpoint", endpoint)
-    .eq("user_id", user.id);
-  return null;
-}

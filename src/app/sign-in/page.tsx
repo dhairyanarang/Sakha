@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { ShieldUser } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleSignInButton } from "./google-sign-in-button";
-import { DEV_TOOLS } from "@/lib/dev";
 import { getMessages } from "@/lib/i18n/server";
 
 export default async function SignInPage({
@@ -79,18 +78,6 @@ export default async function SignInPage({
 
         <GoogleSignInButton next={safeNext} />
 
-        {/* Testing only. Gated on NEXT_PUBLIC_DEV_TOOLS, which is set on
-            preview and development and never on production — so this button
-            cannot appear in a real build. Signs in as the QA account and goes
-            straight to Home. */}
-        {DEV_TOOLS ? (
-          <a
-            href="/dev/login"
-            className="text-text-tertiary flex h-[44px] items-center justify-center rounded-xl border border-dashed border-[color:var(--color-border-subtle)] text-[14px]"
-          >
-            {t.signIn.guestTesting}
-          </a>
-        ) : null}
       </footer>
     </div>
   );
