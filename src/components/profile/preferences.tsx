@@ -41,9 +41,16 @@ export function Preferences({
    * no switch.
    */
   showReminders = true,
+  updatesVoice = false,
 }: {
   language: string;
   showReminders?: boolean;
+  /**
+   * A family member is switching on updates ABOUT HER — her readings, her
+   * medicines — not reminders for themselves. Same switch, same permission,
+   * different thing being promised.
+   */
+  updatesVoice?: boolean;
 }) {
   const t = useT();
   const [selected, setSelected] = useState(language);
@@ -131,7 +138,9 @@ export function Preferences({
                 </p>
                 {/* rgba(0,0,0,0.4) over surface/default, resolved to a solid. */}
                 <p className="text-[16px] leading-[1.2] text-[#999999]">
-                  {t.profile.remindersOn(remindersOn ? t.profile.on : t.profile.off)}
+                  {(updatesVoice ? t.profile.updatesOn : t.profile.remindersOn)(
+                remindersOn ? t.profile.on : t.profile.off,
+              )}
                 </p>
               </div>
               <Toggle

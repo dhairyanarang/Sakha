@@ -103,11 +103,13 @@ export async function FamilyProfile({
 
         <Accounts accounts={memberships} activeId={profile.accountId} />
 
-        {/* Language only. The reminders row asks the browser to allow pushes
-            about HER medicines, and nothing is built yet that would notify a
-            family member about anything — offering the switch would promise a
-            feature that does not exist. */}
-        <Preferences language={language} showReminders={false} />
+        {/* The switch belongs here now.
+            It was hidden while nothing could notify a family member, which
+            stopped being true when family activity notifications shipped —
+            and hiding it left them unable to register a device at all, so the
+            notifications had nowhere to go. They are the main audience for
+            them; they must be able to turn them on. */}
+        <Preferences language={language} updatesVoice />
 
         <SignOut />
       </main>

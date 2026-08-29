@@ -429,6 +429,8 @@ export const en = {
     notification: "Notification",
     remindersLabel: "Reminders",
     remindersOn: (state: string) => `Reminders: ${state}`,
+    /** A family member gets updates about her, never reminders of their own. */
+    updatesOn: (state: string) => `Updates about her: ${state}`,
     on: "On",
     off: "Off",
     remindersOffHint: "You can turn reminders off in your phone's settings.",

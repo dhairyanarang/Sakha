@@ -387,6 +387,7 @@ export const hi: Messages = {
     notification: "नोटिफ़िकेशन",
     remindersLabel: "रिमाइंडर",
     remindersOn: (state) => `रिमाइंडर: ${state}`,
+    updatesOn: (state) => `उनकी जानकारी: ${state}`,
     on: "चालू",
     off: "बंद",
     remindersOffHint: "रिमाइंडर बंद करने के लिए अपने फ़ोन की सेटिंग में जाएं।",
