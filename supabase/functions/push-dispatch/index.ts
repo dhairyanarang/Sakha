@@ -38,16 +38,21 @@ Deno.serve(async (req) => {
   // 1. Let the scheduler queue anything newly due, in the same pass.
   await db.rpc("run_medicine_reminders");
 
-  // 2. Claim a batch. sent_at is stamped BEFORE sending: at-most-once is the
-  //    right bias here. A reminder that silently fails is a missed buzz; a
-  //    reminder sent twice because we retried is the phone crying wolf, and
-  //    she is the one who has to trust it.
-  const { data: rows, error } = await db
-    .from("notification_outbox")
-    .select("*")
-    .is("sent_at", null)
-    .order("created_at", { ascending: true })
-    .limit(BATCH);
+  // 2. Claim a batch, atomically — one UPDATE ... RETURNING behind
+  //    claim_notifications, not a SELECT followed by an UPDATE.
+  //
+  //    This function is no longer called by one timer. Every family event now
+  //    pokes it the moment the outbox row lands, so a poke and a cron tick can
+  //    be inside this handler at the same time. Reading the pending rows and
+  //    then marking them would let both take the same row and send it twice;
+  //    claiming them in a single statement, with SKIP LOCKED, means whoever
+  //    gets the row owns it and the other caller moves on to the next.
+  //
+  //    sent_at is still stamped BEFORE sending: at-most-once is the right bias
+  //    here. A reminder that silently fails is a missed buzz; a reminder sent
+  //    twice because we retried is the phone crying wolf, and she is the one
+  //    who has to trust it.
+  const { data: rows, error } = await db.rpc("claim_notifications", { p_limit: BATCH });
 
   if (error) return json({ error: error.message }, 500);
   if (!rows?.length) return json({ sent: 0, rows: 0 });
@@ -58,11 +63,7 @@ Deno.serve(async (req) => {
   const stale = new Set<string>();
 
   for (const row of rows) {
-    await db
-      .from("notification_outbox")
-      .update({ sent_at: new Date().toISOString(), attempts: row.attempts + 1 })
-      .eq("id", row.id);
-
+    // Already claimed and stamped by claim_notifications above.
     /**
      * WHO gets this — resolved now, from the membership table, never from
      * anything stored on the event.

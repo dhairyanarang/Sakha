@@ -122,18 +122,25 @@ body {
   to   { opacity: 0; visibility: hidden; }
 }
 
-/* Centring, and nothing else. This element is never animated, so the lockup
-   is exactly centred at any device width no matter what the animation does —
-   including not running at all. The earlier version animated TO the centred
-   position, which meant anything that stopped the animation short left the
-   lockup sitting off to one side. */
+/* Centring, and nothing else — done by flexbox on the parent, not by this
+   element.
+
+   It used to be absolutely positioned with left:50% and translateX(-50%),
+   which asks the browser to shrink-wrap an element whose content cannot wrap
+   into a space narrower than that content. Safari resolves that width to the
+   room available (viewport minus the 50% offset) rather than to the content,
+   so its -50% was half of the wrong number and the lockup sat right of centre
+   by the difference. Chrome resolves it to the content width and looked fine,
+   which is why this only ever showed up on a real phone.
+
+   Flex centring needs no width resolution and no percentage transform, so
+   there is nothing left to disagree about. The only offset is vertical, in a
+   viewport unit, on an element that is never animated. */
 .splash-group {
-  position: absolute;
-  left: 50%;
+  flex: none;
   /* Optically centred, not measured-centred: a lockup sitting on the exact
      half-line reads as low. The reference places it here too. */
-  top: 42%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-8dvh);
 }
 
 /* The moving part, in pixels only.
@@ -187,8 +194,9 @@ body {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* nowrap because the lockup is absolutely positioned and would otherwise
-   shrink to fit and break the tagline onto a second line on a narrow phone. */
+/* nowrap so the tagline stays one line; the lockup never shrinks to fit
+   (flex: none above), it simply overflows evenly either side on a phone too
+   narrow for it. */
 .splash-name,
 .splash-tagline {
   white-space: nowrap;

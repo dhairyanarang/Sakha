@@ -155,6 +155,22 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  /**
+   * The one meta Next will not write for us.
+   *
+   * Next 16 emits only the standard `mobile-web-app-capable`, having dropped
+   * the Apple-prefixed twin as deprecated. iOS disagrees: it still gates
+   * apple-touch-startup-image on this exact meta, and without it every one of
+   * the startup images above is ignored and the app launches on a black frame
+   * instead. That black frame is the whole reason they exist.
+   *
+   * It does not change how the app is presented — the manifest's
+   * display: standalone already does that, and statusBarStyle stays "default"
+   * so iOS keeps painting and reserving the status bar itself.
+   */
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
