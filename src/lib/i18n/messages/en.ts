@@ -396,11 +396,26 @@ export const en = {
   library: {
     title: "Learn & Live Better",
     subtitle: "Short, simple things to try",
+    chooseSubject: "Choose a subject",
     filterByLanguage: "Filter by language",
     all: "All",
     comingSoon: "Gentle exercises and guidance will appear here.",
     nothingInLanguage: (language: string) => `Nothing here in ${language} yet.`,
+    moreLikeThis: "More like this",
+    watchOnYoutube: "Watch on YouTube",
+    notMedicalAdvice:
+      "Shared for general wellbeing. It is not advice about your own treatment — please follow what your doctor has told you.",
     categories: {
+      yoga_movement: "Yoga & Gentle Movement",
+      pranayama_breathing: "Pranayama & Breathing",
+      meditation_relaxation: "Meditation & Relaxation",
+      walking_mobility: "Walking & Mobility",
+      morning_daily_routine: "Morning & Daily Routine",
+      healthy_ageing: "Healthy Ageing",
+      food_wellness: "Food & Everyday Wellness",
+      health_basics: "Health Basics",
+      // The first five, kept only until the placeholder rows they label are
+      // retired. Not in CATEGORY_ORDER, so they never appear as a chip.
       morning_routine: "Morning & Daily Routine",
       movement: "Movement & Exercise",
       mind: "Mind & Relaxation",

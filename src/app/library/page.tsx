@@ -12,9 +12,9 @@ import { getMessages } from "@/lib/i18n/server";
  * Not health documents: those are hers and live under Health. This is the same
  * shelf for everyone, curated by us.
  *
- * The whole screen is two levels deep at most — land, look, tap, watch. No
- * category pages, no detail pages, no search, and nothing that has to guess
- * what she wants.
+ * Subject first, then the thing itself: she picks a shelf, sees what is on
+ * it, and taps through to watch it inside Sakha. Three steps, no search, and
+ * nothing anywhere that guesses at what she wants.
  */
 export default async function LibraryPage() {
   // Owner only. The shelf is curated for the person living the day it is meant
@@ -23,7 +23,7 @@ export default async function LibraryPage() {
   // URL. requireOwner sends them home rather than showing an error.
   await requireOwner();
 
-  const [groups, avatarUrl] = await Promise.all([getLibrary(), getHeaderAvatar()]);
+  const [items, avatarUrl] = await Promise.all([getLibrary(), getHeaderAvatar()]);
   const t = await getMessages();
 
   return (
@@ -38,12 +38,12 @@ export default async function LibraryPage() {
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 p-4">
-        {groups.length === 0 ? (
+        {items.length === 0 ? (
           <div className="flex flex-1 flex-col justify-center">
             <EmptyState message={t.library.comingSoon} />
           </div>
         ) : (
-          <LibraryShelf groups={groups} />
+          <LibraryShelf items={items} />
         )}
       </main>
 

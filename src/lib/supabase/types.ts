@@ -262,45 +262,60 @@ export type Database = {
       library_items: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
+          content_note: string | null
           content_type: string
           created_at: string
+          curation_note: string | null
           description: string | null
           duration_minutes: number | null
+          duration_seconds: number | null
           external_url: string
           id: string
           language: string
           published: boolean
           sort_order: number
+          source: string | null
           thumbnail_url: string | null
           title: string
+          youtube_id: string | null
         }
         Insert: {
           category: Database["public"]["Enums"]["library_category"]
+          content_note?: string | null
           content_type?: string
           created_at?: string
+          curation_note?: string | null
           description?: string | null
           duration_minutes?: number | null
+          duration_seconds?: number | null
           external_url: string
           id?: string
           language?: string
           published?: boolean
           sort_order?: number
+          source?: string | null
           thumbnail_url?: string | null
           title: string
+          youtube_id?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["library_category"]
+          content_note?: string | null
           content_type?: string
           created_at?: string
+          curation_note?: string | null
           description?: string | null
           duration_minutes?: number | null
+          duration_seconds?: number | null
           external_url?: string
           id?: string
           language?: string
           published?: boolean
           sort_order?: number
+          source?: string | null
           thumbnail_url?: string | null
           title?: string
+          youtube_id?: string | null
         }
         Relationships: []
       }
@@ -575,6 +590,32 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token_hash: string }; Returns: string }
+      claim_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          account_id: string
+          actor_id: string | null
+          attempts: number
+          body_value: string | null
+          created_at: string
+          dedupe_key: string
+          id: string
+          kind: string
+          last_error: string | null
+          measurement_type:
+            | Database["public"]["Enums"]["measurement_type"]
+            | null
+          medicine_names: string | null
+          sent_at: string | null
+          slot: Database["public"]["Enums"]["time_of_day"] | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notification_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_account: {
         Args: { p_display_name: string; p_language?: string }
         Returns: string
@@ -609,6 +650,14 @@ export type Database = {
         | "mind"
         | "health_education"
         | "food"
+        | "yoga_movement"
+        | "pranayama_breathing"
+        | "meditation_relaxation"
+        | "walking_mobility"
+        | "morning_daily_routine"
+        | "healthy_ageing"
+        | "food_wellness"
+        | "health_basics"
       measurement_type: "blood_pressure" | "blood_sugar" | "weight"
       medication_status: "confirmed" | "skipped" | "unconfirmed"
       mood_level: "not_good" | "good" | "very_good"
@@ -747,6 +796,14 @@ export const Constants = {
         "mind",
         "health_education",
         "food",
+        "yoga_movement",
+        "pranayama_breathing",
+        "meditation_relaxation",
+        "walking_mobility",
+        "morning_daily_routine",
+        "healthy_ageing",
+        "food_wellness",
+        "health_basics",
       ],
       measurement_type: ["blood_pressure", "blood_sugar", "weight"],
       medication_status: ["confirmed", "skipped", "unconfirmed"],

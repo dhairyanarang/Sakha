@@ -354,11 +354,25 @@ export const hi: Messages = {
   library: {
     title: "सीखें और बेहतर जिएं",
     subtitle: "छोटी और आसान बातें जो आप आज़मा सकते हैं",
+    chooseSubject: "विषय चुनें",
     filterByLanguage: "भाषा चुनें",
     all: "सभी",
     comingSoon: "यहां हल्की कसरत और सलाह आएंगी।",
     nothingInLanguage: (language) => `अभी ${language} में कुछ नहीं है।`,
+    moreLikeThis: "इसी तरह की और",
+    watchOnYoutube: "यूट्यूब पर देखें",
+    notMedicalAdvice:
+      "यह सामान्य सेहत के लिए है। यह आपके अपने इलाज की सलाह नहीं है — अपने डॉक्टर की बात ही मानें।",
     categories: {
+      yoga_movement: "योग और हल्की कसरत",
+      pranayama_breathing: "प्राणायाम और सांस",
+      meditation_relaxation: "ध्यान और आराम",
+      walking_mobility: "चलना-फिरना",
+      morning_daily_routine: "सुबह और रोज़ की दिनचर्या",
+      healthy_ageing: "बढ़ती उम्र में सेहत",
+      food_wellness: "खानपान और रोज़ की सेहत",
+      health_basics: "सेहत की बुनियादी बातें",
+      // Legacy — see the English dictionary.
       morning_routine: "सुबह और रोज़ की दिनचर्या",
       movement: "चलना-फिरना और कसरत",
       mind: "मन और आराम",
