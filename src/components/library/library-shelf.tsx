@@ -29,9 +29,12 @@ import { useT } from "@/lib/i18n/client";
  * front of it, and only appears when the shelf she is looking at actually
  * holds both.
  *
- * Cards are sized for her: a large picture, an 18px title, and one line of
- * plain facts. Metadata sits on text/secondary rather than the lighter grey
- * used elsewhere, because here it is content she is meant to read.
+ * The cards stand up rather than lie down. A picture across the full width of
+ * the card, the title under it, and one short line of facts — which is the
+ * shape a thing-you-might-watch already has everywhere else she looks. The old
+ * horizontal row gave the thumbnail a third of the width and spent the rest on
+ * a description she was scanning past; the picture is what she actually
+ * chooses by, so it gets the room.
  */
 const CATEGORY_ICON: Record<ShelfCategory, typeof Sunrise> = {
   yoga_movement: Flower2,
@@ -146,40 +149,54 @@ function LibraryCard({ item }: { item: LibraryItem }) {
   const Icon = CATEGORY_ICON[item.category as ShelfCategory] ?? BookOpen;
   const minutes = item.durationSeconds ? Math.round(item.durationSeconds / 60) : null;
 
+  /**
+   * Two facts, and only where they earn their place.
+   *
+   * Language, because she may want one and not the other. Then the length, or
+   * "Short" when there is no useful length to give — a forty-second clip is
+   * better described than measured. Nothing says "Video": that is what the
+   * whole card already looks like.
+   *
+   * The creator is deliberately not here. It matters, and it is on the screen
+   * where she is deciding whether to trust what she is about to watch, rather
+   * than on a browsing card where it is one more thing to read past.
+   */
   const facts = [
-    minutes && minutes > 0 ? t.units.minutesShort(minutes) : null,
     LANGUAGE_NAME[item.language] ?? item.language,
-    item.source,
+    item.contentType === "short"
+      ? t.library.shortLabel
+      : minutes && minutes > 0
+        ? t.units.minutesShort(minutes)
+        : null,
   ].filter(Boolean);
 
   return (
     <Link
       href={`/library/${item.id}`}
-      className="bg-surface-default border-border-soft active:bg-surface-tinted flex w-full items-center gap-3 rounded-xl border-[0.5px] p-3 transition-colors"
+      /* The whole card is the target — nothing here is a small tap. Flat, as
+         everything in this system is: a hairline border and a fill, no shadow.
+         overflow-hidden lets the picture run to the card's own edges and take
+         its rounded corners, which is what gives it the weight. */
+      className="bg-surface-default border-border-soft active:bg-surface-tinted block w-full overflow-hidden rounded-xl border-[0.5px] transition-colors"
     >
-      <span className="bg-surface-tinted relative flex h-[90px] w-[120px] shrink-0 items-center justify-center overflow-hidden rounded-md">
+      <span className="bg-surface-tinted relative flex aspect-video w-full items-center justify-center">
         {item.thumbnailUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={item.thumbnailUrl} alt="" className="size-full object-cover" />
         ) : (
-          <Icon size={32} className="text-action-primary" aria-hidden />
+          <Icon size={40} className="text-action-primary" aria-hidden />
         )}
         {/* Says "this plays" without a word of explanation. */}
-        <span className="bg-action-primary text-text-on-brand absolute right-2 bottom-2 flex size-7 items-center justify-center rounded-full">
-          <Play size={14} fill="currentColor" aria-hidden />
+        <span className="bg-action-primary text-text-on-brand absolute right-3 bottom-3 flex size-11 items-center justify-center rounded-full">
+          <Play size={20} fill="currentColor" aria-hidden />
         </span>
       </span>
 
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
+      <span className="flex flex-col gap-1 p-4">
         <span className="text-text-primary text-[18px] leading-[1.3] font-medium">
           {item.title}
         </span>
-        {item.description ? (
-          <span className="text-text-secondary line-clamp-2 text-[16px] leading-[1.4]">
-            {item.description}
-          </span>
-        ) : null}
-        <span className="text-text-secondary line-clamp-1 text-[14px] leading-[1.2]">
+        <span className="text-text-secondary text-[16px] leading-[1.2]">
           {facts.join(" · ")}
         </span>
       </span>

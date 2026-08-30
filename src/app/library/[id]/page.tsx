@@ -72,6 +72,7 @@ export default async function LibraryItemPage({ params }: PageProps<"/library/[i
             </p>
           </div>
 
+          {/* One line, and only when it says something the title does not. */}
           {item.description ? (
             <p className="text-text-primary text-[18px] leading-[1.5]">{item.description}</p>
           ) : null}

@@ -402,9 +402,9 @@ export const en = {
     comingSoon: "Gentle exercises and guidance will appear here.",
     nothingInLanguage: (language: string) => `Nothing here in ${language} yet.`,
     moreLikeThis: "More like this",
+    shortLabel: "Short",
     watchOnYoutube: "Watch on YouTube",
-    notMedicalAdvice:
-      "Shared for general wellbeing. It is not advice about your own treatment — please follow what your doctor has told you.",
+    notMedicalAdvice: "For general wellbeing — not advice about your own treatment.",
     categories: {
       yoga_movement: "Yoga & Gentle Movement",
       pranayama_breathing: "Pranayama & Breathing",

@@ -360,9 +360,9 @@ export const hi: Messages = {
     comingSoon: "यहां हल्की कसरत और सलाह आएंगी।",
     nothingInLanguage: (language) => `अभी ${language} में कुछ नहीं है।`,
     moreLikeThis: "इसी तरह की और",
+    shortLabel: "शॉर्ट",
     watchOnYoutube: "यूट्यूब पर देखें",
-    notMedicalAdvice:
-      "यह सामान्य सेहत के लिए है। यह आपके अपने इलाज की सलाह नहीं है — अपने डॉक्टर की बात ही मानें।",
+    notMedicalAdvice: "सामान्य सेहत के लिए — आपके इलाज की सलाह नहीं।",
     categories: {
       yoga_movement: "योग और हल्की कसरत",
       pranayama_breathing: "प्राणायाम और सांस",
