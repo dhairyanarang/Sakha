@@ -11,7 +11,6 @@ export type DoseGroup = {
 
 export type HomeData = {
   today: string;
-  mood: Enums<"mood_level"> | null;
   doses: DoseGroup[];
   lastSugar: { value: number; unit: string } | null;
   lastBp: { systolic: number; diastolic: number; unit: string } | null;
@@ -30,7 +29,7 @@ export async function getHomeData(accountId: string): Promise<HomeData> {
   const supabase = await createClient();
   const today = localDate();
 
-  const [meds, logs, checkin, sugar, bp, walk] = await Promise.all([
+  const [meds, logs, sugar, bp, walk] = await Promise.all([
     supabase
       .from("medications")
       .select("id, name, times_of_day")
@@ -42,12 +41,6 @@ export async function getHomeData(accountId: string): Promise<HomeData> {
       .select("medication_id, slot, status")
       .eq("account_id", accountId)
       .eq("local_date", today),
-    supabase
-      .from("daily_checkins")
-      .select("mood")
-      .eq("account_id", accountId)
-      .eq("local_date", today)
-      .maybeSingle(),
     supabase
       .from("health_measurements")
       .select("value, unit")
@@ -99,7 +92,6 @@ export async function getHomeData(accountId: string): Promise<HomeData> {
 
   return {
     today,
-    mood: checkin.data?.mood ?? null,
     doses,
     lastSugar: sugar.data ? { value: Number(sugar.data.value), unit: sugar.data.unit } : null,
     lastBp:

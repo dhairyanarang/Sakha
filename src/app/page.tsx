@@ -5,7 +5,6 @@ import { getT } from "@/lib/i18n/server";
 import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
 import { getHeaderAvatar } from "@/lib/profile-data";
-import { MoodCard } from "@/components/home/mood-card";
 import { TodaysCare } from "@/components/home/todays-care";
 import { FamilyHome } from "@/components/family/family-home";
 
@@ -44,7 +43,6 @@ export default async function HomePage() {
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
-        <MoodCard mood={home.mood} />
         <TodaysCare data={home} canEdit />
       </main>
 

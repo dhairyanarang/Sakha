@@ -197,11 +197,6 @@ export const en = {
   },
 
   home: {
-    moodQuestion: "How do you feel today?",
-    moodNotGood: "Not Good",
-    moodGood: "Good",
-    moodVeryGood: "Very Good",
-    moodNoted: "Thank you, that's noted.",
 
     todaysCare: "Today's Care",
     /** "Last: 124 mg/dL" — the value and unit are data, the word is ours. */

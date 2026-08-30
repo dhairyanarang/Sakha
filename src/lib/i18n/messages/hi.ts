@@ -183,11 +183,6 @@ export const hi: Messages = {
   },
 
   home: {
-    moodQuestion: "आज आप कैसा महसूस कर रहे हैं?",
-    moodNotGood: "ठीक नहीं",
-    moodGood: "अच्छा",
-    moodVeryGood: "बहुत अच्छा",
-    moodNoted: "शुक्रिया, हमने नोट कर लिया।",
 
     todaysCare: "आज की देखभाल",
     lastReading: (value) => `पिछली: ${value}`,

@@ -24,24 +24,6 @@ function revalidateMeasurements() {
   revalidatePath("/health/measurements/[type]", "page");
 }
 
-export async function setMood(mood: Enums<"mood_level">): Promise<string | null> {
-  const accountId = await getOwnedActiveAccountId();
-  if (!accountId) return await saveFailed();
-
-  const supabase = await createClient();
-  // One check-in per day; changing her mind updates rather than stacking rows.
-  const { error } = await supabase
-    .from("daily_checkins")
-    .upsert(
-      { account_id: accountId, local_date: localDate(), mood },
-      { onConflict: "account_id,local_date" },
-    );
-  if (error) return await saveFailed();
-
-  revalidatePath("/");
-  return null;
-}
-
 /**
  * Confirms every medicine in a slot at once, which is what the single Confirm
  * button on the card means.
