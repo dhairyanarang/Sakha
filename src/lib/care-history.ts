@@ -187,3 +187,24 @@ export async function getCareMonth(
 
   return days;
 }
+
+/**
+ * One day, for Home in historical mode.
+ *
+ * Deliberately routed through getCareMonth rather than given its own queries.
+ * The reconstruction rules — which medicines a day may be held to, how a slot
+ * aggregates, which timezone a timestamp belongs to — are subtle enough that a
+ * second implementation would drift from this one within a month. It costs a
+ * month-scoped read to render a day, which is five bounded queries, and buys
+ * exactly one source of truth for what a past day was.
+ */
+export async function getCareDay(
+  accountId: string,
+  date: string,
+): Promise<CareDay | null> {
+  const year = Number(date.slice(0, 4));
+  const month = Number(date.slice(5, 7));
+  if (!year || !month) return null;
+  const days = await getCareMonth(accountId, year, month);
+  return days.find((d) => d.date === date) ?? null;
+}

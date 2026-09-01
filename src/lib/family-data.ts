@@ -38,6 +38,8 @@ export type RecentUpdate = {
   /** For medicine and walk activity. Never "missed" — no such state exists. */
   status: Enums<"medication_status"> | null;
   slot: Enums<"time_of_day"> | null;
+  /** A slot where some medicines were confirmed and others were skipped. */
+  mixed?: boolean;
 };
 
 export type MedicinesToday = {
@@ -58,6 +60,17 @@ export type FamilyHome = {
 const WINDOW_DAYS = 30;
 const MAX_UPDATES = 8;
 const MAX_DOCUMENTS = 3;
+/**
+ * Medicines get their own share of the feed, and cannot spend anybody else's.
+ *
+ * A dose log is written per medicine PER SLOT, so three tablets taken three
+ * times a day is nine rows for one ordinary Tuesday — more than the whole feed
+ * held. Her blood pressure, her sugar and her walk were all pushed off the
+ * bottom by her taking her tablets, which is precisely backwards. Grouping by
+ * slot fixes the arithmetic; this makes sure it stays fixed when she is on
+ * eight medicines instead of three.
+ */
+const MAX_MEDICINE_UPDATES = 4;
 
 /**
  * Everything the family Home renders, in one pass.
@@ -86,13 +99,15 @@ export async function getFamilyHome(accountId: string): Promise<FamilyHome> {
       .limit(60),
     // created_at, not confirmed_at: this is "when did something happen on the
     // account", and a dose confirmed late still happened when she confirmed it.
+    // local_date so the grouping below is done in HER day, not the server's,
+    // and a wider limit because these rows are collapsed before they are shown.
     supabase
       .from("medication_logs")
-      .select("id, slot, status, created_at, medications(name)")
+      .select("id, local_date, slot, status, created_at, medications(name)")
       .eq("account_id", accountId)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
-      .limit(MAX_UPDATES),
+      .limit(120),
     supabase
       .from("health_documents")
       .select("id, title, doc_date, created_at")
@@ -138,19 +153,56 @@ export async function getFamilyHome(accountId: string): Promise<FamilyHome> {
     });
   }
 
+  /**
+   * One row per slot, not per tablet.
+   *
+   * Confirming a slot is ONE action — the owner's Home has a single Confirm
+   * button per part of the day, and the notification it sends is one buzz
+   * however many tablets were in it. The feed was the only place that split it
+   * back into three, so a son saw "Morning medicine confirmed" three times and
+   * learned nothing from the second and third.
+   *
+   * The group is keyed on her local date and the slot, so a slot confirmed
+   * across midnight still reads as one morning.
+   */
+  const slotGroups = new Map<
+    string,
+    { at: string; slot: Enums<"time_of_day">; names: string[]; statuses: string[] }
+  >();
   for (const l of logs.data ?? []) {
     const med = l.medications as unknown as { name: string } | null;
-    updates.push({
-      id: `l-${l.id}`,
-      kind: "medicine",
+    const key = `${l.local_date}:${l.slot}`;
+    const group = slotGroups.get(key) ?? {
+      // Rows arrive newest first, so the first one seen is the latest in the
+      // slot — which is when the slot finished being answered.
       at: l.created_at,
+      slot: l.slot,
+      names: [],
+      statuses: [],
+    };
+    if (med?.name) group.names.push(med.name);
+    group.statuses.push(l.status);
+    slotGroups.set(key, group);
+  }
+
+  const medicineUpdates: RecentUpdate[] = [];
+  for (const [key, g] of slotGroups) {
+    const allConfirmed = g.statuses.every((x) => x === "confirmed");
+    const allSkipped = g.statuses.every((x) => x === "skipped");
+    medicineUpdates.push({
+      id: `l-${key}`,
+      kind: "medicine",
+      at: g.at,
       value: null,
       unit: null,
-      detail: med?.name ?? null,
-      status: l.status,
-      slot: l.slot,
+      detail: g.names.join(", ") || null,
+      status: allConfirmed ? "confirmed" : allSkipped ? "skipped" : "confirmed",
+      slot: g.slot,
+      mixed: !allConfirmed && !allSkipped,
     });
   }
+  medicineUpdates.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  updates.push(...medicineUpdates.slice(0, MAX_MEDICINE_UPDATES));
 
   for (const d of docs.data ?? []) {
     updates.push({

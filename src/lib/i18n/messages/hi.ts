@@ -122,6 +122,13 @@ export const hi: Messages = {
 
   family: {
     careHistory: "देखभाल का इतिहास",
+    viewingThisDay: "इस दिन की देखभाल",
+    today: "आज",
+    medicinesThatDay: "दवाएँ",
+    alsoThatDay: "उस दिन और",
+    nothingElseThatDay: "उस दिन और कुछ दर्ज नहीं हुआ।",
+    nothingDue: "कुछ नहीं था",
+    noCareThatDay: "उस दिन का कोई रिकॉर्ड नहीं है।",
     previousMonth: "पिछला महीना",
     nextMonth: "अगला महीना",
     loadingMonth: "वह महीना लाया जा रहा है…",
@@ -190,6 +197,7 @@ export const hi: Messages = {
       /* "सुबह की दवा कन्फर्म" — the slot takes की before दवा. */
       medicineConfirmed: (slot) => `${slot} की दवा कन्फर्म की`,
       medicineSkipped: (slot) => `${slot} की दवा छोड़ी`,
+      medicinePartly: (slot) => `${slot} की कुछ दवाएँ ली गईं`,
       walked: (minutes) => `${minutes} मिनट टहले`,
       wentForAWalk: "टहलने गए",
       noWalk: "टहलना दर्ज नहीं",

@@ -40,7 +40,11 @@ function title(update: RecentUpdate, t: Messages, locale: Locale): string {
     case "weight":
       return u.weight(update.value ?? "", update.unit ?? "");
     case "medicine": {
+      // One row is now a whole part of the day, so it can be partly answered —
+      // some tablets confirmed and others skipped. Said plainly, because
+      // "partly" is the honest word and neither half is a failure.
       const when = update.slot ? slotName(update.slot, locale) : "";
+      if (update.mixed) return u.medicinePartly(when);
       return update.status === "confirmed"
         ? u.medicineConfirmed(when)
         : u.medicineSkipped(when);

@@ -131,6 +131,14 @@ export const en = {
     headerSubtitle: "How things are going",
     /** The calendar behind Recent Updates. */
     careHistory: "Care history",
+    /** Historical-date mode on the family Home. */
+    viewingThisDay: "Viewing care for this day",
+    today: "Today",
+    medicinesThatDay: "Medicines",
+    alsoThatDay: "Also that day",
+    nothingElseThatDay: "Nothing else was recorded that day.",
+    nothingDue: "nothing due",
+    noCareThatDay: "There is nothing recorded for that day.",
     previousMonth: "Previous month",
     nextMonth: "Next month",
     loadingMonth: "Getting that month…",
@@ -211,6 +219,7 @@ export const en = {
       /** Never "missed" or "late" — confirmation is allowed at any time. */
       medicineConfirmed: (slot: string) => `${slot} medicine confirmed`,
       medicineSkipped: (slot: string) => `${slot} medicine skipped`,
+      medicinePartly: (slot: string) => `${slot} medicine partly confirmed`,
       walked: (minutes: number) => `Walked ${minutes} minutes`,
       wentForAWalk: "Went for a walk",
       noWalk: "No walk logged",
