@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Sheet } from "@/components/home/sheet";
 import { localDate } from "@/lib/today";
@@ -24,14 +23,16 @@ export function FamilyCalendar({
   open,
   onClose,
   selected,
+  onSelect,
 }: {
   open: boolean;
   onClose: () => void;
   /** The day currently on screen, so the sheet opens where you left it. */
   selected: string;
+  /** Navigating is the caller's job — it owns the pending state. */
+  onSelect: (date: string) => void;
 }) {
   const { t, locale } = useI18n();
-  const router = useRouter();
 
   /**
    * "This month" in HER timezone, not the reader's.
@@ -71,8 +72,7 @@ export function FamilyCalendar({
 
   function choose(date: string) {
     onClose();
-    // Today drops the parameter entirely, so the plain URL is always today.
-    router.push(date === todayIST ? "/" : `/?d=${date}`);
+    onSelect(date);
   }
 
   return (

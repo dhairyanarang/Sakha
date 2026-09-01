@@ -8,7 +8,7 @@ import { getHealthOverview, getMeasurementsOn } from "@/lib/health-data";
 import { getHeaderAvatar } from "@/lib/profile-data";
 import { localDate, readingStamp } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
-import { FamilyDateBar } from "./family-date-bar";
+import { FamilyDay } from "./family-day";
 import { MedicineSlotSheet } from "./medicine-slot-sheet";
 
 /**
@@ -31,13 +31,10 @@ import { MedicineSlotSheet } from "./medicine-slot-sheet";
 export async function FamilyHome({
   accountId,
   ownerName,
-  canEdit,
   date,
 }: {
   accountId: string;
   ownerName: string;
-  /** Contributors may record and upload; view-only members may not. */
-  canEdit: boolean;
   /** The day being shown. Null means today. */
   date?: string | null;
 }) {
@@ -83,75 +80,85 @@ export async function FamilyHome({
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
-        <FamilyDateBar date={shown} isToday={isToday} />
+        {/* The bar and the two date-dependent sections move together.
+            Documents sit outside: they do not belong to a day, and
+            blanking them would suggest they had gone. */}
+        <FamilyDay date={shown}>
 
-        <section className="flex shrink-0 flex-col gap-3">
-          <SectionHeading>
-            {isToday ? t.family.todaysMedicine : t.family.medicinesHeading}
-          </SectionHeading>
+          <section className="flex shrink-0 flex-col gap-3">
+            <SectionHeading>
+              {isToday ? t.family.todaysMedicine : t.family.medicinesHeading}
+            </SectionHeading>
 
-          {slots.length === 0 ? (
-            <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-4 py-5">
-              <p className="text-body-medium text-text-secondary">
-                {t.family.noMedicinesThatDay}
-              </p>
+            {slots.length === 0 ? (
+              <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-4 py-5">
+                <p className="text-body-medium text-text-secondary">
+                  {t.family.noMedicinesThatDay}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-surface-default border-border-soft flex flex-col gap-[18px] rounded-xl border-[0.5px] px-3 py-[18px]">
+                {slots.map((group, i) => (
+                  <div key={group.slot} className="flex flex-col gap-[18px]">
+                    {i > 0 ? <div className="border-border-default border-t" /> : null}
+                    <MedicineSlotSheet group={group} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="flex shrink-0 flex-col gap-2.5">
+            <SectionHeading>{t.family.measurements}</SectionHeading>
+            <div className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] px-3 py-4">
+              {/* A reading is shown only if it was taken on this day. Never the
+                  latest from another — a June blood pressure under Saturday the
+                  2nd would be a false statement about her. */}
+              <MeasurementRow
+                href={`/health/measurements/blood-sugar${from}`}
+                icon={<Droplet size={22} className="text-feedback-error" aria-hidden />}
+                tone="error"
+                label={t.health.bloodSugar}
+                value={sugar ? String(sugar.value) : null}
+                unit="mg/dL"
+                when={sugar ? readingStamp(sugar.measuredAt, locale) : null}
+              />
+              <div className="border-border-default border-t" />
+              <MeasurementRow
+                href={`/health/measurements/blood-pressure${from}`}
+                icon={<HeartPulse size={22} className="text-action-primary" aria-hidden />}
+                tone="brand"
+                label={t.health.bloodPressure}
+                value={bp && bp.valueSecondary != null ? `${bp.value}/${bp.valueSecondary}` : null}
+                unit="mmHg"
+                when={bp ? readingStamp(bp.measuredAt, locale) : null}
+              />
+              <div className="border-border-default border-t" />
+              <MeasurementRow
+                href={`/health/measurements/weight${from}`}
+                icon={<Weight size={22} className="text-feedback-success-text" aria-hidden />}
+                tone="success"
+                label={t.health.weight}
+                value={weight ? String(weight.value) : null}
+                unit="kg"
+                when={weight ? readingStamp(weight.measuredAt, locale) : null}
+              />
             </div>
-          ) : (
-            <div className="bg-surface-default border-border-soft flex flex-col gap-[18px] rounded-xl border-[0.5px] px-3 py-[18px]">
-              {slots.map((group, i) => (
-                <div key={group.slot} className="flex flex-col gap-[18px]">
-                  {i > 0 ? <div className="border-border-default border-t" /> : null}
-                  <MedicineSlotSheet group={group} />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="flex shrink-0 flex-col gap-2.5">
-          <SectionHeading>{t.family.measurements}</SectionHeading>
-          <div className="bg-surface-default border-border-soft flex flex-col gap-4 rounded-xl border-[0.5px] px-3 py-4">
-            {/* A reading is shown only if it was taken on this day. Never the
-                latest from another — a June blood pressure under Saturday the
-                2nd would be a false statement about her. */}
-            <MeasurementRow
-              href={`/health/measurements/blood-sugar${from}`}
-              icon={<Droplet size={22} className="text-feedback-error" aria-hidden />}
-              tone="error"
-              label={t.health.bloodSugar}
-              value={sugar ? String(sugar.value) : null}
-              unit="mg/dL"
-              when={sugar ? readingStamp(sugar.measuredAt, locale) : null}
-            />
-            <div className="border-border-default border-t" />
-            <MeasurementRow
-              href={`/health/measurements/blood-pressure${from}`}
-              icon={<HeartPulse size={22} className="text-action-primary" aria-hidden />}
-              tone="brand"
-              label={t.health.bloodPressure}
-              value={bp && bp.valueSecondary != null ? `${bp.value}/${bp.valueSecondary}` : null}
-              unit="mmHg"
-              when={bp ? readingStamp(bp.measuredAt, locale) : null}
-            />
-            <div className="border-border-default border-t" />
-            <MeasurementRow
-              href={`/health/measurements/weight${from}`}
-              icon={<Weight size={22} className="text-feedback-success-text" aria-hidden />}
-              tone="success"
-              label={t.health.weight}
-              value={weight ? String(weight.value) : null}
-              unit="kg"
-              when={weight ? readingStamp(weight.measuredAt, locale) : null}
-            />
-          </div>
-        </section>
+          </section>
+        </FamilyDay>
 
         {/* Not filtered by the date, and never should be. */}
+        {/* canAdd, not canEdit. Adding is a MEMBER right: RLS gates
+            health_documents_insert and the storage write on is_account_member,
+            and family Health has always offered it. canEdit is
+            role === "owner", so passing it here hid an action a family member
+            is allowed to take. Deleting stays owner-only — that is canDelete
+            on the document screen, and it is unchanged. */}
         <DocumentsSection
           documents={overview.documents}
           accountId={accountId}
           backTo={backTo}
-          canAdd={canEdit}
+          canAdd
           addLabel={t.documents.uploadDocument}
           emptyMessage={t.family.noDocumentsYet}
         />

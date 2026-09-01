@@ -20,7 +20,7 @@ import { FamilyHome } from "@/components/family/family-home";
  * sends her son should open for both of them.
  */
 export default async function HomePage({ searchParams }: PageProps<"/">) {
-  const { account, isFamily, canEdit } = await requireAccount();
+  const { account, isFamily } = await requireAccount();
 
   if (isFamily) {
     // ?d=YYYY-MM-DD chooses the day Family View shows. In the URL rather than
@@ -31,7 +31,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <FamilyHome
         accountId={account.accountId}
         ownerName={account.displayName}
-        canEdit={canEdit}
         date={date}
       />
     );

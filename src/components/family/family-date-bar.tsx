@@ -20,10 +20,13 @@ import { useI18n } from "@/lib/i18n/client";
 export function FamilyDateBar({
   date,
   isToday,
+  onSelect,
 }: {
   /** YYYY-MM-DD, the day being shown. */
   date: string;
   isToday: boolean;
+  /** Chosen in the sheet, navigated by FamilyDay so it can show a skeleton. */
+  onSelect: (date: string) => void;
 }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
@@ -56,7 +59,12 @@ export function FamilyDateBar({
         </button>
       </section>
 
-      <FamilyCalendar open={open} onClose={() => setOpen(false)} selected={date} />
+      <FamilyCalendar
+        open={open}
+        onClose={() => setOpen(false)}
+        selected={date}
+        onSelect={onSelect}
+      />
     </>
   );
 }
