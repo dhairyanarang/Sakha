@@ -19,11 +19,22 @@ import { FamilyHome } from "@/components/family/family-home";
  * redirect after accepting an invitation all point at "/", and a link she
  * sends her son should open for both of them.
  */
-export default async function HomePage() {
-  const { account, isFamily } = await requireAccount();
+export default async function HomePage({ searchParams }: PageProps<"/">) {
+  const { account, isFamily, canEdit } = await requireAccount();
 
   if (isFamily) {
-    return <FamilyHome accountId={account.accountId} ownerName={account.displayName} />;
+    // ?d=YYYY-MM-DD chooses the day Family View shows. In the URL rather than
+    // client state, so back works and a refresh keeps the day.
+    const { d } = await searchParams;
+    const date = typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+    return (
+      <FamilyHome
+        accountId={account.accountId}
+        ownerName={account.displayName}
+        canEdit={canEdit}
+        date={date}
+      />
+    );
   }
 
   const { locale } = await getT();

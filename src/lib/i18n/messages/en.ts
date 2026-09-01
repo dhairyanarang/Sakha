@@ -125,6 +125,21 @@ export const en = {
    * a reading is a number and a time, never a verdict.
    */
   family: {
+    /** Family View — one screen, one day. */
+    todayDate: (date: string) => `Today, ${date}`,
+    change: "Change",
+    chooseDay: "Choose a day",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    /** Monday first, as a week reads in India. Single letters. */
+    weekdayInitials: ["M", "T", "W", "T", "F", "S", "S"],
+    todaysMedicine: "Today's Medicine",
+    medicinesHeading: "Medicine",
+    measurements: "Measurements",
+    noMedicinesThatDay: "No medicines were due that day.",
+    /** Never "missed" or "skipped" — this screen has two states only. */
+    confirmed: "Confirmed",
+    unconfirmed: "Unconfirmed",
     /** "Asha's Sakha" — the header on their Home. */
     theirSakha: (name: string) => `${name}'s Sakha`,
     theirHealth: (name: string) => `${name}'s Health`,

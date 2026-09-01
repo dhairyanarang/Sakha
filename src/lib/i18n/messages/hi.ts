@@ -121,6 +121,18 @@ export const hi: Messages = {
   },
 
   family: {
+    todayDate: (date) => `आज, ${date}`,
+    change: "बदलें",
+    chooseDay: "दिन चुनें",
+    previousMonth: "पिछला महीना",
+    nextMonth: "अगला महीना",
+    weekdayInitials: ["सो", "मं", "बु", "गु", "शु", "श", "र"],
+    todaysMedicine: "आज की दवा",
+    medicinesHeading: "दवा",
+    measurements: "माप",
+    noMedicinesThatDay: "उस दिन कोई दवा नहीं थी।",
+    confirmed: "ले ली",
+    unconfirmed: "दर्ज नहीं",
     theirSakha: (name) => `${name} का सखा`,
     theirHealth: (name) => `${name} की सेहत`,
     headerSubtitle: "हाल कैसा चल रहा है",

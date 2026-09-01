@@ -300,3 +300,50 @@ export async function getDocument(
     isPdf,
   };
 }
+
+/**
+ * The readings actually recorded on one day — never a fallback to another.
+ *
+ * getHealthOverview answers "what is her latest", which is the right question
+ * for Health and the wrong one for a screen showing a chosen date: a blood
+ * pressure from June must not appear under Saturday the 2nd as though it were
+ * taken then. A day with no reading returns null for that type, and the screen
+ * says so.
+ *
+ * Bounded to her timezone, not the server's. The date column on a measurement
+ * is a timestamp, so the window is built in +05:30 rather than sliced off an
+ * ISO string, which would file anything before half past five in the morning
+ * under the previous day.
+ */
+export async function getMeasurementsOn(
+  accountId: string,
+  date: string,
+): Promise<Record<Enums<"measurement_type">, LatestMeasurement | null>> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("health_measurements")
+    .select("type, value, value_secondary, unit, measured_at")
+    .eq("account_id", accountId)
+    .gte("measured_at", `${date}T00:00:00+05:30`)
+    .lte("measured_at", `${date}T23:59:59.999+05:30`)
+    .order("measured_at", { ascending: false });
+
+  const on: Record<Enums<"measurement_type">, LatestMeasurement | null> = {
+    blood_sugar: null,
+    blood_pressure: null,
+    weight: null,
+  };
+  // Newest first, so the first of each type is that day's most recent.
+  for (const row of data ?? []) {
+    if (on[row.type]) continue;
+    on[row.type] = {
+      type: row.type,
+      value: Number(row.value),
+      valueSecondary: row.value_secondary == null ? null : Number(row.value_secondary),
+      unit: row.unit,
+      measuredAt: row.measured_at,
+    };
+  }
+  return on;
+}

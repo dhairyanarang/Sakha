@@ -276,7 +276,14 @@ export type MedicinesBySlot = {
  * uses: she is confirming a whole slot at once and he is reading it, so he
  * wants to know WHICH one is outstanding, not how many.
  */
-export async function getMedicinesBySlot(accountId: string): Promise<MedicinesBySlot> {
+export async function getMedicinesBySlot(
+  accountId: string,
+  /**
+   * Which day to read the logs for. Defaults to today, so every existing
+   * caller is unchanged — Family View passes a date when one has been chosen.
+   */
+  date: string = localDate(),
+): Promise<MedicinesBySlot> {
   const supabase = await createClient();
 
   const [meds, logs] = await Promise.all([
@@ -290,16 +297,20 @@ export async function getMedicinesBySlot(accountId: string): Promise<MedicinesBy
       .from("medication_logs")
       .select("medication_id, slot, status")
       .eq("account_id", accountId)
-      .eq("local_date", localDate()),
+      .eq("local_date", date),
   ]);
 
   const logged = new Map(
     (logs.data ?? []).map((l) => [`${l.medication_id}:${l.slot}`, l.status]),
   );
 
+  // A day that has already been lived has no "not yet" about it; only today
+  // has slots that have not come around.
+  const isToday = date === localDate();
+
   return SLOT_ORDER.map((slot) => ({
     slot,
-    started: slotHasStarted(slot),
+    started: !isToday || slotHasStarted(slot),
     medicines: (meds.data ?? [])
       .filter((m) => m.times_of_day.includes(slot))
       .map((m) => ({
