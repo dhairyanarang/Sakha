@@ -7,6 +7,7 @@ import { relativeWhen } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
 import { ViewingBanner } from "./viewing-banner";
 import { RecentUpdates } from "./recent-updates";
+import { CareHistory } from "./care-history";
 import { FamilyHealthOverview } from "./health-overview";
 
 /**
@@ -49,7 +50,7 @@ export async function FamilyHome({
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
         <ViewingBanner name={ownerName} />
 
-        <RecentUpdates updates={home.updates} />
+        <RecentUpdates updates={home.updates} historyAction={<CareHistory accountId={accountId} />} />
 
         <FamilyHealthOverview
           latest={home.latest}

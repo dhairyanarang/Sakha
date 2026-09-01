@@ -121,6 +121,21 @@ export const hi: Messages = {
   },
 
   family: {
+    careHistory: "देखभाल का इतिहास",
+    previousMonth: "पिछला महीना",
+    nextMonth: "अगला महीना",
+    loadingMonth: "वह महीना लाया जा रहा है…",
+    pickADay: "कोई दिन चुनें और देखें वह कैसा रहा।",
+    noMedicinesThatDay: "उस दिन कोई दवा नहीं थी।",
+    doseConfirmed: "ले ली",
+    doseSkipped: "छोड़ी",
+    doseUnconfirmed: "बताया नहीं",
+    dayMark: {
+      confirmed: "सभी दवाएँ ले लीं",
+      partial: "कुछ दवाएँ ले लीं",
+      unanswered: "कोई दवा दर्ज नहीं",
+    },
+    weekdayInitials: ["सो", "मं", "बु", "गु", "शु", "श", "र"],
     theirSakha: (name) => `${name} का सखा`,
     theirHealth: (name) => `${name} की सेहत`,
     headerSubtitle: "हाल कैसा चल रहा है",

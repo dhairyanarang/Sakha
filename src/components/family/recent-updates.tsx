@@ -53,12 +53,29 @@ function title(update: RecentUpdate, t: Messages, locale: Locale): string {
   }
 }
 
-export async function RecentUpdates({ updates }: { updates: RecentUpdate[] }) {
+export async function RecentUpdates({
+  updates,
+  /**
+   * The way back through the feed. Passed in rather than rendered here so this
+   * stays a Server Component — the calendar needs state, and hoisting it into
+   * the parent would have made the whole feed a client component for the sake
+   * of one button.
+   */
+  historyAction,
+}: {
+  updates: RecentUpdate[];
+  historyAction?: React.ReactNode;
+}) {
   const { t, locale } = await getT();
 
   return (
     <section className="flex shrink-0 flex-col gap-2.5">
-      <SectionHeading>{t.family.recentUpdates}</SectionHeading>
+      {/* The heading keeps its place; the calendar sits opposite it, which is
+          where a person looks for "and what about before today". */}
+      <div className="flex items-center justify-between gap-2">
+        <SectionHeading>{t.family.recentUpdates}</SectionHeading>
+        {historyAction}
+      </div>
 
       {updates.length === 0 ? (
         <div className="bg-surface-default border-border-soft flex flex-col gap-1 rounded-xl border-[0.5px] px-4 py-5">

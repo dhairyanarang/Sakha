@@ -129,6 +129,28 @@ export const en = {
     theirSakha: (name: string) => `${name}'s Sakha`,
     theirHealth: (name: string) => `${name}'s Health`,
     headerSubtitle: "How things are going",
+    /** The calendar behind Recent Updates. */
+    careHistory: "Care history",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    loadingMonth: "Getting that month…",
+    pickADay: "Choose a day to see how it went.",
+    noMedicinesThatDay: "No medicines were due that day.",
+    /** Never "missed" or "failed" — an unanswered dose is not a failure. */
+    doseConfirmed: "Confirmed",
+    doseSkipped: "Skipped",
+    doseUnconfirmed: "Not confirmed",
+    /**
+     * Said on each calendar day, because the dot alone is a 5px shape. Never
+     * "missed" — a dose nobody answered is not a failure.
+     */
+    dayMark: {
+      confirmed: "all medicines confirmed",
+      partial: "some medicines confirmed",
+      unanswered: "no medicines confirmed",
+    },
+    /** Monday first, as a week reads in India. Single letters. */
+    weekdayInitials: ["M", "T", "W", "T", "F", "S", "S"],
     healthSubtitle: "Medicines, readings and documents",
     viewingTheirInformation: (name: string) =>
       `You are viewing ${name}'s health information.`,

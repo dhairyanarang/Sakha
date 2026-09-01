@@ -133,15 +133,18 @@ Decided by the user on 2026-08-26:
   and `/profile` branch on `requireAccount().isFamily` into
   `src/components/family/*`. Their nav is Home | Health | Profile — no
   Library, which is a shelf curated for the person living the day.
-- **Her mood is not shared.** The daily check-in never appears on a family
-  screen. The access screen they consent to promises medicines, readings,
-  documents and today's care; nothing beyond that list may be added to their
-  view without changing that copy first.
-- **Daily check-in is on the Home screen**, already designed: a "how do you feel
-  today" question, medicine confirmation for today, and log actions for sugar,
-  BP and walking. *Verify the exact mood options against the Home frame in
-  Figma — the PRD says good/okay/not good, the user described not good/good/very
-  good. Figma decides.*
+- **A family member sees only what the access screen promised** — medicines,
+  readings, documents and today's care. Nothing beyond that list may be added
+  to their view without changing that copy first.
+- **The daily check-in is gone (2026-08-30).** "How do you feel today?" was the
+  first thing on Home and nothing ever read the answer back: not Home, not
+  Health, not the family screens, not the notifications. The card, its server
+  action, its query and its strings are removed. `daily_checkins`, `mood_level`
+  and the RLS policy are all still in the database, untouched, so this is six
+  files to restore rather than a migration to reverse — but do not rebuild the
+  question without deciding first what reads the answer.
+- **Home is medicines and today's care.** Confirmation for today, and log
+  actions for sugar, BP and walking.
 - **Walk check-in** is to be designed in code from the existing component
   library. This is the sole authorised exception to "don't invent design."
 - Auth is **Google OAuth via Supabase**, as designed.
@@ -159,12 +162,73 @@ only — never production, so none of this exists in a real build.
 - The QA account itself is `qa@sakha.internal`, created directly in
   `auth.users`. **Delete it, the env vars, and this code before launch.**
 
+## Built since the P0 notes above
+
+**Launch splash.** Server-rendered in the root layout and animated entirely in
+CSS, so the first frame the phone paints is already the blue lockup — no
+JavaScript has to boot before something appears. Plays once per app session
+(an inline script marks `sessionStorage` before the overlay is parsed, so a
+mid-session full load like the auth callback does not replay it). Centring is
+flexbox, never a percentage transform on a shrink-wrapped absolute box: Safari
+resolves that width differently from Chrome and the lockup sat right of centre
+on real phones. iOS also needs `apple-mobile-web-app-capable` written by hand
+in `metadata.other` — Next 16 emits only the modern `mobile-web-app-capable`,
+and without the Apple one iOS ignores every `apple-touch-startup-image` and
+launches on black. Do not change the animation, its timing or its sequence.
+
+**`src/app/(home)/`** is a route group holding Home and a `loading.tsx`. The
+group changes no URL; the boundary exists so Next can flush the shell — and
+the splash inside it — before Home's session check and six queries have
+finished. Without it nothing painted until all of them had.
+
+The boundary has one consequence worth knowing before touching either file:
+once bytes have gone out, a `redirect()` can no longer be a status code, and
+Next falls back to a meta refresh. That turned the signed-out `/` from a 307
+into a 200 the browser sat on for a second. So **`proxy.ts` sends a signed-out
+request for `/` to `/welcome` itself**, before anything renders. It reuses the
+`getUser()` the proxy already awaits, so it costs no query and a signed-IN
+request falls straight through and keeps the early paint. It is deliberately
+only the signed-out case and only `/` — every other reason to leave Home
+(onboarding, a family member, the wrong active account) still belongs to
+`requireAccount`, which knows about accounts and the proxy does not. Any future
+`loading.tsx` on another gated route will need the same treatment, or that
+route's redirect quietly becomes a meta refresh too.
+
+**Library V1.** Eight categories as the primary chips, language demoted to a
+secondary control that appears only where a shelf holds both. Cards are
+vertical: a full-width 16:9 thumbnail, title, then language and duration or
+"Short". Tapping opens `/library/[id]`, which plays the video inside Sakha on
+`youtube-nocookie.com` — no autoplay, no queue, and at most three related items
+from the same category. `library_items` still has the five original category
+values alongside the eight new ones; they are unused and come out in a later
+migration. The catalogue lives in `supabase/seed/library_catalogue_v1.sql`.
+Adding content is a SQL insert with `published = false` until someone approves
+it — there is deliberately no admin UI.
+
+**Care history.** A calendar behind the Recent Updates heading on the family
+Home. `getCareMonth` reconstructs a past day by the same rule as everywhere
+else — medicines x times_of_day left-joined against that day's logs, with
+unconfirmed meaning no row — and stores nothing. The only thing history does
+differently is ask which medicines a day is entitled to hold her to, using
+`created_at` and `archived_at`, so a tablet started on Friday is not counted
+against Tuesday — except where a dose log exists for that day, which always
+wins. A medicine archived on Tuesday evening was still taken on Tuesday
+morning, and her confirmation must never vanish from history because of
+something she did to the medicine afterwards. No streak, no score, no colour-coded month: an unconfirmed
+dose is not a failure and must never be drawn as one.
+
+**Notifications are event-driven.** An `after insert` trigger on
+`notification_outbox` pokes the dispatcher through `pg_net` the moment a row
+lands, which took family activity from a measured 11-53s down to a measured
+0.2-0.6s. The minute cron stays as the guarantee if a poke is ever lost, so
+claiming a batch is a single `UPDATE ... RETURNING` with `SKIP LOCKED` — two
+callers can now be in the dispatcher at once. The poke swallows its own errors:
+it runs inside the transaction that wrote her reading, and a failed
+notification must never roll back the thing it was about. Reminders are
+excluded from the poke and left to the cron, which also removes the only loop.
+
 ## Known open issues
 
-- **`surface/tinted-strong` resolves to the same value as `surface/tinted`**
-  (both `brand/50`, #F1F1FF), so it is inert. Consequence: Secondary's pressed
-  state can only darken its label, which is a quiet cue. A dedicated token for
-  a pressed tinted surface would fix it.
 - Chart (dual-line BP, single-line sugar) is deliberately not built yet. The
   measurement detail screens ship without it, and without the 7 days / 30 days
   / 3 months pills that exist only to drive it — so the one sanctioned shadow,
@@ -175,9 +239,6 @@ only — never production, so none of this exists in a real build.
   toggles a legend for the dots — a guess at intent, not a decision.
 - No Accessibility or general app-settings screen has been designed.
 - PWA file upload on installed iOS has not been tested on a real device.
-- Neither role can sign out from inside the product — the only sign-out lives
-  behind `NEXT_PUBLIC_DEV_TOOLS`. Not a family-access gap; it was always
-  missing, and it has to be solved before launch.
 - The family screens and the invite acceptance flow were **built in code from
   the existing component library**, like the walk check-in — Figma has no
   frames for any of them. Third authorised exception (2026-08-28).
