@@ -1,66 +1,67 @@
-import { BottomNav, SectionHeading } from "@/components/ui";
+import { BottomNav } from "@/components/ui";
 import { AppHeader } from "@/components/app-header";
-import { DocumentRow } from "@/components/health/document-row";
-import { getFamilyHome } from "@/lib/family-data";
+import { TodaysCare } from "@/components/home/todays-care";
+import { DocumentsSection } from "@/components/health/documents-section";
+import { getHomeData } from "@/lib/home-data";
+import { getHealthOverview } from "@/lib/health-data";
+import { getCareDay } from "@/lib/care-history";
 import { getHeaderAvatar } from "@/lib/profile-data";
-import { relativeWhen } from "@/lib/today";
+import { localDate } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
-import { ViewingBanner } from "./viewing-banner";
-import { RecentUpdates } from "./recent-updates";
 import { CareHistory } from "./care-history";
-import { FamilyHealthOverview } from "./health-overview";
 import { DateContext } from "./date-context";
 import { DayCare } from "./day-care";
-import { getCareDay } from "@/lib/care-history";
-import { localDate } from "@/lib/today";
 
 /**
  * Home, for someone looking in on another person's account.
  *
- * The owner's Home asks "what do I need to do today" and is built out of
- * actions: confirm this dose, record that reading, log a walk. This one asks
- * "how is she doing" and is built out of what has already happened. It is not
- * her Home with the buttons removed — the order is different, the leading
- * section is different, and there is nothing on it to tap that changes
- * anything.
+ * One day at a time, and the same shape whichever day it is. It used to lead
+ * with a rolling feed of everything that had happened lately, which answered
+ * "what has been going on" by repeating "Morning medicine confirmed · 2 days
+ * ago" three times and pushing her blood pressure off the bottom of the
+ * screen. A day is the unit a family member actually thinks in.
  *
- * Recent Updates leads because it is the reason the app was opened. Health
- * Overview sits under it as the way through to detail, and documents last.
+ * Today reuses her own Today's Care wholesale, with canEdit deciding whether
+ * anything can be pressed — the design for this screen IS that component, so
+ * reimplementing it would have been two things to keep in step. A chosen date
+ * cannot reuse it, because a past day has no Record button and no "upcoming"
+ * slot; it gets the read-only telling in DayCare instead.
+ *
+ * There is no "you are viewing X's information" banner. The header says
+ * "Meenu's Sakha" two lines above it, and saying it twice was noise.
  */
 export async function FamilyHome({
   accountId,
   ownerName,
+  canEdit,
   date,
 }: {
   accountId: string;
   ownerName: string;
+  /** Contributors may record and upload; view-only members may not. */
+  canEdit: boolean;
   /** A past day to show instead of today. Null is today, and is the default. */
   date?: string | null;
 }) {
-  const { t, locale } = await getT();
+  const { t } = await getT();
 
-  /**
-   * Today keeps the rolling feed; a chosen day shows only that day.
-   *
-   * Today's question is "what has been going on", and a window of recent
-   * activity answers it. A chosen date asks "how did that day go", where
-   * anything from the days either side would only blur the answer. Same
-   * screen, same components, one branch.
-   */
   const historical = date && date !== localDate() ? date : null;
 
   /**
    * Only fetch the view being rendered.
    *
-   * These are two different screens sharing one URL, and each costs a handful
-   * of round trips to Mumbai. Asking for the rolling feed while showing a past
-   * day meant six queries whose results were thrown away on every date tapped.
+   * These are two different days sharing one URL and each costs several round
+   * trips to Mumbai. Asking for today while showing a past day meant a set of
+   * queries thrown away on every date tapped.
    */
-  const [home, avatarUrl, day] = await Promise.all([
-    historical ? Promise.resolve(null) : getFamilyHome(accountId),
+  const [home, overview, avatarUrl, day] = await Promise.all([
+    historical ? Promise.resolve(null) : getHomeData(accountId),
+    getHealthOverview(accountId),
     getHeaderAvatar(),
     historical ? getCareDay(accountId, historical) : Promise.resolve(null),
   ]);
+
+  const calendar = <CareHistory accountId={accountId} selected={historical ?? undefined} />;
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
@@ -74,19 +75,11 @@ export async function FamilyHome({
       </AppHeader>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pt-2 pb-4">
-        <ViewingBanner name={ownerName} />
-
         {historical ? (
           <>
             <DateContext date={historical} />
-            {/* The calendar stays reachable from the day you are already on,
-                so moving between days does not mean going back to today
-                first. */}
-            <div className="flex items-center justify-end">
-              <CareHistory accountId={accountId} selected={historical} />
-            </div>
             {day ? (
-              <DayCare day={day} />
+              <DayCare day={day} date={historical} calendar={calendar} />
             ) : (
               <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-4 py-5">
                 <p className="text-body-medium text-text-secondary">
@@ -95,47 +88,23 @@ export async function FamilyHome({
               </div>
             )}
           </>
-        ) : (
-          <>
-            <RecentUpdates
-              updates={home?.updates ?? []}
-              historyAction={<CareHistory accountId={accountId} />}
-            />
+        ) : home ? (
+          <TodaysCare
+            data={home}
+            canEdit={canEdit}
+            medicinesHeading={t.family.todaysMedicine}
+            medicinesAction={calendar}
+          />
+        ) : null}
 
-            {home ? (
-              <FamilyHealthOverview
-                latest={home.latest}
-                medicines={home.medicines}
-                heading={t.family.healthOverview}
-              />
-            ) : null}
-
-            {/* Today-only, for the same reason Health Overview is: "recent
-                documents" is a rolling list, and showing it under a date
-                banner reading 29 August would contradict itself. That day's
-                own documents are listed by DayCare. */}
-            <section className="flex shrink-0 flex-col gap-2.5">
-              <SectionHeading>{t.family.recentDocuments}</SectionHeading>
-              {(home?.documents ?? []).length === 0 ? (
-                <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-4 py-5">
-                  <p className="text-body-medium text-text-secondary">
-                    {t.family.noDocumentsYet}
-                  </p>
-                </div>
-              ) : (
-                (home?.documents ?? []).map((d) => (
-                  <DocumentRow
-                    key={d.id}
-                    href={`/health/documents/${d.id}`}
-                    title={d.title}
-                    when={relativeWhen(d.at, locale)}
-                  />
-                ))
-              )}
-            </section>
-          </>
-        )}
-
+        {/* Documents are hers, not a day's — the same list on either view. */}
+        <DocumentsSection
+          documents={overview.documents}
+          accountId={accountId}
+          canAdd={canEdit}
+          addLabel={t.documents.uploadDocument}
+          emptyMessage={t.family.noDocumentsYet}
+        />
       </main>
 
       <BottomNav active="home" variant="family" className="shrink-0" />

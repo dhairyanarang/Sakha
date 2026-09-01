@@ -122,16 +122,14 @@ export const hi: Messages = {
 
   family: {
     careHistory: "देखभाल का इतिहास",
-    viewingThisDay: "इस दिन की देखभाल",
+    todaysMedicine: "आज की दवा",
+    careThatDay: "उस दिन की देखभाल",
     today: "आज",
-    medicinesThatDay: "दवाएँ",
-    alsoThatDay: "उस दिन और",
     nothingElseThatDay: "उस दिन और कुछ दर्ज नहीं हुआ।",
     nothingDue: "कुछ नहीं था",
     noCareThatDay: "उस दिन का कोई रिकॉर्ड नहीं है।",
     previousMonth: "पिछला महीना",
     nextMonth: "अगला महीना",
-    loadingMonth: "वह महीना लाया जा रहा है…",
     pickADay: "कोई दिन चुनें और देखें वह कैसा रहा।",
     noMedicinesThatDay: "उस दिन कोई दवा नहीं थी।",
     doseConfirmed: "ले ली",

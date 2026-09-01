@@ -1,67 +1,53 @@
 import { Droplet, FileText, Footprints, HeartPulse, Pill, Weight } from "lucide-react";
-import { IconCircle, SectionHeading, StatusTag } from "@/components/ui";
-import { SLOT_ORDER, slotName } from "@/lib/today";
+import { IconCircle, SectionHeading } from "@/components/ui";
+import { slotLabel } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
 import type { CareDay } from "@/lib/care-history";
-import type { DotState } from "@/components/ui/status-tag";
 
 /**
  * One past day, as it was.
  *
- * The rolling feed answers "what has been going on lately" and is right for
- * today. A chosen date asks something narrower — "how did that day go" — so
- * this shows that day and only that day, with no window and nothing from
- * either side of it to confuse what is being looked at.
+ * The same two cards today has — medicines, then care — but stated rather than
+ * offered. A past day has nothing to press: no Confirm, no Record, no walk to
+ * log. So the rows say what happened and stop, which is also why this cannot
+ * simply reuse Today's Care.
  *
  * Medicines are one row per part of the day, never one per tablet. That is how
- * she confirms them (a single button per slot) and how the notification
- * already describes them, and it is the difference between three rows and nine
- * on an ordinary Tuesday.
+ * she confirms them and how the notification already describes them.
  *
- * Readings, the walk and documents keep their own rows underneath. They are
- * the reason a family member opened the app on a day something happened, and
- * the medicines must never be able to push them off the screen.
+ * Headings name the day being viewed. "Today's Medicine" above the first of
+ * August would contradict the banner directly above it.
  */
-export async function DayCare({ day }: { day: CareDay }) {
+export async function DayCare({
+  day,
+  date,
+  calendar,
+}: {
+  day: CareDay;
+  /** YYYY-MM-DD, for the headings. */
+  date: string;
+  /** The date picker, opposite the first heading, exactly as today has it. */
+  calendar?: React.ReactNode;
+}) {
   const { t, locale } = await getT();
 
-  const byStatus = new Map(day.doses.map((d) => [d.slot, d.status]));
-
-  /**
-   * The day in three dots, reading morning, afternoon, evening.
-   *
-   * Solid where the slot was confirmed, a ring where medicines were due and it
-   * was not, and faint where nothing was due then — which is the state that
-   * would otherwise have collided with "not confirmed" and made one mark mean
-   * two things.
-   */
-  const dots: DotState[] = SLOT_ORDER.map((slot) => {
-    const status = byStatus.get(slot);
-    if (!status) return "n/a";
-    return status === "confirmed" ? "yes" : "no";
-  });
-
-  const summary = SLOT_ORDER.map((slot) => {
-    const status = byStatus.get(slot);
-    if (!status) return `${slotName(slot, locale)}: ${t.family.nothingDue}`;
-    return `${slotName(slot, locale)}: ${
-      status === "confirmed"
-        ? t.family.doseConfirmed
-        : status === "skipped"
-          ? t.family.doseSkipped
-          : t.family.doseUnconfirmed
-    }`;
-  }).join(", ");
+  // Noon UTC so the label can never slip a day either side of the date string.
+  const heading = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", {
+    day: "numeric",
+    month: "long",
+    weekday: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T12:00:00Z`));
 
   const hasActivity =
     day.readings.length > 0 || day.walk !== null || day.documents.length > 0;
 
   return (
     <>
-      <section className="flex shrink-0 flex-col gap-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <SectionHeading>{t.family.medicinesThatDay}</SectionHeading>
-          {day.doses.length > 0 ? <StatusTag states={dots} label={summary} /> : null}
+      <section className="flex shrink-0 flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <SectionHeading>{heading}</SectionHeading>
+          {calendar}
         </div>
 
         {day.doses.length === 0 ? (
@@ -79,24 +65,18 @@ export async function DayCare({ day }: { day: CareDay }) {
                   <IconCircle tone="brand">
                     <Pill size={22} className="text-action-primary" aria-hidden />
                   </IconCircle>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="text-body-medium text-text-primary">
-                      {slotName(dose.slot, locale)}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <p className="text-text-primary text-[16px] leading-[1.2] font-medium">
+                      {slotLabel(dose.slot, locale)}
                     </p>
-                    <p className="text-text-secondary truncate text-[14px] leading-[1.2]">
+                    <p className="text-text-tertiary truncate text-[16px] leading-[1.2]">
                       {dose.medicineNames.join(", ")}
                     </p>
                   </div>
-                  {/* Words as well as dots — a status must never depend on
-                      telling two small shapes apart. */}
-                  <p
-                    className={
-                      "shrink-0 text-[15px] leading-[1.3] " +
-                      (dose.status === "confirmed"
-                        ? "text-text-primary font-medium"
-                        : "text-text-secondary")
-                    }
-                  >
+                  {/* Words, not colour. Confirmed, skipped, or simply not
+                      answered — and the last of those is not a failure, so it
+                      is stated as flatly as the others. */}
+                  <p className="text-text-primary shrink-0 text-center text-[16px] leading-[1.2] font-medium">
                     {dose.status === "confirmed"
                       ? t.family.doseConfirmed
                       : dose.status === "skipped"
@@ -110,8 +90,8 @@ export async function DayCare({ day }: { day: CareDay }) {
         )}
       </section>
 
-      <section className="flex shrink-0 flex-col gap-2.5">
-        <SectionHeading>{t.family.alsoThatDay}</SectionHeading>
+      <section className="flex shrink-0 flex-col gap-3">
+        <SectionHeading>{t.family.careThatDay}</SectionHeading>
         {!hasActivity ? (
           <div className="bg-surface-default border-border-soft rounded-xl border-[0.5px] px-4 py-5">
             <p className="text-body-medium text-text-secondary">
@@ -123,7 +103,10 @@ export async function DayCare({ day }: { day: CareDay }) {
             {day.readings.map((r, i) => (
               <Row
                 key={`r${i}`}
-                icon={r.type === "weight" ? Weight : r.type === "blood_sugar" ? Droplet : HeartPulse}
+                first={i === 0}
+                icon={
+                  r.type === "weight" ? Weight : r.type === "blood_sugar" ? Droplet : HeartPulse
+                }
                 tone={r.type === "weight" ? "success" : r.type === "blood_sugar" ? "error" : "brand"}
                 className={
                   r.type === "weight"
@@ -132,7 +115,6 @@ export async function DayCare({ day }: { day: CareDay }) {
                       ? "text-feedback-error"
                       : "text-action-primary"
                 }
-                first={i === 0}
                 text={
                   r.type === "blood_pressure"
                     ? t.family.updates.bloodPressure(r.value, r.unit)
@@ -144,10 +126,10 @@ export async function DayCare({ day }: { day: CareDay }) {
             ))}
             {day.walk ? (
               <Row
+                first={day.readings.length === 0}
                 icon={Footprints}
                 tone="success"
                 className="text-feedback-success-text"
-                first={day.readings.length === 0}
                 text={
                   !day.walk.didWalk
                     ? t.family.updates.noWalk
@@ -160,10 +142,10 @@ export async function DayCare({ day }: { day: CareDay }) {
             {day.documents.map((title, i) => (
               <Row
                 key={`d${i}`}
+                first={false}
                 icon={FileText}
                 tone="neutral"
                 className="text-text-secondary"
-                first={false}
                 text={t.family.updates.documentAdded(title)}
               />
             ))}
@@ -174,7 +156,7 @@ export async function DayCare({ day }: { day: CareDay }) {
   );
 }
 
-/** The same row shape Recent Updates uses, so a day reads like the feed does. */
+/** One thing that happened, said in a line. Nothing to press. */
 function Row({
   icon: Icon,
   tone,
@@ -195,7 +177,9 @@ function Row({
         <IconCircle tone={tone}>
           <Icon size={22} className={className} aria-hidden />
         </IconCircle>
-        <p className="text-body-medium text-text-primary min-w-0 flex-1">{text}</p>
+        <p className="text-text-primary min-w-0 flex-1 text-[16px] leading-[1.2] font-medium">
+          {text}
+        </p>
       </div>
     </div>
   );

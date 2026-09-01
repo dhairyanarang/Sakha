@@ -67,7 +67,7 @@ export function CareHistory({
   const [year, setYear] = useState(viewing ? Number(viewing.slice(0, 4)) : currentYear);
   const [month, setMonth] = useState(viewing ? Number(viewing.slice(5, 7)) : currentMonth);
   const [days, setDays] = useState<CareDay[] | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   /**
    * One fetch per month, on open and on each month change.
@@ -173,6 +173,9 @@ export function CareHistory({
               const date = `${year}-${pad(month)}-${pad(i + 1)}`;
               const lived = byDate.has(date);
               const isViewing = viewing === date;
+              // Today reads as a place on the calendar, not as a selection —
+              // a tint, where the day being viewed gets the solid fill.
+              const isToday = date === todayIST;
               const mark = markFor(byDate.get(date));
               return (
                 <button
@@ -191,9 +194,11 @@ export function CareHistory({
                     "flex h-11 flex-col items-center justify-center gap-[3px] rounded-lg text-[16px] transition-colors " +
                     (isViewing
                       ? "bg-action-primary text-text-on-brand font-medium"
-                      : lived
-                        ? "text-text-primary active:bg-surface-tinted"
-                        : "text-text-disabled")
+                      : isToday
+                        ? "bg-surface-tinted text-action-primary font-medium"
+                        : lived
+                          ? "text-text-primary active:bg-surface-tinted"
+                          : "text-text-disabled")
                   }
                 >
                   <span className="leading-none">{i + 1}</span>
@@ -221,11 +226,6 @@ export function CareHistory({
             })}
           </div>
 
-          {pending && !days ? (
-            <p className="text-text-secondary shrink-0 text-[16px]">
-              {t.family.loadingMonth}
-            </p>
-          ) : null}
         </div>
       </Sheet>
     </>

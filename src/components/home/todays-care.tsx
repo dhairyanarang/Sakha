@@ -15,10 +15,21 @@ import type { HomeData } from "@/lib/home-data";
 export function TodaysCare({
   data,
   canEdit = true,
+  medicinesHeading,
+  medicinesAction,
 }: {
   data: HomeData;
   /** A family member sees the same rows with nothing to press. */
   canEdit?: boolean;
+  /**
+   * Her own Home calls this section "Medicines" because it is the only one she
+   * has. A family member is looking at a particular day, so theirs names the
+   * day — "Today's Medicine", or the date when they have chosen one. Absent
+   * here means her wording, unchanged.
+   */
+  medicinesHeading?: string;
+  /** Sits opposite that heading. The family calendar, and nothing else. */
+  medicinesAction?: React.ReactNode;
 }) {
   const { t, locale } = useI18n();
   const [sheet, setSheet] = useState<null | "sugar" | "bp" | "walk">(null);
@@ -50,9 +61,10 @@ export function TodaysCare({
           care rows below do not have, and grouping them keeps the difference
           legible. */}
       <section className="flex shrink-0 flex-col gap-3">
-        <SectionHeading>
-          {t.medicines.title}
-        </SectionHeading>
+        <div className="flex items-center justify-between gap-2">
+          <SectionHeading>{medicinesHeading ?? t.medicines.title}</SectionHeading>
+          {medicinesAction}
+        </div>
 
         {data.doses.length === 0 ? (
           <EmptyState

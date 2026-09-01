@@ -131,17 +131,15 @@ export const en = {
     headerSubtitle: "How things are going",
     /** The calendar behind Recent Updates. */
     careHistory: "Care history",
+    todaysMedicine: "Today's Medicine",
+    careThatDay: "Care that day",
     /** Historical-date mode on the family Home. */
-    viewingThisDay: "Viewing care for this day",
     today: "Today",
-    medicinesThatDay: "Medicines",
-    alsoThatDay: "Also that day",
     nothingElseThatDay: "Nothing else was recorded that day.",
     nothingDue: "nothing due",
     noCareThatDay: "There is nothing recorded for that day.",
     previousMonth: "Previous month",
     nextMonth: "Next month",
-    loadingMonth: "Getting that month…",
     pickADay: "Choose a day to see how it went.",
     noMedicinesThatDay: "No medicines were due that day.",
     /** Never "missed" or "failed" — an unanswered dose is not a failure. */
