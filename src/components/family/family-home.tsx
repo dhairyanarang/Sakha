@@ -47,6 +47,17 @@ export async function FamilyHome({
   const shown = date ?? today;
   const isToday = shown === today;
 
+  /**
+   * This exact screen, day included, for anything that pushes off it.
+   *
+   * Family View has no Health tab, so a detail screen that assumed one sent a
+   * family member somewhere their app does not have. The origin travels on the
+   * link instead of being inferred from their role, because role alone would
+   * get the screen right and still lose the day they were looking at.
+   */
+  const backTo = isToday ? "/" : `/?d=${shown}`;
+  const from = `?from=${encodeURIComponent(backTo)}`;
+
   const [slots, onDay, overview, avatarUrl] = await Promise.all([
     getMedicinesBySlot(accountId, shown),
     getMeasurementsOn(accountId, shown),
@@ -104,7 +115,7 @@ export async function FamilyHome({
                 latest from another — a June blood pressure under Saturday the
                 2nd would be a false statement about her. */}
             <MeasurementRow
-              href="/health/measurements/blood-sugar"
+              href={`/health/measurements/blood-sugar${from}`}
               icon={<Droplet size={22} className="text-feedback-error" aria-hidden />}
               tone="error"
               label={t.health.bloodSugar}
@@ -114,7 +125,7 @@ export async function FamilyHome({
             />
             <div className="border-border-default border-t" />
             <MeasurementRow
-              href="/health/measurements/blood-pressure"
+              href={`/health/measurements/blood-pressure${from}`}
               icon={<HeartPulse size={22} className="text-action-primary" aria-hidden />}
               tone="brand"
               label={t.health.bloodPressure}
@@ -124,7 +135,7 @@ export async function FamilyHome({
             />
             <div className="border-border-default border-t" />
             <MeasurementRow
-              href="/health/measurements/weight"
+              href={`/health/measurements/weight${from}`}
               icon={<Weight size={22} className="text-feedback-success-text" aria-hidden />}
               tone="success"
               label={t.health.weight}
@@ -139,6 +150,7 @@ export async function FamilyHome({
         <DocumentsSection
           documents={overview.documents}
           accountId={accountId}
+          backTo={backTo}
           canAdd={canEdit}
           addLabel={t.documents.uploadDocument}
           emptyMessage={t.family.noDocumentsYet}

@@ -23,12 +23,19 @@ import { useI18n } from "@/lib/i18n/client";
 export function DocumentsSection({
   documents,
   accountId,
+  backTo,
   canAdd = true,
   addLabel,
   emptyMessage,
 }: {
   documents: DocumentSummary[];
   accountId: string;
+  /**
+   * Where opening a document should return to. Health leaves this unset and
+   * gets its own default; Family View passes the day it is showing, so Back
+   * lands on the same screen and the same date.
+   */
+  backTo?: string;
   /** Owner AND family: both may add a document. Neither rename nor delete. */
   canAdd?: boolean;
   /** Family says "Upload Document" where she says "Add Document". */
@@ -68,7 +75,11 @@ export function DocumentsSection({
         documents.map((d) => (
           <DocumentRow
             key={d.id}
-            href={`/health/documents/${d.id}`}
+            href={
+              backTo
+                ? `/health/documents/${d.id}?from=${encodeURIComponent(backTo)}`
+                : `/health/documents/${d.id}`
+            }
             title={d.title}
             when={relativeWhen(d.at, locale)}
           />

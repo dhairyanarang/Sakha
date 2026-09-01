@@ -8,6 +8,7 @@ import {
 } from "@/components/health/measurement-detail";
 import type { Enums } from "@/lib/supabase/types";
 import { getT } from "@/lib/i18n/server";
+import { safeReturnTo } from "@/lib/return-to";
 import type { Messages } from "@/lib/i18n";
 
 /**
@@ -71,10 +72,21 @@ const typesFor = (
 
 export default async function MeasurementPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ type: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { type: slug } = await params;
+  /**
+   * Back goes where you came from.
+   *
+   * This screen opens from her Health tab and from a family member's Family
+   * View, and Family View has no Health tab to return to — it was sending them
+   * into a screen their app no longer has. The origin travels with the link,
+   * so it also carries the day being viewed.
+   */
+  const backHref = safeReturnTo((await searchParams).from, "/health");
   const { t, locale } = await getT();
   const config = typesFor(t)[slug];
   if (!config) notFound();
@@ -86,7 +98,7 @@ export default async function MeasurementPage({
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
-      <ScreenHeader backHref="/health" title={config.heading} />
+      <ScreenHeader backHref={backHref} title={config.heading} />
       <MeasurementDetail
         type={config.type}
         title={config.title}

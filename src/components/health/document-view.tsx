@@ -27,10 +27,17 @@ import { documentTypeLabel } from "@/lib/i18n/labels";
  */
 export function DocumentView({
   doc,
+  backHref = "/health",
   canDelete = true,
   viewerId = null,
 }: {
   doc: StoredDocument;
+  /**
+   * Where Back and a completed delete return to. Defaults to Health, which is
+   * where the owner opens documents from; Family View passes its own path so a
+   * family member is not sent to a tab their app does not have.
+   */
+  backHref?: string;
   /**
    * Owner only. A family member may add a document and open any of them, and
    * may remove none — including one he added himself. Absent rather than
@@ -57,14 +64,14 @@ export function DocumentView({
     startTransition(async () => {
       const err = await deleteDocument(doc.id);
       if (err) setError(err);
-      else router.push("/health");
+      else router.push(backHref);
     });
   }
 
   return (
     <div className="bg-surface-page flex flex-1 flex-col">
       <ScreenHeader
-        backHref="/health"
+        backHref={backHref}
         title={doc.title}
         action={
           canDelete ? (
