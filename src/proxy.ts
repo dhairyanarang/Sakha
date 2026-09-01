@@ -29,7 +29,33 @@ export async function proxy(request: NextRequest) {
 
   // getUser() revalidates the token against Supabase. getSession() only reads
   // the cookie and will happily return a forged one — never trust it here.
-  await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+
+  /**
+   * Signed out, asking for Home.
+   *
+   * requireAccount() in the page would send them to Welcome too, and for every
+   * other route it still does. But Home now has a streaming boundary — the
+   * shell and the splash are flushed before the page runs — and once bytes
+   * have gone out, a redirect can no longer be a status code. Next falls back
+   * to a meta refresh, so the signed-out launch fetched a document it threw
+   * away and waited up to a second to leave it.
+   *
+   * Deciding it here costs nothing: getUser() has already been awaited above,
+   * so this adds no query and no round trip. It is deliberately only the
+   * signed-out case and only "/" — every other reason to leave Home
+   * (onboarding, a family member, the wrong active account) still belongs to
+   * requireAccount, which knows about accounts and this does not.
+   *
+   * A signed-IN request falls straight through and keeps the early first paint.
+   */
+  if (!data.user && request.nextUrl.pathname === "/") {
+    const away = NextResponse.redirect(new URL("/welcome", request.url));
+    // Carry over anything the session refresh above wanted to write, or the
+    // redirect would drop a cookie clearance on the floor.
+    for (const cookie of response.cookies.getAll()) away.cookies.set(cookie);
+    return away;
+  }
 
   return response;
 }
