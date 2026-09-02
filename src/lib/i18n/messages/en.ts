@@ -255,8 +255,10 @@ export const en = {
     weightProgress: "Weight Progress",
     latest: "Latest",
     noReadingsYet: "No readings yet",
-    sugarRangeValue: "70-140 mg/dL",
-    bpRangeValue: "90–120 systolic, 60–80 diastolic",
+    /** Numbers come from lib/measurement-ranges — never retyped here. */
+    sugarRangeValue: (lo: number, hi: number) => `${lo}-${hi} mg/dL`,
+    bpRangeValue: (sysLo: number, sysHi: number, diaLo: number, diaHi: number) =>
+      `${sysLo}–${sysHi} systolic, ${diaLo}–${diaHi} diastolic`,
     /** Screen-reader label for one row in the history list. */
     readingAria: (value: string, unit: string, when: string) => `${value} ${unit}, ${when}`,
     editReadingAria: (value: string, unit: string, when: string) =>

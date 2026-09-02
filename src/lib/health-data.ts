@@ -347,3 +347,28 @@ export async function getMeasurementsOn(
   }
   return on;
 }
+
+/**
+ * Just the documents.
+ *
+ * getHealthOverview answers three questions at once, which is right for the
+ * Health screen where all three are on the page. Family View needs only this
+ * one — it reads its medicines and its measurements for a chosen day through
+ * their own queries — and calling the overview there re-fetched medications
+ * and health_measurements it already had, twice per render and again on every
+ * date change.
+ */
+export async function getDocuments(accountId: string): Promise<DocumentSummary[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("health_documents")
+    .select("id, title, doc_date, created_at")
+    .eq("account_id", accountId)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((d) => ({
+    id: d.id,
+    title: d.title,
+    at: d.doc_date ?? d.created_at,
+  }));
+}

@@ -3,6 +3,7 @@
 import { TZ, clockLabel } from "@/lib/today";
 import { useLocale } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n";
+import type { Band } from "@/lib/measurement-ranges";
 
 /**
  * The progression chart, hand-built as inline SVG.
@@ -115,12 +116,22 @@ export function MeasurementChart({
   series,
   unit,
   summary,
+  bands = [],
 }: {
   /** Chronological, oldest first. */
   points: ChartPoint[];
   series: Series[];
   unit: string;
   summary: string;
+  /**
+   * The healthy range, drawn as a tinted band behind the line.
+   *
+   * Passed in rather than known here: the numbers are a health statement and
+   * belong to lib/measurement-ranges, which is also what writes the badge
+   * above the chart — so the band and the words can never disagree. Empty for
+   * weight, which has no range and must not be given one.
+   */
+  bands?: Band[];
 }) {
   const locale = useLocale();
 
@@ -133,7 +144,21 @@ export function MeasurementChart({
   const allValues = plotted.flatMap((p) => p.values.filter((v): v is number => v != null));
   if (allValues.length === 0) return null;
 
-  const y = niceDomain(Math.min(...allValues), Math.max(...allValues));
+  /**
+   * The axis has to contain the band as well as the readings.
+   *
+   * Otherwise a week of readings in the 120s gives a domain that starts at 100
+   * and the lower edge of the healthy range is off the top of nothing — the
+   * band would be drawn clipped, or not at all, and would quietly imply the
+   * range starts wherever the axis happens to. Readings far outside the band
+   * work the same way from the other side: the domain grows, the band stays
+   * where it belongs and simply occupies less of the height.
+   */
+  const bandValues = bands.flatMap((b) => [b.min, b.max]);
+  const y = niceDomain(
+    Math.min(...allValues, ...bandValues),
+    Math.max(...allValues, ...bandValues),
+  );
   const firstAt = plotted[0].at;
   const lastAt = plotted[plotted.length - 1].at;
   const span = lastAt - firstAt;
@@ -165,6 +190,48 @@ export function MeasurementChart({
       <text x={0} y={UNIT_Y} dominantBaseline="middle" className="fill-[#333333] text-[12px] font-semibold">
         {unit}
       </text>
+
+      {/* Behind everything: the reading line must stay clearly on top of the
+          range, never absorbed into it. A thin stroke on each boundary and a
+          pale fill between — both from the design system's own chart tokens,
+          one of which existed for exactly this and had never been used. */}
+      {bands.map((b, i) => {
+        const top = yFor(Math.min(b.max, y.max));
+        const bottom = yFor(Math.max(b.min, y.min));
+        return (
+          <g key={`band-${i}`}>
+            <rect
+              x={PLOT.left}
+              y={top}
+              width={PLOT.right - PLOT.left}
+              height={Math.max(0, bottom - top)}
+              fill="var(--color-feedback-success-surface)"
+            />
+            {/* Only drawn where the boundary is actually on the axis, so a
+                range clipped by the domain does not grow a false edge. */}
+            {b.max <= y.max ? (
+              <line
+                x1={PLOT.left}
+                x2={PLOT.right}
+                y1={top}
+                y2={top}
+                stroke="var(--color-chart-range-line)"
+                strokeWidth={1}
+              />
+            ) : null}
+            {b.min >= y.min ? (
+              <line
+                x1={PLOT.left}
+                x2={PLOT.right}
+                y1={bottom}
+                y2={bottom}
+                stroke="var(--color-chart-range-line)"
+                strokeWidth={1}
+              />
+            ) : null}
+          </g>
+        );
+      })}
 
       {y.lines.map((value) => (
         <g key={value}>

@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { MeasurementRow } from "@/components/health/measurement-row";
 import { DocumentsSection } from "@/components/health/documents-section";
 import { getMedicinesBySlot } from "@/lib/family-data";
-import { getHealthOverview, getMeasurementsOn } from "@/lib/health-data";
+import { getDocuments, getMeasurementsOn } from "@/lib/health-data";
 import { getHeaderAvatar } from "@/lib/profile-data";
 import { localDate, readingStamp } from "@/lib/today";
 import { getT } from "@/lib/i18n/server";
@@ -55,12 +55,10 @@ export async function FamilyHome({
   const backTo = isToday ? "/" : `/?d=${shown}`;
   const from = `?from=${encodeURIComponent(backTo)}`;
 
-  const [slots, onDay, overview, avatarUrl] = await Promise.all([
+  const [slots, onDay, documents, avatarUrl] = await Promise.all([
     getMedicinesBySlot(accountId, shown),
     getMeasurementsOn(accountId, shown),
-    // Documents only. The latest readings it also returns are deliberately
-    // unused here — this screen shows the chosen day's or nothing at all.
-    getHealthOverview(accountId),
+    getDocuments(accountId),
     getHeaderAvatar(),
   ]);
 
@@ -155,7 +153,7 @@ export async function FamilyHome({
             is allowed to take. Deleting stays owner-only — that is canDelete
             on the document screen, and it is unchanged. */}
         <DocumentsSection
-          documents={overview.documents}
+          documents={documents}
           accountId={accountId}
           backTo={backTo}
           canAdd

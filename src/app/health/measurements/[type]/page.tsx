@@ -9,6 +9,12 @@ import {
 import type { Enums } from "@/lib/supabase/types";
 import { getT } from "@/lib/i18n/server";
 import { safeReturnTo } from "@/lib/return-to";
+import {
+  BP_DIASTOLIC,
+  BP_SYSTOLIC,
+  NORMAL_RANGES,
+  SUGAR,
+} from "@/lib/measurement-ranges";
 import type { Messages } from "@/lib/i18n";
 
 /**
@@ -42,7 +48,7 @@ const typesFor = (
     range: {
       kind: "badge",
       label: t.health.normalRange,
-      value: t.health.sugarRangeValue,
+      value: t.health.sugarRangeValue(SUGAR.min, SUGAR.max),
     },
   },
   "blood-pressure": {
@@ -53,7 +59,12 @@ const typesFor = (
     range: {
       kind: "callout",
       label: t.health.typicalRangeAdults,
-      value: t.health.bpRangeValue,
+      value: t.health.bpRangeValue(
+        BP_SYSTOLIC.min,
+        BP_SYSTOLIC.max,
+        BP_DIASTOLIC.min,
+        BP_DIASTOLIC.max,
+      ),
     },
   },
   weight: {
@@ -104,6 +115,9 @@ export default async function MeasurementPage({
         title={config.title}
         unit={config.unit}
         rangeNote={config.range}
+        // Same definition the badge above is written from, so the band and
+        // the words cannot drift apart.
+        bands={NORMAL_RANGES[config.type]}
         months={months}
         canEdit={canEdit}
         /* Everyone on the account may add a reading — a son taking his

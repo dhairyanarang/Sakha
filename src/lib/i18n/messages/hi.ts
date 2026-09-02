@@ -237,8 +237,9 @@ export const hi: Messages = {
     weightProgress: "वज़न में बदलाव",
     latest: "आख़िरी",
     noReadingsYet: "अभी कोई रीडिंग नहीं",
-    sugarRangeValue: "70-140 mg/dL",
-    bpRangeValue: "90–120 सिस्टोलिक, 60–80 डायस्टोलिक",
+    sugarRangeValue: (lo, hi) => `${lo}-${hi} mg/dL`,
+    bpRangeValue: (sysLo, sysHi, diaLo, diaHi) =>
+      `${sysLo}–${sysHi} सिस्टोलिक, ${diaLo}–${diaHi} डायस्टोलिक`,
     readingAria: (value, unit, when) => `${value} ${unit}, ${when}`,
     editReadingAria: (value, unit, when) => `${value} ${unit}, ${when} — बदलें`,
     chartNone: (title) => `${title}: अभी कोई रीडिंग नहीं।`,

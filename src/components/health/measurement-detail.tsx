@@ -5,6 +5,7 @@ import { Calendar, ChevronRight } from "lucide-react";
 import { FixedBar, InfoCallout, SectionHeading, Toast } from "@/components/ui";
 import { RecordMeasurementSheet } from "@/components/home/record-measurement-sheet";
 import { MeasurementChart, type ChartPoint, type Series } from "./measurement-chart";
+import type { Band } from "@/lib/measurement-ranges";
 import { readingStamp, relativeWhen } from "@/lib/today";
 import { useI18n } from "@/lib/i18n/client";
 import type { Locale, Messages } from "@/lib/i18n";
@@ -35,6 +36,7 @@ export function MeasurementDetail({
   title,
   unit,
   rangeNote,
+  bands,
   months,
   canEdit = true,
   canRecord = true,
@@ -44,6 +46,8 @@ export function MeasurementDetail({
   title: string;
   unit: string;
   rangeNote: RangeNote;
+  /** The healthy range, drawn behind the line. Same numbers as rangeNote. */
+  bands?: Band[];
   months: MeasurementMonth[];
   /** Owner only: tap a past reading to correct or remove it. */
   canEdit?: boolean;
@@ -181,6 +185,7 @@ export function MeasurementDetail({
                 series={series}
                 unit={unit}
                 summary={summary}
+                  bands={bands}
               />
             </>
           ) : null}
