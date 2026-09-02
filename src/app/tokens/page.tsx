@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { DEV_TOOLS } from "@/lib/dev";
 /**
  * Token proof sheet — Phase 0.
  *
@@ -99,6 +101,11 @@ function Swatches({ items }: { items: readonly (readonly [string, string])[] }) 
 }
 
 export default function TokenProofSheet() {
+  // A design-system page, not a product screen. It was publicly reachable in
+  // production, which is not where an internal proof sheet belongs — gated on
+  // the flag that already exists for exactly this, so it stays available on
+  // preview and is simply absent in production.
+  if (!DEV_TOOLS) notFound();
   return (
     <main className="mx-auto w-full max-w-[402px] px-4 py-6 flex flex-col gap-7">
       <header className="flex flex-col gap-1">

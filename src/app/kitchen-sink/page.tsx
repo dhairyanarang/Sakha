@@ -1,4 +1,6 @@
 "use client";
+import { notFound } from "next/navigation";
+import { DEV_TOOLS } from "@/lib/dev";
 
 import { useState } from "react";
 import { Bell, Calendar, ChevronRight, Droplet, Globe } from "lucide-react";
@@ -56,6 +58,11 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 const STYLES = ["primary", "secondary", "tertiary"] as const;
 
 export default function KitchenSink() {
+  // A design-system page, not a product screen. It was publicly reachable in
+  // production, which is not where an internal proof sheet belongs — gated on
+  // the flag that already exists for exactly this, so it stays available on
+  // preview and is simply absent in production.
+  if (!DEV_TOOLS) notFound();
   const [chip, setChip] = useState("Morning");
   const [notif, setNotif] = useState(true);
   const [lang, setLang] = useState("English");

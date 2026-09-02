@@ -15,8 +15,8 @@ clearer, easier, safer, or more comfortable? If not, reconsider before shipping.
 `docs/design-system.md` · `docs/information-architecture.md` · `docs/prd.md`
 
 They are the contract this code is written against. Read them before writing UI
-code. Where they and this file disagree, they win — except on P0 scope, where
-the changes recorded at the bottom of this file are newer.
+code. Where they and this file disagree, **this file wins** — the docs predate
+several deliberate changes recorded below.
 
 ## Figma is the source of truth
 
@@ -30,227 +30,232 @@ history — do not build from them.
 - `src/app/tokens.css` is **generated**. Do not hand-edit values. To change a
   colour, change it in Figma and regenerate.
 - **If a screen or state is not in Figma, stop and ask.** Do not improvise
-  design. Two authorised exceptions, both asked for explicitly by the user, and
-  both to be built from the existing system rather than invented: the walk
-  check-in, and **adding and viewing a health document** (2026-08-27) — Figma
-  has the Documents section on the Health screen but no frame for either.
+  design. The authorised exceptions, each asked for explicitly and each built
+  from the existing system rather than invented: the walk check-in; adding and
+  viewing a health document; the family screens and invite acceptance flow; and
+  the Library detail screen.
 
-## Hard rules
+## Two products, one codebase
 
-**Tokens.** Components reference **semantic** tokens only (`text-text-primary`,
-`bg-surface-page`). Never reference primitives (`--brand-500`) directly.
+Sakha is two experiences behind one set of URLs, branching on
+`requireAccount().isFamily`.
 
-**No component libraries.** No shadcn, no MUI, nothing alongside this system.
-One visual system only. Radix UI primitives, unstyled, are permitted for exactly
-two things: a select/dropdown, and a future date picker.
+**The owner (the elderly person).** Bottom nav: Home | Health | Library |
+Profile. Home is today's care — medicines to confirm, readings to record, a
+walk to log. Health holds medicines, measurements and documents. Library is a
+curated shelf. This is the person living the day.
 
-**Typography.** Inter, only. An earlier draft said Noto Sans — that was wrong.
-Apply the 13 text-style utilities directly; never invent a font-size/weight pair.
+**The family member.** A single screen, **no bottom navigation at all**. They
+are not managing a day, they are looking in on one. `/` renders Family View;
+Profile is reached from the avatar in the header.
 
-**Measurements are verified, not conventional.** Primary buttons are **60px**
-tall, not 64 — earlier research said 64 before real designs existed; trust the
-built number. Compact buttons 39px. Chips and avatar 46–54px. 4px grid, no
-other unit, anywhere.
+What is deliberately **not** in the product: Ask AI, Get Help / emergency
+flows, trusted contacts (one sharing concept only — a family member on the
+account), and the daily mood check-in, which was removed on 2026-08-30 because
+nothing ever read the answer back. `daily_checkins` and `mood_level` remain in
+the database, unused. Do not rebuild the question without first deciding what
+reads the answer.
 
-**Layout.** Mobile only. 402px base frame, 16px horizontal margins. 370px
-component width is *derived* (402 − 32) — never hardcode it, and never invent
-tablet or desktop breakpoints. No responsive design has been done.
+## Family View
 
-**Colour.** One brand scale, no second identity colour. No warning colour and no
-second danger scale — this product's whole posture is against manufactured
-alarm. `feedback/error` and `feedback/mood-not-good` share a value today but are
-separate tokens; never substitute one for the other. Mood is a soft personal
-signal, never an alarm.
+One screen, one day. `src/components/family/family-home.tsx`.
 
-**Opacity.** Never use CSS opacity to lighten text — use a lighter solid
-neutral. A modal scrim must be real runtime opacity, never a pre-computed solid.
+- **No bottom navigation.** There is nowhere else to go. The avatar in the
+  header is the route to Profile and to switching account.
+- **Date selector** at the top: "Today, 2 September" with a **Change** button
+  opening a calendar sheet. The chosen day lives in the URL as `?d=YYYY-MM-DD`
+  so Back works and a refresh keeps it. Choosing today drops the parameter, so
+  the plain URL is always today — and that is also the way back to it.
+- **Medicine is date-specific.** Three slots, Morning / Afternoon / Evening.
+  Exactly **two states: Confirmed or Unconfirmed.** A slot counts as Confirmed
+  only when every medicine in it is confirmed. There is **no Skipped state on
+  this screen** — a `skipped` log and an unanswered one both read Unconfirmed,
+  and a past slot that was never confirmed stays Unconfirmed rather than being
+  reinterpreted. Tapping a slot opens a **view-only** sheet listing that slot's
+  medicines with their three-dot schedule. Nothing on this screen writes to a
+  dose; confirming is hers.
+- **Measurements are date-specific**, via `getMeasurementsOn`. A reading shows
+  only if it was recorded on that day. There is **never a fallback to the
+  latest reading from another date** — a June blood pressure under Saturday the
+  2nd would be a false statement. A day with no reading says so.
+- **Documents are NOT date-specific** and must not become so. A prescription is
+  not an event that happened on the day it was photographed. The same library
+  shows whatever date is selected.
+- **Family members can add documents.** Adding is a member right, not an owner
+  one — see Permissions. Deleting is owner-only.
+- **Date-change skeleton.** Changing the date navigates, and a plain
+  `router.push` would hand the whole screen to the route loading boundary and
+  blank the date bar too. `FamilyDay` wraps the push in `startTransition`, so
+  React keeps the screen mounted and `isPending` swaps **only** Medicine and
+  Measurements for a static skeleton. Documents never flicker. The skeleton
+  replaces rather than dims — stale readings under the wrong date are worse
+  than none. No artificial delay.
 
-**Elevation.** Flat by design. Exactly one sanctioned shadow exists: the
-selected time-range pill on the measurement chart (0/4, 16 blur, 0 spread,
-black 16%). Do not build a broader shadow system.
+An earlier calendar/history experiment (a historical-day care view built into
+the family Home) was **abandoned**. It is not part of the product and must not
+be reintroduced. It survives only as the git tag
+`archive/family-calendar-experiment`.
 
-**Dark mode.** None designed. Do not build one speculatively.
+## Health and measurements
 
-**Motion.** No durations or curves were ever specified — static frames can't
-show motion. Restrained, functional, never decorative. Always honour
-`prefers-reduced-motion`.
+Three measurements: **Blood Sugar**, **Blood Pressure**, **Weight**. One detail
+screen shape for all three, with the chart, the history list and the record
+flow.
 
-**Accessibility.** No functionality may depend on a gesture beyond a simple tap
-— no swipe-only, no long-press-only. Never rely on colour alone; pair it with an
-icon or label. Never disable pinch-zoom.
+**Normal ranges have a single numeric source of truth:
+`src/lib/measurement-ranges.ts`.**
 
-**Icons.** Lucide, exclusively. 20–22px inline. No circular icon-button
-containers — icons sit directly on their background. The back chevron is the one
-exception at 24px in a 42px tap area.
+- Blood Sugar: **70–140 mg/dL**
+- Blood Pressure: **90–120 systolic, 60–80 diastolic** (two bands)
+- Weight: **no range**, deliberately. None was ever written, a healthy weight
+  is not a number this product is in a position to assert, and its absence must
+  stay an absence rather than becoming a guess.
+
+These are **product display ranges, not medical advice**, and the app never
+presents them as a diagnosis or a personal target. Do not introduce thresholds
+from outside the codebase, and do not paraphrase or invent range copy.
+
+The numbers previously existed only as a sentence in the dictionary, once per
+language. The chart forced the issue: two copies of a health statement drift,
+and a green band disagreeing with the badge above it is worse than no band. So
+the values live in one module and both the badge and the chart read from it.
+The sentences are still authored per language, with the numbers passed in.
+
+**Graph safe area.** `measurement-chart.tsx` takes `bands` and draws a pale
+fill between the boundaries with a thin stroke on each, behind the reading
+line. Colours come from existing chart tokens (`--color-chart-range-line`,
+`feedback-success-surface`) — no invented values. The Y axis expands to contain
+the band as well as the data, so a range is never drawn clipped or implied to
+start wherever the axis happens to; a boundary outside the domain draws no
+stroke. Verified against no readings, a single reading, flat identical values,
+and values far above and below the range.
 
 ## Language and data model
 
 **Medicine status is `confirmed`, `skipped`, or `unconfirmed`. Never "missed"
 or "failed."** This is a hard rule running through copy, data model, and UI
 alike. Confirmation is allowed at any time; no penalty framing for lateness,
-ever. Snoozing delays a push — it is not a stored status.
+ever. (Family View surfaces only Confirmed/Unconfirmed — see above.)
 
 Short sentences, plain words. "Your medicines," not "Medication management."
 Errors are calm and actionable, never blaming, never technical. No countdowns,
 no auto-expiring confirmations, nothing time-pressured anywhere.
 
 - **Time of day is multi-select.** One medicine can be Morning *and* Evening on
-  one entry. An earlier draft required adding it twice — that is gone.
+  one entry.
 - **Do not create columns the real screens don't collect.** Dosage,
-  before/after food, and start/end dates were in an earlier draft of the data
-  model and are not in the built Add Medicine flow.
+  before/after food, and start/end dates are not in the built Add Medicine flow.
 - Condition tag and remarks are optional and never block saving.
-- All data hangs off an **`account_id`** (the elderly person's account), not a
-  `user_id`, with an `account_members` join table. Family sharing then costs
-  nothing — same screens, same queries, different active account.
-- "Unconfirmed" is the **absence** of a log row, not a stored value. Today's
-  doses are computed from `medications × times_of_day` left-joined against
-  today's logs, in `Asia/Kolkata`.
+- All data hangs off an **`account_id`**, not a `user_id`, with an
+  `account_members` join table. Family sharing then costs nothing — same
+  screens, same queries, different active account.
+- "Unconfirmed" is the **absence** of a log row, not a stored value. Doses are
+  computed from `medications × times_of_day` left-joined against that day's
+  logs, in `Asia/Kolkata`.
 - **The app is the source of truth, not the notification.** What she sees on
   opening the app must be correct whether or not a push ever arrived.
 
-## P0 scope changes (newer than `docs/prd.md`)
+## Permissions
 
-Decided by the user on 2026-08-26:
+Two roles, and the client mirrors the database rather than replacing it.
 
-- **Ask AI is out of P0.** No Claude API layer, no assistant, no urgent-language
-  guardrail. Revisit after the core ships.
-- **Get Help is out of P0.** No emergency call/WhatsApp flow. Consequently
-  `is_emergency_contact` is dropped — do not build it.
-- **Trusted contacts are gone** (2026-08-28). The table is dropped. There is
-  exactly one sharing concept: a family member invited to **view** the account.
-  Do not reintroduce a second notion of "someone close to her".
-- **Family access is view-only.** A member can read everything on the account
-  and change nothing. Reads gate on `private.is_account_member`, writes on
-  `private.is_account_owner`. Every health table and both storage buckets are
-  written this way as of `20260828010000`; `family_invitations` reads were
-  tightened to owner-only in `20260828040000`, so the guest list is hers alone.
-  There is deliberately **no UPDATE policy on `account_members`** — RLS denies
-  by default, so nobody can rewrite a role at all. Adding a policy to say so
-  would only weaken it.
-- **A family member gets a different screen, not a disabled one.** She asks
-  "what do I need to do today"; they ask "how is she doing". `/`, `/health`
-  and `/profile` branch on `requireAccount().isFamily` into
-  `src/components/family/*`. Their nav is Home | Health | Profile — no
-  Library, which is a shelf curated for the person living the day.
-- **Her mood is not shared.** The daily check-in never appears on a family
-  screen. The access screen they consent to promises medicines, readings,
-  documents and today's care; nothing beyond that list may be added to their
-  view without changing that copy first.
-- **Daily check-in is on the Home screen**, already designed: a "how do you feel
-  today" question, medicine confirmation for today, and log actions for sugar,
-  BP and walking. *Verify the exact mood options against the Home frame in
-  Figma — the PRD says good/okay/not good, the user described not good/good/very
-  good. Figma decides.*
-- **Walk check-in** is to be designed in code from the existing component
-  library. This is the sole authorised exception to "don't invent design."
-- Auth is **Google OAuth via Supabase**, as designed.
+| | Owner | Family member |
+|---|---|---|
+| Read everything on the account | yes | yes |
+| Add a reading | yes | **yes** |
+| Add a document | yes | **yes** |
+| Confirm a dose | yes | no |
+| Edit / delete anything | yes | **no** |
 
-## Development affordances (remove before launch)
+`requireAccount()` returns `canEdit = role === "owner"`. RLS is the real
+enforcement: **READ and CREATE gate on `private.is_account_member`; every
+UPDATE and DELETE gates on `private.is_account_owner`** (`20260828050000`).
 
-Gated on `NEXT_PUBLIC_DEV_TOOLS`, which is set on preview and development
-only — never production, so none of this exists in a real build.
+`canAdd` is a **member** right and must not be gated on `canEdit` — that bug
+hid Add Document from the person most likely to use it. `canDelete` correctly
+uses `canEdit`.
 
-- `/dev/login` signs in as the QA account so the screens behind auth can be
-  driven in a browser. Credentials come from `DEV_LOGIN_EMAIL` /
-  `DEV_LOGIN_PASSWORD`, never the repo.
-- A small panel offers "Restart onboarding", which deletes the signed-in
-  user's own account so the flow starts from the top.
-- The QA account itself is `qa@sakha.internal`, created directly in
-  `auth.users`. **Delete it, the env vars, and this code before launch.**
+There is deliberately **no UPDATE policy on `account_members`** — RLS denies by
+default, so nobody can rewrite a role at all. Adding a policy to say so would
+only weaken it.
 
-## Built since the P0 notes above
+## Navigation
 
-**Launch splash.** Server-rendered in the root layout and animated entirely in
-CSS, so the first frame the phone paints is already the blue lockup — no
-JavaScript has to boot before something appears. Plays once per app session
-(an inline script marks `sessionStorage` before the overlay is parsed, so a
-mid-session full load like the auth callback does not replay it). Centring is
-flexbox, never a percentage transform on a shrink-wrapped absolute box: Safari
-resolves that width differently from Chrome and the lockup sat right of centre
-on real phones. iOS also needs `apple-mobile-web-app-capable` written by hand
-in `metadata.other` — Next 16 emits only the modern `mobile-web-app-capable`,
-and without the Apple one iOS ignores every `apple-touch-startup-image` and
-launches on black. Do not change the animation, its timing or its sequence.
+Detail screens are shared between owner and family, so **Back is
+context-aware**: the origin travels on the link as `?from=<path>`, read through
+`safeReturnTo` in `src/lib/return-to.ts`, which falls back to `/health` for
+anything that is not a same-origin path (these values end up in an `href`).
 
-**`src/app/(home)/`** is a route group holding Home and a `loading.tsx`. The
-group changes no URL; the boundary exists so Next can flush the shell — and
-the splash inside it — before Home's session check and six queries have
-finished. Without it nothing painted until all of them had.
+Family View passes its own path **including the selected date**, so returning
+from a measurement or a document lands on the same screen *and* the same day.
+This is not inferred from `isFamily` — role alone would get the screen right
+and lose the date.
 
-The boundary has one consequence worth knowing before touching either file:
-once bytes have gone out, a `redirect()` can no longer be a status code, and
-Next falls back to a meta refresh. That turned the signed-out `/` from a 307
-into a 200 the browser sat on for a second. So **`proxy.ts` sends a signed-out
-request for `/` to `/welcome` itself**, before anything renders. It reuses the
-`getUser()` the proxy already awaits, so it costs no query and a signed-IN
-request falls straight through and keeps the early paint. It is deliberately
-only the signed-out case and only `/` — every other reason to leave Home
-(onboarding, a family member, the wrong active account) still belongs to
-`requireAccount`, which knows about accounts and the proxy does not. Any future
-`loading.tsx` on another gated route will need the same treatment, or that
-route's redirect quietly becomes a meta refresh too.
+Family View must never navigate to `/health`. That route still exists and is
+the owner's Health screen; its family branch is now unreachable by navigation
+and is retained rather than deleted.
 
-**Library V1.** Eight categories as the primary chips, language demoted to a
-secondary control that appears only where a shelf holds both. Cards are
-vertical: a full-width 16:9 thumbnail, title, then language and duration or
-"Short". Tapping opens `/library/[id]`, which plays the video inside Sakha on
-`youtube-nocookie.com` — no autoplay, no queue, and at most three related items
-from the same category. `library_items` still has the five original category
-values alongside the eight new ones; they are unused and come out in a later
-migration. The catalogue lives in `supabase/seed/library_catalogue_v1.sql`.
-Adding content is a SQL insert with `published = false` until someone approves
-it — there is deliberately no admin UI.
+## Loading and performance
 
-**Notifications are event-driven.** An `after insert` trigger on
-`notification_outbox` pokes the dispatcher through `pg_net` the moment a row
-lands, which took family activity from a measured 11-53s down to a measured
-0.2-0.6s. The minute cron stays as the guarantee if a poke is ever lost, so
-claiming a batch is a single `UPDATE ... RETURNING` with `SKIP LOCKED` — two
-callers can now be in the dispatcher at once. The poke swallows its own errors:
-it runs inside the transaction that wrote her reading, and a failed
-notification must never roll back the thing it was about. Reminders are
-excluded from the poke and left to the cron, which also removes the only loop.
+- `src/app/(home)/` is a route group holding Home and a `loading.tsx`. That
+  loading file is never seen — it exists so Next has a **streaming boundary**,
+  without which nothing could be flushed until Home's session check and its
+  queries finished, and the splash sat behind all of it.
+- **`proxy.ts` redirects a signed-out `/` to `/welcome` itself**, before
+  anything renders. It has to: once bytes are flushed a redirect can no longer
+  be a status code and Next falls back to a meta refresh. It reuses the
+  `getUser()` already awaited, so it costs no query, and a signed-in request
+  falls straight through and keeps the early paint. **Any future `loading.tsx`
+  on a gated route needs the same treatment.**
+- Fetch only what the view renders. Family View reads documents through
+  `getDocuments`, not `getHealthOverview` — the latter also queries
+  `medications` and `health_measurements`, which this screen already has, and
+  cost two duplicate round trips per render and per date change.
 
-## Known open issues
+## PWA and splash
 
-- **`surface/tinted-strong` resolves to the same value as `surface/tinted`**
-  (both `brand/50`, #F1F1FF), so it is inert. Consequence: Secondary's pressed
-  state can only darken its label, which is a quiet cue. A dedicated token for
-  a pressed tinted surface would fix it.
-- Chart (dual-line BP, single-line sugar) is deliberately not built yet. The
-  measurement detail screens ship without it, and without the 7 days / 30 days
-  / 3 months pills that exist only to drive it — so the one sanctioned shadow,
-  which lives on the selected pill, is still unused anywhere in the app.
-- **Weight has no detail frame.** It reuses the sugar/BP screen shape because
-  Health links to it, and it carries no range note because none was written.
-- The Medicines screen's info icon has no designed destination. It currently
-  toggles a legend for the dots — a guess at intent, not a decision.
-- No Accessibility or general app-settings screen has been designed.
-- PWA file upload on installed iOS has not been tested on a real device.
-- Neither role can sign out from inside the product — the only sign-out lives
-  behind `NEXT_PUBLIC_DEV_TOOLS`. Not a family-access gap; it was always
-  missing, and it has to be solved before launch.
-- The family screens and the invite acceptance flow were **built in code from
-  the existing component library**, like the walk check-in — Figma has no
-  frames for any of them. Third authorised exception (2026-08-28).
+Server-rendered in the root layout and animated entirely in CSS, so the first
+frame the phone paints is already the blue lockup. Plays once per app session.
 
-### Resolved 2026-08-26
+**Do not change the animation, its timing, layout, sequence or reduced-motion
+behaviour.** Two non-obvious traps are already solved:
 
-Tertiary button gained a real pressed state (tinted fill, darkened border and
-label). Secondary's pressed label was restored to `action/primary-pressed` after
-a rebinding had made it identical to Default. Settings Row's chevron replaced an
-8px circle. Card padding 14 -> 16 and Family Member Card gap 10 -> 12, both back
-on the grid. All 18 Button labels and the Empty State message are now bound to
-real text styles.
+- Centring is flexbox, never a percentage transform on a shrink-wrapped
+  absolute box — Safari resolves that width differently from Chrome and the
+  lockup sat right of centre on real phones.
+- iOS needs `apple-mobile-web-app-capable` written by hand in `metadata.other`.
+  Next 16 emits only the modern `mobile-web-app-capable`, and without the Apple
+  one iOS ignores every `apple-touch-startup-image` and launches on black.
 
-`surface/tinted-strong` was re-aliased brand/50 -> brand/100 and now actually
-differs from `surface/tinted`; Secondary/Pressed uses it so the fill darkens
-rather than relying on a label shift alone. Two new semantic tokens,
-`control/track-off` (neutral/300) and `control/track-disabled` (neutral/200),
-separate an off toggle from a disabled one — they previously resolved to the
-same hex. A new `text/name-label` style (18/Medium) carries the Family Member
-Card name, which had no correct style to bind to. 83 variables, 14 text styles.
+## Library
+
+Owner-only — a shelf curated for the person living the day. Eight categories as
+the primary chips, language demoted to a secondary control shown only where a
+shelf holds both. Cards are vertical: full-width 16:9 thumbnail, title, then
+language and duration or "Short".
+
+`/library/[id]` plays the video inside Sakha on `youtube-nocookie.com` — no
+autoplay, no queue, at most three related items from the same category.
+
+Content is a SQL insert with `published = false` until approved; there is
+deliberately no admin CMS. The catalogue lives in
+`supabase/seed/library_catalogue_v1.sql`. `library_items` still carries the five
+original category values alongside the eight current ones; they are unused.
+
+## Notifications
+
+Event-driven, with the timer as the guarantee.
+
+An `after insert` trigger on `notification_outbox` pokes the dispatcher through
+`pg_net` the moment a row lands, which took family activity from a measured
+11–53s down to a measured 0.2–0.6s. The minute cron stays as the guarantee if a
+poke is ever lost, so claiming a batch is a single `UPDATE ... RETURNING` with
+`SKIP LOCKED` — two callers can be in the dispatcher at once.
+
+The poke swallows its own errors: it runs inside the transaction that wrote her
+reading, and **a failed notification must never roll back the thing it was
+about.** Reminders are excluded from the poke and left to the cron, which also
+removes the only loop.
 
 ## Supabase
 
@@ -269,18 +274,79 @@ Project `yfuihfgvheavodrzxiwh`, region `ap-south-1` (Mumbai — she is in Delhi)
 - Storage upsert needs INSERT **and** SELECT **and** UPDATE policies; with
   only INSERT, replacing a document fails silently.
 - `service_role` / secret keys must never appear in a `NEXT_PUBLIC_` variable.
-- The `reminders` table is deliberately not built yet — its shape depends on
-  recurrence decisions that belong to Phase 7.
+- The `reminders` table is deliberately not built yet.
 
-## Commands
+## Deployment
+
+- **Production branch: `main`.** Pushing to `main` triggers a production
+  deployment through the Vercel Git integration — treat a push to `main` as a
+  deploy.
+- **Production domain: https://sakha.dhairya.work**
+- Feature work happens on a branch with a preview deployment, is tested on a
+  real device, and is fast-forwarded into `main` only once approved.
+- Previews sit behind Vercel Deployment Protection; open them in a browser
+  signed into the Vercel account.
 
 ```bash
 pnpm dev      # local dev server
 pnpm build    # production build — must pass before any push
 pnpm lint
-pnpm db:types                     # regenerate DB types (needs `supabase login` once)
+npx tsc --noEmit                  # run AFTER build: it needs .next/types
+pnpm db:types                     # regenerate DB types
 vercel env pull .env.local --yes  # refresh local env from Vercel
 ```
+
+`tsc` reads generated route types from `.next/types`, so from a clean tree the
+order is **build → tsc → lint**. Running `tsc` against a cleared `.next` fails
+on `PageProps` and is a tooling artefact, not a code error.
+
+## Development affordances
+
+Gated on `NEXT_PUBLIC_DEV_TOOLS`, set on preview only — none of it exists in
+production.
+
+- A panel offers "Restart onboarding", which deletes the signed-in user's own
+  account so the flow starts from the top.
+- `/kitchen-sink` and `/tokens` are design-system proof sheets, gated on the
+  same flag. They were publicly reachable in production until 2026-09-02.
+
+There is **no dev login route**. Screens behind auth cannot be driven headlessly;
+they need a real signed-in browser, which is why UI work is verified on a
+preview deployment rather than locally.
+
+## Engineering rules
+
+- **Smallest correct change.** No broad refactors, no stylistic churn, no
+  cleanup bundled into a feature.
+- **Figma is the visual source of truth** when a frame is supplied. Where it is
+  silent, follow the existing design system rather than inventing.
+- **Reuse the shared component.** Detail screens, sheets, rows and the design
+  system are shared on purpose; make them context-aware rather than forking.
+- **Be conservative with health content.** No invented thresholds, no
+  paraphrased medical statements, no alarm framing. An unanswered dose is not a
+  failure.
+- **Never weaken RLS**, and never rely on a client check alone.
+- **Verify before deleting.** Check every reference across the repo; keep what
+  is intentionally retained and say why.
+- **Test before production**, on a preview and on a real device. The build
+  passing is not the test.
+- **No silent architectural changes.** Say what changed and why.
+
+## Known open issues
+
+- The measurement chart has no 7 days / 30 days / 3 months range pills, so the
+  one sanctioned shadow — which lives on the selected pill — is still unused.
+- **Weight has no detail frame.** It reuses the sugar/BP screen shape because
+  Health links to it, and carries no range note because none was written.
+- The Medicines screen's info icon has no designed destination. It toggles a
+  legend for the dots — a guess at intent, not a decision.
+- No Accessibility or general app-settings screen has been designed.
+- PWA file upload on installed iOS has not been tested on a real device.
+- `/health`'s family branch (`family-health.tsx`, `health-overview.tsx`,
+  `viewing-banner.tsx`, `family-medicines.tsx`) is unreachable by navigation
+  now that Family View has no Health tab. Retained, not dead: the route still
+  serves the owner, and removing the family branch is a product decision.
+- `daily_checkins` and `mood_level` remain in the database with no reader.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
